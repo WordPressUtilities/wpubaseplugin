@@ -3,7 +3,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: http://github.com/Darklg/WPUtilities
 Description: A framework for a WordPress plugin
-Version: 1.6.1
+Version: 1.6.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -139,7 +139,7 @@ class wpuBasePlugin {
     ---------------------------------------------------------- */
 
     /* Display notices */
-    private function admin_notices() {
+    function admin_notices() {
         $return = '';
         if ( !empty( $this->messages ) ) {
             foreach ( $this->messages as $message ) {
