@@ -1,32 +1,38 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
-"POT-Creation-Date: 2013-11-13 23:59+0100\n"
+"Project-Id-Version: Base Plugin\n"
+"POT-Creation-Date: 2015-02-22 22:11+0100\n"
 "PO-Revision-Date: \n"
-"Last-Translator: Kevin <kevin@rocher.me>\n"
+"Last-Translator: Darklg <darklg.blog@gmail.com>\n"
 "Language-Team: \n"
+"Language: fr_FR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.5.7\n"
+"X-Generator: Poedit 1.7.1\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-KeywordsList: __;_e\n"
 "X-Poedit-SearchPath-0: ../.\n"
 
-#: .././wpubaseplugin.php:29
+#: .././wpubaseplugin.php:42
 msgid "Base Plugin"
 msgstr "Plugin de base"
 
-#: .././wpubaseplugin.php:30
+#: .././wpubaseplugin.php:43
 msgid "Base"
 msgstr "Base"
 
-#: .././wpubaseplugin.php:95
+#: .././wpubaseplugin.php:68
+#, php-format
+msgid "The plugin %s should be installed."
+msgstr "Le plugin %s devrait être installé."
+
+#: .././wpubaseplugin.php:151
 msgid "Content"
 msgstr "Contenu"
 
-#: .././wpubaseplugin.php:100
+#: .././wpubaseplugin.php:156
 msgid "Submit"
 msgstr "Envoyer"
 

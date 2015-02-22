@@ -1,17 +1,29 @@
 <?php
+
 /*
 Plugin Name: WPU Base Plugin
 Plugin URI: http://github.com/Darklg/WPUtilities
 Description: A framework for a WordPress plugin
-Version: 1.6.2
+Version: 1.7
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
 
-class wpuBasePlugin
+class WPUBasePlugin
 {
+
+    /* ----------------------------------------------------------
+      Construct
+    ---------------------------------------------------------- */
+
+    function __construct() {
+        $this->set_options();
+        add_action('init', array(&$this,
+            'init'
+        ) , 10);
+    }
 
     /* ----------------------------------------------------------
       Options
@@ -23,25 +35,59 @@ class wpuBasePlugin
             'id' => 'wpubaseplugin',
             'level' => 'manage_options'
         );
-        $this->messages = array();
-        $this->data_table = $wpdb->prefix . $this->options['id'] . "_table";
+
         load_plugin_textdomain($this->options['id'], false, dirname(plugin_basename(__FILE__)) . '/lang/');
 
         // Allow translation for plugin name
-        $this->options['name'] = $this->__('Base Plugin');
-        $this->options['menu_name'] = $this->__('Base');
+        $this->options['name'] = __('Base Plugin', 'wpubaseplugin');
+        $this->options['menu_name'] = __('Base', 'wpubaseplugin');
+
+
+        $this->data_table = $wpdb->prefix . $this->options['id'] . "_table";
+    }
+
+
+    /* ----------------------------------------------------------
+      Dependencies
+    ---------------------------------------------------------- */
+
+    function check_dependencies() {
+        include_once (ABSPATH . 'wp-admin/includes/plugin.php');
+
+        // Check for Plugins activation
+        $this->plugins = array(
+            'wpuoptions' => array(
+                'installed' => true,
+                'path' => 'wpuoptions/wpuoptions.php',
+                'message_url' => '<a target="_blank" href="https://github.com/WordPressUtilities/wpuoptions">WPU Options</a>',
+            )
+        );
+        foreach ($this->plugins as $id => $plugin) {
+            if (!is_plugin_active($plugin['path'])) {
+                $this->plugins[$id]['installed'] = false;
+                $this->messages->set_message($id . '__not_installed', sprintf(__('The plugin %s should be installed.', 'wpubaseplugin') , $plugin['message_url']) , 'error');
+            }
+        }
     }
 
     /* ----------------------------------------------------------
-      Construct
+      Init
     ---------------------------------------------------------- */
 
-    function __construct() {
-        $this->set_options();
-    }
-
     function init() {
-        $this->set_global_hooks();
+
+        // Set messages
+        require_once dirname(__FILE__) . '/inc/class-WPUBaseMessages.php';
+        $this->messages = new WPUBaseMessages();
+
+        // Set admin datas
+        require_once dirname(__FILE__) . '/inc/class-WPUBaseAdminDatas.php';
+        $this->admin_datas = new WPUBaseAdminDatas();
+
+        // Check dependencies
+        $this->check_dependencies();
+
+        // Hooks
         if (is_admin()) {
             $this->set_admin_hooks();
         } else {
@@ -53,16 +99,13 @@ class wpuBasePlugin
       Hooks
     ---------------------------------------------------------- */
 
-    private function set_global_hooks() {
-    }
-
     private function set_public_hooks() {
         add_action('wp_enqueue_scripts', array(&$this,
             'load_assets_css'
-        ));
+        ) , 10);
         add_action('wp_enqueue_scripts', array(&$this,
             'load_assets_js'
-        ));
+        ) , 10);
     }
 
     private function set_admin_hooks() {
@@ -75,6 +118,7 @@ class wpuBasePlugin
         add_action('wp_dashboard_setup', array(&$this,
             'add_dashboard_widget'
         ));
+
         // Only on plugin admin page
         if (isset($_GET['page']) && $_GET['page'] == $this->options['id']) {
             add_action('wp_loaded', array(&$this,
@@ -86,11 +130,9 @@ class wpuBasePlugin
             add_action('admin_enqueue_scripts', array(&$this,
                 'load_assets_js'
             ));
-            add_action('admin_notices', array(&$this,
-                'admin_notices'
-            ));
         }
     }
+
 
     /* ----------------------------------------------------------
       Admin
@@ -100,6 +142,21 @@ class wpuBasePlugin
         add_menu_page($this->options['name'], $this->options['menu_name'], $this->options['level'], $this->options['id'], array(&$this,
             'set_admin_page_main'
         ));
+    }
+
+    function set_admin_page_main() {
+        echo $this->get_wrapper_start($this->options['name']);
+
+        // Content
+        echo '<p>' . __('Content', ' wpubaseplugin') . '</p>';
+
+        // Default Form
+        echo '<form action="" method="post"><div>';
+        wp_nonce_field('action-main-form', 'action-main-form-' . $this->options['id']);
+        echo '<button class="button-primary" type="submit">' . __('Submit', ' wpubaseplugin') . '</button>';
+        echo '</div></form>';
+
+        echo $this->get_wrapper_end();
     }
 
     function set_adminbar_menu($admin_bar) {
@@ -113,26 +170,11 @@ class wpuBasePlugin
         ));
     }
 
-    function set_admin_page_main() {
-        echo $this->get_wrapper_start($this->options['name']);
-
-        // Content
-        echo '<p>' . $this->__('Content') . '</p>';
-
-        // Default Form
-        echo '<form action="" method="post"><div>';
-        wp_nonce_field('action-main-form', 'action-main-form-' . $this->options['id']);
-        echo '<button class="button-primary" type="submit">' . $this->__('Submit') . '</button>';
-        echo '</div></form>';
-
-        echo $this->get_wrapper_end();
-    }
-
     function set_admin_page_main_postAction() {
         if (empty($_POST) || !isset($_POST['action-main-form-' . $this->options['id']]) || !wp_verify_nonce($_POST['action-main-form-' . $this->options['id']], 'action-main-form')) {
             return;
         }
-        $this->messages[] = 'Success !';
+        $this->messages->set_message('success_postaction', 'Success !');
     }
 
     /* Widget Dashboard */
@@ -148,22 +190,8 @@ class wpuBasePlugin
     }
 
     /* ----------------------------------------------------------
-      Assets & Notices
+      Assets
     ---------------------------------------------------------- */
-
-    /* Display notices */
-    function admin_notices() {
-        $return = '';
-        if (!empty($this->messages)) {
-            foreach ($this->messages as $message) {
-                $return.= '<div class="updated"><p>' . $message . '</p></div>';
-            }
-        }
-
-        // Empty messages
-        $this->messages = array();
-        echo $return;
-    }
 
     function load_assets_js() {
         wp_enqueue_script($this->options['id'] . '_scripts', plugins_url('assets/js/script.js', __FILE__));
@@ -200,64 +228,6 @@ class wpuBasePlugin
     }
 
     /* ----------------------------------------------------------
-      Utilities : Requests
-    ---------------------------------------------------------- */
-
-    private function get_pager_limit($perpage, $tablename = '') {
-        global $wpdb;
-
-        // Ensure good format for table name
-        if (empty($tablename) || !preg_match('/^([A-Za-z0-9_-]+)$/', $tablename)) {
-            return array(
-                'pagenum' => 0,
-                'max_pages' => 0,
-                'limit' => '',
-            );
-        }
-
-        // Ensure good format for perpage
-        if (empty($perpage) || !is_numeric($perpage)) {
-            $perpage = 20;
-        }
-
-        // Get number of elements in table
-        $elements_count = $wpdb->get_var("SELECT COUNT(*) FROM " . $tablename);
-
-        // Get max page number
-        $max_pages = ceil($elements_count / $perpage);
-
-        // Obtain Page Number
-        $pagenum = (isset($_GET['pagenum']) && is_numeric($_GET['pagenum']) ? $_GET['pagenum'] : 1);
-        $pagenum = min($pagenum, $max_pages);
-
-        // Set SQL limit
-        $limit = 'LIMIT ' . ($pagenum * $perpage - $perpage) . ', ' . $perpage;
-
-        return array(
-            'pagenum' => $pagenum,
-            'max_pages' => $max_pages,
-            'limit' => $limit,
-        );
-    }
-
-    /* ----------------------------------------------------------
-      Utilities : Export
-    ---------------------------------------------------------- */
-
-    private function export_array_to_csv($array, $name) {
-        if (isset($array[0])) {
-            header('Content-Type: application/csv');
-            header('Content-Disposition: attachment; filename=export-list-' . $name . '-' . date('y-m-d') . '.csv');
-            header('Pragma: no-cache');
-            echo implode(';', array_keys($array[0])) . "\n";
-            foreach ($array as $line) {
-                echo implode(';', $line) . "\n";
-            }
-            die;
-        }
-    }
-
-    /* ----------------------------------------------------------
       Utilities : Public
     ---------------------------------------------------------- */
 
@@ -269,19 +239,11 @@ class wpuBasePlugin
     }
 
     /* ----------------------------------------------------------
-      Utilities : Translate
-    ---------------------------------------------------------- */
-
-    function __($string) {
-        return __($string, $this->options['id']);
-    }
-
-    /* ----------------------------------------------------------
       Utilities : Display
     ---------------------------------------------------------- */
 
     private function get_wrapper_start($title) {
-        return '<div class="wrap"><div id="icon-options-general" class="icon32"></div><h2 class="title">' . $title . '</h2><br />';
+        return '<div class="wrap"><h2 class="title">' . $title . '</h2><br />';
     }
 
     private function get_wrapper_end() {
@@ -327,19 +289,13 @@ class wpuBasePlugin
     }
 }
 
-$wpuBasePlugin = false;
-add_action('init', 'init_wpuBasePlugin');
-function init_wpuBasePlugin() {
-    global $wpuBasePlugin;
-    $wpuBasePlugin = new wpuBasePlugin();
-    $wpuBasePlugin->init();
-}
+/* Launch plugin */
+$WPUBasePlugin = new WPUBasePlugin();
 
-/* Limited launch for activation/deactivation hook */
-$temp_wpuBasePlugin = new wpuBasePlugin();
-register_activation_hook(__FILE__, array(&$temp_wpuBasePlugin,
+/* Set activation/deactivation hook */
+register_activation_hook(__FILE__, array(&$WPUBasePlugin,
     'activate'
 ));
-register_deactivation_hook(__FILE__, array(&$temp_wpuBasePlugin,
+register_deactivation_hook(__FILE__, array(&$WPUBasePlugin,
     'deactivate'
 ));
