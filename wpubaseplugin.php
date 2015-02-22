@@ -4,7 +4,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: http://github.com/Darklg/WPUtilities
 Description: A framework for a WordPress plugin
-Version: 1.7
+Version: 1.7.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -148,12 +148,12 @@ class WPUBasePlugin
         echo $this->get_wrapper_start($this->options['name']);
 
         // Content
-        echo '<p>' . __('Content', ' wpubaseplugin') . '</p>';
+        echo '<p>' . __('Content', 'wpubaseplugin') . '</p>';
 
         // Default Form
         echo '<form action="" method="post"><div>';
         wp_nonce_field('action-main-form', 'action-main-form-' . $this->options['id']);
-        echo '<button class="button-primary" type="submit">' . __('Submit', ' wpubaseplugin') . '</button>';
+        echo '<button class="button-primary" type="submit">' . __('Submit', 'wpubaseplugin') . '</button>';
         echo '</div></form>';
 
         echo $this->get_wrapper_end();
