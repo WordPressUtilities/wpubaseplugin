@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Base Plugin\n"
-"POT-Creation-Date: 2015-02-22 22:11+0100\n"
+"POT-Creation-Date: 2015-02-23 23:02+0100\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Darklg <darklg.blog@gmail.com>\n"
 "Language-Team: \n"
@@ -15,6 +15,14 @@ msgstr ""
 "X-Poedit-KeywordsList: __;_e\n"
 "X-Poedit-SearchPath-0: ../.\n"
 
+#: .././inc/class-WPUBaseAdminPage.php:44
+msgid "Content"
+msgstr "Contenu"
+
+#: .././inc/class-WPUBaseAdminPage.php:49
+msgid "Submit"
+msgstr "Envoyer"
+
 #: .././wpubaseplugin.php:42
 msgid "Base Plugin"
 msgstr "Plugin de base"
@@ -23,18 +31,10 @@ msgstr "Plugin de base"
 msgid "Base"
 msgstr "Base"
 
-#: .././wpubaseplugin.php:68
+#: .././wpubaseplugin.php:66
 #, php-format
 msgid "The plugin %s should be installed."
 msgstr "Le plugin %s devrait être installé."
-
-#: .././wpubaseplugin.php:151
-msgid "Content"
-msgstr "Contenu"
-
-#: .././wpubaseplugin.php:156
-msgid "Submit"
-msgstr "Envoyer"
 
 #~ msgid "Error: Your version of %s is outdated!"
 #~ msgstr "Erreur : Votre version de %s n'est pas à jour !"

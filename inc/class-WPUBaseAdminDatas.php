@@ -1,9 +1,9 @@
 <?php
 
 /*
-Class Name: WPU Base Messages
+Class Name: WPU Base Admin Datas
 Description: A class to handle data display in WordPress admin
-Version: 1.0.0
+Version: 1.1.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -71,6 +71,48 @@ class WPUBaseAdminDatas
             }
             die;
         }
+    }
+
+    /* ----------------------------------------------------------
+      Utilities : Display
+    ---------------------------------------------------------- */
+
+    private function get_admin_table($values, $args = array()) {
+        $pagination = '';
+        if (isset($args['pagenum'], $args['max_pages'])) {
+            $page_links = paginate_links(array(
+                'base' => add_query_arg('pagenum', '%#%') ,
+                'format' => '',
+                'prev_text' => '&laquo;',
+                'next_text' => '&raquo;',
+                'total' => $args['max_pages'],
+                'current' => $args['pagenum']
+            ));
+
+            if ($page_links) {
+                $pagination = '<div class="tablenav"><div class="tablenav-pages" style="margin: 1em 0">' . $page_links . '</div></div>';
+            }
+        }
+
+        $content = '<table class="widefat">';
+        if (isset($args['columns']) && is_array($args['columns']) && !empty($args['columns'])) {
+            $labels = '<tr><th>' . implode('</th><th>', $args['columns']) . '</th></tr>';
+            $content.= '<thead>' . $labels . '</thead>';
+            $content.= '<tfoot>' . $labels . '</tfoot>';
+        }
+        $content.= '<tbody>';
+        foreach ($values as $id => $vals) {
+            $content.= '<tr>';
+            foreach ($vals as $val) {
+                $content.= '<td>' . $val . '</td>';
+            }
+            $content.= '</tr>';
+        }
+        $content.= '</tbody>';
+        $content.= '</table>';
+        $content.= $pagination;
+
+        return $content;
     }
 }
 
