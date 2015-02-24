@@ -3,7 +3,7 @@
 /*
 Class Name: WPU Base Admin page
 Description: A class to handle pages in WordPress
-Version: 1.0.0
+Version: 1.1.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -12,6 +12,18 @@ License URI: http://opensource.org/licenses/MIT
 
 class WPUBaseAdminPage
 {
+
+    private $pages = array(
+        'main' => array(
+            'name' => 'Main page',
+            'menu_name' => 'Main page'
+        ) ,
+        'subpage' => array(
+            'name' => 'Subpage page',
+            'menu_name' => 'Subpage page',
+            'parent' => 'main'
+        )
+    );
 
     function __construct($parent) {
         $this->parent = $parent;
@@ -22,8 +34,9 @@ class WPUBaseAdminPage
             'set_adminbar_menu'
         ) , 100);
 
-        // Only on plugin admin page
-        if (isset($_GET['page']) && $_GET['page'] == $this->parent->options['id']) {
+        // Only on a plugin admin page
+        $page = $this->get_page();
+        if (array_key_exists($page, $this->pages)) {
             add_action('wp_loaded', array(&$this,
                 'set_admin_page_main_postAction'
             ));
@@ -31,42 +44,88 @@ class WPUBaseAdminPage
     }
 
     function set_admin_menu() {
-        add_menu_page($this->parent->options['name'], $this->parent->options['menu_name'], $this->parent->options['level'], $this->parent->options['id'], array(&$this,
-            'set_admin_page_main'
-        ));
+        $parent = false;
+        foreach ($this->pages as $id => $page) {
+            $page_id_pref = $this->parent->options['id'] . '-';
+            $page_id = $page_id_pref . $id;
+            $page_action = array(&$this,
+                'set_admin_page_main'
+            );
+            if (isset($page['parent']) && array_key_exists($page['parent'], $this->pages)) {
+                add_submenu_page($page_id_pref . $page['parent'], $page['name'], $page['menu_name'], $page['level'], $page_id, $page_action);
+            } else {
+                add_menu_page($page['name'], $page['menu_name'], $page['level'], $page_id, $page_action);
+            }
+        }
+    }
+
+    function set_adminbar_menu($admin_bar) {
+        foreach ($this->pages as $id => $page) {
+            $page_id_pref = $this->parent->options['id'] . '-';
+
+            $menu_details = array(
+                'id' => $page_id_pref . $id,
+                'title' => $page['menu_name'],
+                'href' => admin_url('admin.php?page=' . $page_id_pref . $id) ,
+                'meta' => array(
+                    'title' => $page['menu_name'],
+                ) ,
+            );
+            if (isset($page['parent']) && array_key_exists($page['parent'], $this->pages)) {
+                $menu_details['parent'] = $page_id_pref . $page['parent'];
+            }
+            $admin_bar->add_menu($menu_details);
+        }
     }
 
     function set_admin_page_main() {
-        echo $this->get_wrapper_start($this->parent->options['name']);
+        $page = $this->get_page();
 
-        // Content
-        echo '<p>' . __('Content', 'wpubaseplugin') . '</p>';
+        echo $this->get_wrapper_start($this->pages[$page]['name']);
 
         // Default Form
         echo '<form action="" method="post"><div>';
-        wp_nonce_field('action-main-form', 'action-main-form-' . $this->parent->options['id']);
-        echo '<button class="button-primary" type="submit">' . __('Submit', 'wpubaseplugin') . '</button>';
+
+        wp_nonce_field('action-main-form-' . $page, 'action-main-form-' . $this->parent->options['id'] . '-' . $page);
+
+        switch ($page) {
+            case 'main':
+                echo '<p>' . __('Content', 'wpubaseplugin') . '</p>';
+                echo '<button class="button-primary" type="submit">' . __('Submit', 'wpubaseplugin') . '</button>';
+                break;
+
+            case 'subpage':
+                echo '<p>' . __('Content', 'wpubaseplugin') . '</p>';
+                echo '<button class="button-primary" type="submit">' . __('Submit', 'wpubaseplugin') . '</button>';
+                break;
+
+            default:
+                break;
+        }
+
         echo '</div></form>';
 
         echo $this->get_wrapper_end();
     }
 
-    function set_adminbar_menu($admin_bar) {
-        $admin_bar->add_menu(array(
-            'id' => $this->parent->options['id'],
-            'title' => $this->parent->options['menu_name'],
-            'href' => admin_url('admin.php?page=' . $this->parent->options['id']) ,
-            'meta' => array(
-                'title' => $this->parent->options['menu_name'],
-            ) ,
-        ));
-    }
-
     function set_admin_page_main_postAction() {
-        if (empty($_POST) || !isset($_POST['action-main-form-' . $this->parent->options['id']]) || !wp_verify_nonce($_POST['action-main-form-' . $this->parent->options['id']], 'action-main-form')) {
+        $page = $this->get_page();
+        $action_id = 'action-main-form-' . $this->parent->options['id'] . '-' . $page;
+        if (empty($_POST) || !isset($_POST[$action_id]) || !wp_verify_nonce($_POST[$action_id], 'action-main-form-' . $page)) {
             return;
         }
-        $this->parent->messages->set_message('success_postaction', 'Success !');
+        switch ($page) {
+            case 'main':
+                $this->parent->messages->set_message('success_postaction', 'Success Main !');
+                break;
+
+            case 'subpage':
+                $this->parent->messages->set_message('success_postaction', 'Success Main 2 !');
+                break;
+
+            default:
+                break;
+        }
     }
 
     private function get_wrapper_start($title) {
@@ -75,6 +134,14 @@ class WPUBaseAdminPage
 
     private function get_wrapper_end() {
         return '</div>';
+    }
+
+    private function get_page() {
+        $page = '';
+        if (isset($_GET['page'])) {
+            $page = str_replace($this->parent->options['id'] . '-', '', $_GET['page']);
+        }
+        return $page;
     }
 }
 
