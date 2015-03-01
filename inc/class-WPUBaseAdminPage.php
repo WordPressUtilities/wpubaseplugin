@@ -13,48 +13,13 @@ License URI: http://opensource.org/licenses/MIT
 class WPUBaseAdminPage
 {
 
-    private $pages = array(
-        'main' => array(
-            'name' => 'Main page',
-            'menu_name' => 'Main page'
-        ) ,
-        'subpage' => array(
-            'name' => 'Subpage page',
-            'menu_name' => 'Subpage page',
-            'parent' => 'main',
-        )
-    );
-
-    /* Main
-     -------------------------- */
-
-    function page_content__main() {
-        echo '<p>' . __('Content', 'wpubaseplugin') . ' main</p>';
-        echo '<button class="button-primary" type="submit">' . __('Submit', 'wpubaseplugin') . '</button>';
-    }
-
-    function page_action__main() {
-        $this->parent->messages->set_message('success_postaction_main', 'Success Main !');
-    }
-
-    /* Subpage
-     -------------------------- */
-
-    function page_content__subpage() {
-        echo '<p>' . __('Content', 'wpubaseplugin') . ' subpage</p>';
-        echo '<button class="button-primary" type="submit">' . __('Submit', 'wpubaseplugin') . '</button>';
-    }
-
-    function page_action__subpage() {
-        $this->parent->messages->set_message('success_postaction_subpage', 'Success subpage !');
-    }
-
     /* ----------------------------------------------------------
       Script
     ---------------------------------------------------------- */
 
-    function __construct($parent) {
+    function __construct($parent, $pages) {
         $this->parent = $parent;
+        $this->pages = $pages;
         $this->prefix = $this->parent->options['id'] . '-';
         $this->pages = $this->set_pages($this->pages);
         add_action('admin_menu', array(&$this,

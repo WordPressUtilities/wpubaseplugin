@@ -4,7 +4,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: http://github.com/Darklg/WPUtilities
 Description: A framework for a WordPress plugin
-Version: 1.10
+Version: 1.10.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -74,6 +74,30 @@ class WPUBasePlugin
 
     function init() {
 
+        $admin_pages = array(
+            'main' => array(
+                'name' => 'Main page',
+                'menu_name' => 'Main page',
+                'function_content' => array(&$this,
+                    'page_content__main'
+                ) ,
+                'function_action' => array(&$this,
+                    'page_action__main'
+                ) ,
+            ) ,
+            'subpage' => array(
+                'name' => 'Subpage page',
+                'menu_name' => 'Subpage page',
+                'parent' => 'main',
+                'function_content' => array(&$this,
+                    'page_content__subpage'
+                ) ,
+                'function_action' => array(&$this,
+                    'page_action__subpage'
+                ) ,
+            )
+        );
+
         // Set messages
         require_once dirname(__FILE__) . '/inc/class-WPUBaseMessages.php';
         $this->messages = new WPUBaseMessages();
@@ -84,7 +108,7 @@ class WPUBasePlugin
 
         // Set admin pages
         require_once dirname(__FILE__) . '/inc/class-WPUBaseAdminPage.php';
-        $this->admin_page = new WPUBaseAdminPage($this);
+        $this->admin_page = new WPUBaseAdminPage($this, $admin_pages);
 
         // Check dependencies
         $this->check_dependencies();
@@ -92,7 +116,8 @@ class WPUBasePlugin
         // Hooks
         if (is_admin()) {
             $this->set_admin_hooks();
-        } else {
+        }
+        else {
             $this->set_public_hooks();
         }
     }
@@ -116,8 +141,8 @@ class WPUBasePlugin
             'add_dashboard_widget'
         ));
 
-        // Only on plugin admin page
-        if (isset($_GET['page']) && $_GET['page'] == $this->options['id']) {
+        // Only on plugin admin pages
+        if (isset($_GET['page']) && strpos($_GET['page'], $this->options['id']) !== false) {
             add_action('admin_print_styles', array(&$this,
                 'load_assets_css'
             ));
@@ -125,6 +150,34 @@ class WPUBasePlugin
                 'load_assets_js'
             ));
         }
+    }
+
+    /* ----------------------------------------------------------
+      Pages
+    ---------------------------------------------------------- */
+
+    /* Main
+     -------------------------- */
+
+    function page_content__main() {
+        echo '<p>' . __('Content', 'wpubaseplugin') . ' main</p>';
+        echo '<button class="button-primary" type="submit">' . __('Submit', 'wpubaseplugin') . '</button>';
+    }
+
+    function page_action__main() {
+        $this->parent->messages->set_message('success_postaction_main', 'Success Main !');
+    }
+
+    /* Subpage
+     -------------------------- */
+
+    function page_content__subpage() {
+        echo '<p>' . __('Content', 'wpubaseplugin') . ' subpage</p>';
+        echo '<button class="button-primary" type="submit">' . __('Submit', 'wpubaseplugin') . '</button>';
+    }
+
+    function page_action__subpage() {
+        $this->parent->messages->set_message('success_postaction_subpage', 'Success subpage !');
     }
 
     /* ----------------------------------------------------------
