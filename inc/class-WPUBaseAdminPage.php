@@ -3,15 +3,14 @@
 /*
 Class Name: WPU Base Admin page
 Description: A class to handle pages in WordPress
-Version: 1.2.0
+Version: 1.2.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
 
-class WPUBaseAdminPage
-{
+class WPUBaseAdminPage {
 
     /* ----------------------------------------------------------
       Script
@@ -67,6 +66,9 @@ class WPUBaseAdminPage
             if (!isset($page['level'])) {
                 $page['level'] = $this->parent->options['level'];
             }
+            if (!isset($page['has_file'])) {
+                $page['has_file'] = false;
+            }
             $pages[$id] = $page;
         }
         return $pages;
@@ -115,7 +117,7 @@ class WPUBaseAdminPage
         echo $this->get_wrapper_start($this->pages[$page]['name']);
 
         // Default Form
-        echo '<form action="' . admin_url('admin-post.php') . '" method="post"><div>';
+        echo '<form action="' . admin_url('admin-post.php') . '" method="post" ' . ($this->pages[$page]['has_file'] ? ' enctype="multipart/form-data"' : '') . '><div>';
         echo '<input type="hidden" name="action" value="' . $this->parent->options['id'] . '">';
         echo '<input type="hidden" name="page_name" value="' . $page . '" />';
         wp_nonce_field('action-main-form-' . $page, 'action-main-form-' . $this->parent->options['id'] . '-' . $page);
