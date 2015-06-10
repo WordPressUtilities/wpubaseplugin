@@ -3,7 +3,7 @@
 /*
 Class Name: WPU Base Admin page
 Description: A class to handle pages in WordPress
-Version: 1.2.1
+Version: 1.2.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -66,6 +66,9 @@ class WPUBaseAdminPage {
             if (!isset($page['level'])) {
                 $page['level'] = $this->parent->options['level'];
             }
+            if (!isset($page['icon_url'])) {
+                $page['icon_url'] = '';
+            }
             if (!isset($page['has_file'])) {
                 $page['has_file'] = false;
             }
@@ -86,7 +89,7 @@ class WPUBaseAdminPage {
                 add_submenu_page($this->prefix . $page['parent'], $page['name'], $page['menu_name'], $page['level'], $page_id, $page_action);
             }
             else {
-                add_menu_page($page['name'], $page['menu_name'], $page['level'], $page_id, $page_action);
+                add_menu_page($page['name'], $page['menu_name'], $page['level'], $page_id, $page_action, $page['icon_url']);
             }
         }
     }
