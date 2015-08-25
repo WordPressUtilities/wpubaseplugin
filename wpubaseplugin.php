@@ -4,15 +4,20 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: http://github.com/Darklg/WPUtilities
 Description: A framework for a WordPress plugin
-Version: 1.10.3
+Version: 1.11
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
 
-class WPUBasePlugin
-{
+class WPUBasePlugin {
+
+    private $utilities_classes = array(
+        'WPUBaseMessages',
+        'WPUBaseAdminDatas',
+        'WPUBaseAdminPage',
+    );
 
     /* ----------------------------------------------------------
       Construct
@@ -49,6 +54,15 @@ class WPUBasePlugin
       Dependencies
     ---------------------------------------------------------- */
 
+    function check_utilities(){
+        // Check for utilities class
+        foreach ($this->utilities_classes as $className) {
+            if (!class_exists($className)) {
+                require_once dirname(__FILE__) . '/inc/class-' . $className . '.php';
+            }
+        }
+    }
+
     function check_dependencies() {
         include_once (ABSPATH . 'wp-admin/includes/plugin.php');
 
@@ -76,8 +90,8 @@ class WPUBasePlugin
 
         $admin_pages = array(
             'main' => array(
+                'menu_name' => 'Base plugin',
                 'name' => 'Main page',
-                'menu_name' => 'Main page',
                 'function_content' => array(&$this,
                     'page_content__main'
                 ) ,
@@ -86,9 +100,8 @@ class WPUBasePlugin
                 ) ,
             ) ,
             'subpage' => array(
-                'name' => 'Subpage page',
-                'menu_name' => 'Subpage page',
                 'parent' => 'main',
+                'name' => 'Subpage page',
                 'function_content' => array(&$this,
                     'page_content__subpage'
                 ) ,
@@ -98,16 +111,16 @@ class WPUBasePlugin
             )
         );
 
+        // Check utilities
+        $this->check_utilities();
+
         // Set messages
-        require_once dirname(__FILE__) . '/inc/class-WPUBaseMessages.php';
         $this->messages = new WPUBaseMessages();
 
         // Set admin datas
-        require_once dirname(__FILE__) . '/inc/class-WPUBaseAdminDatas.php';
         $this->admin_datas = new WPUBaseAdminDatas();
 
         // Set admin pages
-        require_once dirname(__FILE__) . '/inc/class-WPUBaseAdminPage.php';
         $this->admin_page = new WPUBaseAdminPage($this, $admin_pages);
 
         // Check dependencies
@@ -217,10 +230,10 @@ class WPUBasePlugin
 
         // Create or update table search
         dbDelta("CREATE TABLE " . $this->data_table . " (
-            `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-            `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            `value` varchar(100) DEFAULT NULL,
-            PRIMARY KEY (`id`)
+            id int(11) unsigned NOT NULL AUTO_INCREMENT,
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            value varchar(100) DEFAULT NULL,
+            PRIMARY KEY (id)
         ) DEFAULT CHARSET=utf8;");
     }
 

@@ -3,7 +3,7 @@
 /*
 Class Name: WPU Base Admin page
 Description: A class to handle pages in WordPress
-Version: 1.2.2
+Version: 1.2.3
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -90,6 +90,7 @@ class WPUBaseAdminPage {
             }
             else {
                 add_menu_page($page['name'], $page['menu_name'], $page['level'], $page_id, $page_action, $page['icon_url']);
+                add_submenu_page($page_id, $page['name'], $page['name'], $page['level'], $page_id, $page_action);
             }
         }
     }
@@ -117,7 +118,7 @@ class WPUBaseAdminPage {
     function set_admin_page_main() {
         $page = $this->get_page();
 
-        echo $this->get_wrapper_start($this->pages[$page]['name']);
+        echo $this->get_wrapper_start();
 
         // Default Form
         echo '<form action="' . admin_url('admin-post.php') . '" method="post" ' . ($this->pages[$page]['has_file'] ? ' enctype="multipart/form-data"' : '') . '><div>';
@@ -140,8 +141,8 @@ class WPUBaseAdminPage {
         wp_redirect($this->pages[$page]['url']);
     }
 
-    private function get_wrapper_start($title) {
-        return '<div class="wrap"><h2 class="title">' . $title . '</h2><br />';
+    private function get_wrapper_start() {
+        return '<div class="wrap"><h2 class="title">' . get_admin_page_title() . '</h2><br />';
     }
 
     private function get_wrapper_end() {
