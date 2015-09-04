@@ -4,7 +4,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: http://github.com/Darklg/WPUtilities
 Description: A framework for a WordPress plugin
-Version: 1.11
+Version: 1.11.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -230,10 +230,9 @@ class WPUBasePlugin {
 
         // Create or update table search
         dbDelta("CREATE TABLE " . $this->data_table . " (
-            id int(11) unsigned NOT NULL AUTO_INCREMENT,
+            id int(11) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
             date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            value varchar(100) DEFAULT NULL,
-            PRIMARY KEY (id)
+            value varchar(100) DEFAULT NULL
         ) DEFAULT CHARSET=utf8;");
     }
 
