@@ -4,7 +4,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: http://github.com/Darklg/WPUtilities
 Description: A framework for a WordPress plugin
-Version: 1.11.1
+Version: 1.11.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -241,7 +241,7 @@ class WPUBasePlugin {
 
     function uninstall() {
         global $wpdb;
-        $wpdb->query('DROP TABLE ' . $this->data_table);
+        $wpdb->query('DROP TABLE IF EXISTS ' . $this->data_table);
     }
 
     /* ----------------------------------------------------------
