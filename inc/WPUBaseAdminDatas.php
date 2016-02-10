@@ -1,5 +1,6 @@
 <?php
 
+
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle data display in WordPress admin
@@ -9,6 +10,8 @@ Author URI: http://darklg.me/
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
+
+namespace admindatas_1_1_0;
 
 class WPUBaseAdminDatas
 {

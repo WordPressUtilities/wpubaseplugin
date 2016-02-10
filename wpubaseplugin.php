@@ -4,7 +4,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: http://github.com/Darklg/WPUtilities
 Description: A framework for a WordPress plugin
-Version: 1.11.2
+Version: 1.12
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -14,27 +14,46 @@ License URI: http://opensource.org/licenses/MIT
 class WPUBasePlugin {
 
     private $utilities_classes = array(
-        'WPUBaseMessages',
-        'WPUBaseAdminDatas',
-        'WPUBaseAdminPage',
+        'messages' => array(
+            'namespace' => 'messages_1_0_1',
+            'name' => 'WPUBaseMessages'
+        ),
+        'admindatas' => array(
+            'namespace' => 'admindatas_1_1_0',
+            'name' => 'WPUBaseAdminDatas'
+        ),
+        'adminpage' => array(
+            'namespace' => 'adminpage_1_2_3',
+            'name' => 'WPUBaseAdminPage'
+        )
+    );
+
+    private $plugins = array(
+        'wpuoptions' => array(
+            'path' => 'wpuoptions/wpuoptions.php',
+            'message_url' => '<a target="_blank" href="https://github.com/WordPressUtilities/wpuoptions">WPU Options</a>'
+        )
     );
 
     /* ----------------------------------------------------------
       Construct
     ---------------------------------------------------------- */
 
-    function __construct() {
+    public function __construct() {
+        // Set plugin options
         $this->set_options();
+
+        // Init
         add_action('init', array(&$this,
             'init'
-        ) , 10);
+        ), 10);
     }
 
     /* ----------------------------------------------------------
       Options
     ---------------------------------------------------------- */
 
-    function set_options() {
+    public function set_options() {
         global $wpdb;
         $this->options = array(
             'id' => 'wpubaseplugin',
@@ -54,30 +73,25 @@ class WPUBasePlugin {
       Dependencies
     ---------------------------------------------------------- */
 
-    function check_utilities(){
+    public function load_tools() {
+        $this->tools = array();
         // Check for utilities class
-        foreach ($this->utilities_classes as $className) {
-            if (!class_exists($className)) {
-                require_once dirname(__FILE__) . '/inc/class-' . $className . '.php';
-            }
+        foreach ($this->utilities_classes as $id => $item) {
+            include dirname(__FILE__) . '/inc/' . $item['name'] . '.php';
+            $className = $item['namespace'].'\\'.$item['name'];
+            $this->tools[$id] = new $className;
         }
     }
 
-    function check_dependencies() {
-        include_once (ABSPATH . 'wp-admin/includes/plugin.php');
+    public function check_dependencies() {
+        include_once ABSPATH . 'wp-admin/includes/plugin.php';
 
         // Check for Plugins activation
-        $this->plugins = array(
-            'wpuoptions' => array(
-                'installed' => true,
-                'path' => 'wpuoptions/wpuoptions.php',
-                'message_url' => '<a target="_blank" href="https://github.com/WordPressUtilities/wpuoptions">WPU Options</a>',
-            )
-        );
         foreach ($this->plugins as $id => $plugin) {
+            $this->plugins[$id]['installed'] = true;
             if (!is_plugin_active($plugin['path'])) {
                 $this->plugins[$id]['installed'] = false;
-                $this->messages->set_message($id . '__not_installed', sprintf(__('The plugin %s should be installed.', 'wpubaseplugin') , $plugin['message_url']) , 'error');
+                $this->tools['messages']->set_message($id . '__not_installed', sprintf(__('The plugin %s should be installed.', 'wpubaseplugin'), $plugin['message_url']), 'error');
             }
         }
     }
@@ -86,7 +100,7 @@ class WPUBasePlugin {
       Init
     ---------------------------------------------------------- */
 
-    function init() {
+    public function init() {
 
         $admin_pages = array(
             'main' => array(
@@ -94,34 +108,26 @@ class WPUBasePlugin {
                 'name' => 'Main page',
                 'function_content' => array(&$this,
                     'page_content__main'
-                ) ,
+                ),
                 'function_action' => array(&$this,
                     'page_action__main'
-                ) ,
-            ) ,
+                )
+            ),
             'subpage' => array(
                 'parent' => 'main',
                 'name' => 'Subpage page',
                 'function_content' => array(&$this,
                     'page_content__subpage'
-                ) ,
+                ),
                 'function_action' => array(&$this,
                     'page_action__subpage'
-                ) ,
+                )
             )
         );
 
-        // Check utilities
-        $this->check_utilities();
 
-        // Set messages
-        $this->messages = new WPUBaseMessages();
-
-        // Set admin datas
-        $this->admin_datas = new WPUBaseAdminDatas();
-
-        // Set admin pages
-        $this->admin_page = new WPUBaseAdminPage($this, $admin_pages);
+        // Load tools
+        $this->load_tools();
 
         // Check dependencies
         $this->check_dependencies();
@@ -129,10 +135,13 @@ class WPUBasePlugin {
         // Hooks
         if (is_admin()) {
             $this->set_admin_hooks();
-        }
-        else {
+        } else {
             $this->set_public_hooks();
         }
+
+        // Init admin page
+        $this->tools['adminpage']->init($this, $admin_pages);
+
     }
 
     /* ----------------------------------------------------------
@@ -142,10 +151,10 @@ class WPUBasePlugin {
     private function set_public_hooks() {
         add_action('wp_enqueue_scripts', array(&$this,
             'load_assets_css'
-        ) , 10);
+        ), 10);
         add_action('wp_enqueue_scripts', array(&$this,
             'load_assets_js'
-        ) , 10);
+        ), 10);
     }
 
     private function set_admin_hooks() {
@@ -172,38 +181,38 @@ class WPUBasePlugin {
     /* Main
      -------------------------- */
 
-    function page_content__main() {
+    public function page_content__main() {
         echo '<p>' . __('Content', 'wpubaseplugin') . ' main</p>';
         echo '<button class="button-primary" type="submit">' . __('Submit', 'wpubaseplugin') . '</button>';
     }
 
-    function page_action__main() {
-        $this->parent->messages->set_message('success_postaction_main', 'Success Main !');
+    public function page_action__main() {
+        $this->parent->tools['messages']->set_message('success_postaction_main', 'Success Main !');
     }
 
     /* Subpage
      -------------------------- */
 
-    function page_content__subpage() {
+    public function page_content__subpage() {
         echo '<p>' . __('Content', 'wpubaseplugin') . ' subpage</p>';
         echo '<button class="button-primary" type="submit">' . __('Submit', 'wpubaseplugin') . '</button>';
     }
 
-    function page_action__subpage() {
-        $this->parent->messages->set_message('success_postaction_subpage', 'Success subpage !');
+    public function page_action__subpage() {
+        $this->parent->tools['messages']->set_message('success_postaction_subpage', 'Success subpage !');
     }
 
     /* ----------------------------------------------------------
       Admin
     ---------------------------------------------------------- */
 
-    function add_dashboard_widget() {
+    public function add_dashboard_widget() {
         wp_add_dashboard_widget($this->options['id'] . '_dashboard_widget', $this->options['name'], array(&$this,
             'content_dashboard_widget'
         ));
     }
 
-    function content_dashboard_widget() {
+    public function content_dashboard_widget() {
         echo '<p>Hello World !</p>';
     }
 
@@ -211,11 +220,11 @@ class WPUBasePlugin {
       Assets
     ---------------------------------------------------------- */
 
-    function load_assets_js() {
+    public function load_assets_js() {
         wp_enqueue_script($this->options['id'] . '_scripts', plugins_url('assets/js/script.js', __FILE__));
     }
 
-    function load_assets_css() {
+    public function load_assets_css() {
         wp_register_style($this->options['id'] . '_style', plugins_url('assets/css/style.css', __FILE__));
         wp_enqueue_style($this->options['id'] . '_style');
     }
@@ -224,7 +233,7 @@ class WPUBasePlugin {
       Activation / Desactivation
     ---------------------------------------------------------- */
 
-    function activate() {
+    public function activate() {
         global $wpdb;
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
@@ -236,12 +245,19 @@ class WPUBasePlugin {
         ) DEFAULT CHARSET=utf8;");
     }
 
-    function deactivate() {
+    public function deactivate() {
+
+
     }
 
-    function uninstall() {
+    public function uninstall() {
         global $wpdb;
+        // Drop table
         $wpdb->query('DROP TABLE IF EXISTS ' . $this->data_table);
+
+        // Delete options
+
+        // delete post metas
     }
 
     /* ----------------------------------------------------------

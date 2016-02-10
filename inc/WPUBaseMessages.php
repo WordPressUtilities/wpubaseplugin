@@ -1,14 +1,17 @@
 <?php
 
+
 /*
 Class Name: WPU Base Messages
 Description: A class to handle messages in WordPress
-Version: 1.0.0
+Version: 1.0.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
+
+namespace messages_1_0_1;
 
 class WPUBaseMessages
 {
@@ -21,8 +24,9 @@ class WPUBaseMessages
 
     function __construct() {
 
+        $current_user = wp_get_current_user();
+
         // Set Messages
-        global $current_user;
         $this->transient_prefix = sanitize_title(basename(__FILE__)) . $current_user->ID;
         $this->transient_msg = $this->transient_prefix . '__messages';
 

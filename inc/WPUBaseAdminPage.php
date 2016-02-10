@@ -10,13 +10,17 @@ License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
 
+namespace adminpage_1_2_3;
+
 class WPUBaseAdminPage {
+
+    function __construct(){}
 
     /* ----------------------------------------------------------
       Script
     ---------------------------------------------------------- */
 
-    function __construct($parent, $pages) {
+    function init($parent, $pages) {
         $this->parent = $parent;
         $this->pages = $pages;
         $this->prefix = $this->parent->options['id'] . '-';
