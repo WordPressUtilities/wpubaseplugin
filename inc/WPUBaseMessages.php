@@ -1,20 +1,17 @@
 <?php
-
+namespace messages_1_1;
 
 /*
 Class Name: WPU Base Messages
 Description: A class to handle messages in WordPress
-Version: 1.0.1
+Version: 1.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
 
-namespace messages_1_0_1;
-
-class WPUBaseMessages
-{
+class WPUBaseMessages {
 
     private $notices_categories = array(
         'updated',
@@ -22,12 +19,15 @@ class WPUBaseMessages
         'error'
     );
 
-    function __construct() {
+    public function __construct($prefix = '') {
 
         $current_user = wp_get_current_user();
+        if (is_object($current_user)) {
+            $prefix .= $current_user->ID;
+        }
 
         // Set Messages
-        $this->transient_prefix = sanitize_title(basename(__FILE__)) . $current_user->ID;
+        $this->transient_prefix = sanitize_title(basename(__FILE__)) . $prefix;
         $this->transient_msg = $this->transient_prefix . '__messages';
 
         // Add hook
@@ -37,8 +37,8 @@ class WPUBaseMessages
     }
 
     /* Set notices messages */
-    function set_message($id, $message, $group = '') {
-        $messages = (array)get_transient($this->transient_msg);
+    public function set_message($id, $message, $group = '') {
+        $messages = (array) get_transient($this->transient_msg);
         if (!in_array($group, $this->notices_categories)) {
             $group = $this->notices_categories[0];
         }
@@ -47,8 +47,8 @@ class WPUBaseMessages
     }
 
     /* Display notices */
-    function admin_notices() {
-        $messages = (array)get_transient($this->transient_msg);
+    public function admin_notices() {
+        $messages = (array) get_transient($this->transient_msg);
         if (!empty($messages)) {
             foreach ($messages as $group_id => $group) {
                 if (is_array($group)) {
@@ -63,4 +63,3 @@ class WPUBaseMessages
         delete_transient($this->transient_msg);
     }
 }
-
