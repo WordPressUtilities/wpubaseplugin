@@ -1,10 +1,10 @@
 <?php
-namespace messages_1_1;
+namespace messages_1_2;
 
 /*
 Class Name: WPU Base Messages
 Description: A class to handle messages in WordPress
-Version: 1.1
+Version: 1.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -48,12 +48,13 @@ class WPUBaseMessages {
 
     /* Display notices */
     public function admin_notices() {
+        settings_errors();
         $messages = (array) get_transient($this->transient_msg);
         if (!empty($messages)) {
             foreach ($messages as $group_id => $group) {
                 if (is_array($group)) {
                     foreach ($group as $message) {
-                        echo '<div class="' . $group_id . '"><p>' . $message . '</p></div>';
+                        echo '<div class="' . $group_id . ' notice is-dismissible"><p>' . $message . '</p></div>';
                     }
                 }
             }
