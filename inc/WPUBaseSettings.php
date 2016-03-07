@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_1_1;
+namespace wpubasesettings_0_2;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.1.1
+Version: 0.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -58,20 +58,20 @@ class WPUBaseSettings {
         }
 
         foreach ($this->settings as $id => $input) {
-            $label = isset($input['label']) ? $input['label'] : '';
-            $label_check = isset($input['label_check']) ? $input['label_check'] : '';
-            $help = isset($input['help']) ? $input['help'] : '';
-            $type = isset($input['type']) ? $input['type'] : 'text';
-            $section = isset($input['section']) ? $input['section'] : $default_section;
-            add_settings_field($id, $label, array(&$this,
+            $this->settings[$id]['label'] = isset($input['label']) ? $input['label'] : '';
+            $this->settings[$id]['label_check'] = isset($input['label_check']) ? $input['label_check'] : '';
+            $this->settings[$id]['help'] = isset($input['help']) ? $input['help'] : '';
+            $this->settings[$id]['type'] = isset($input['type']) ? $input['type'] : 'text';
+            $this->settings[$id]['section'] = isset($input['section']) ? $input['section'] : $default_section;
+            add_settings_field($id, $this->settings[$id]['label'], array(&$this,
                 'render__field'
-            ), $this->settings_details['plugin_id'], $section, array(
+            ), $this->settings_details['plugin_id'], $this->settings[$id]['section'], array(
                 'name' => $this->settings_details['option_id'] . '[' . $id . ']',
                 'id' => $id,
                 'label_for' => $id,
-                'type' => $type,
-                'help' => $help,
-                'label_check' => $label_check
+                'type' => $this->settings[$id]['type'],
+                'help' => $this->settings[$id]['help'],
+                'label_check' => $this->settings[$id]['label_check']
             ));
         }
     }
@@ -82,8 +82,30 @@ class WPUBaseSettings {
             if (!isset($input[$id])) {
                 $input[$id] = '0';
             }
-            $options[$id] = esc_html(trim($input[$id]));
+            $option_id = $input[$id];
+            switch ($setting['type']) {
+            case 'email':
+                if (filter_var($input[$id], FILTER_VALIDATE_EMAIL) === false) {
+                    $option_id = '';
+                }
+                break;
+            case 'url':
+                if (filter_var($input[$id], FILTER_VALIDATE_URL) === false) {
+                    $option_id = '';
+                }
+                break;
+            case 'number':
+                if (!is_numeric($input[$id])) {
+                    $option_id = 0;
+                }
+                break;
+            default:
+                $option_id = esc_html(trim($input[$id]));
+            }
+
+            $options[$id] = $option_id;
         }
+
         return $options;
     }
 
@@ -101,7 +123,10 @@ class WPUBaseSettings {
         case 'textarea':
             echo '<textarea ' . $name . ' ' . $id . ' cols="20" rows="5">' . esc_attr($options[$args['id']]) . '</textarea>';
             break;
-        default:
+        case 'url':
+        case 'number':
+        case 'email':
+        case 'text':
             echo '<input ' . $name . ' ' . $id . ' type="' . $args['type'] . '" value="' . esc_attr($options[$args['id']]) . '" />';
         }
 
