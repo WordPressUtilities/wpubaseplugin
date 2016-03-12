@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_2;
+namespace wpubasesettings_0_3;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.2
+Version: 0.3
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -20,6 +20,13 @@ class WPUBaseSettings {
         add_action('admin_init', array(&$this,
             'add_settings'
         ));
+        add_filter('option_page_capability_' . $this->settings_details['option_id'], array(&$this,
+            'set_min_capability'
+        ));
+    }
+
+    public function set_min_capability() {
+        return $this->settings_details['user_cap'];
     }
 
     public function set_datas($settings_details, $settings) {
@@ -33,6 +40,14 @@ class WPUBaseSettings {
                     )
                 )
             );
+        }
+        if (!isset($settings_details['user_cap'])) {
+            $settings_details['user_cap'] = 'manage_options';
+        }
+        foreach ($settings_details['sections'] as $id => $section) {
+            if (!isset($section['user_cap'])) {
+                $settings_details['sections'][$id]['user_cap'] = 'manage_options';
+            }
         }
         $this->settings_details = $settings_details;
         if (!is_array($settings)) {
@@ -54,7 +69,11 @@ class WPUBaseSettings {
         ));
         $default_section = key($this->settings_details['sections']);
         foreach ($this->settings_details['sections'] as $id => $section) {
-            add_settings_section($id, $section['name'], '', $this->settings_details['plugin_id']);
+            $section_name = $section['name'];
+            if (!current_user_can($section['user_cap'])) {
+                $section_name = '';
+            }
+            add_settings_section($id, $section_name, '', $this->settings_details['plugin_id']);
         }
 
         foreach ($this->settings as $id => $input) {
@@ -63,14 +82,23 @@ class WPUBaseSettings {
             $this->settings[$id]['help'] = isset($input['help']) ? $input['help'] : '';
             $this->settings[$id]['type'] = isset($input['type']) ? $input['type'] : 'text';
             $this->settings[$id]['section'] = isset($input['section']) ? $input['section'] : $default_section;
-            add_settings_field($id, $this->settings[$id]['label'], array(&$this,
+            $section = $this->settings[$id]['section'];
+            $field_label = $this->settings[$id]['label'];
+            $field_type = $this->settings[$id]['type'];
+            if (!current_user_can($this->settings_details['sections'][$section]['user_cap'])) {
+                $field_label = '';
+                $field_type = 'hidden';
+            }
+
+            add_settings_field($id, $field_label, array(&$this,
                 'render__field'
             ), $this->settings_details['plugin_id'], $this->settings[$id]['section'], array(
                 'name' => $this->settings_details['option_id'] . '[' . $id . ']',
                 'id' => $id,
                 'label_for' => $id,
-                'type' => $this->settings[$id]['type'],
+                'type' => $field_type,
                 'help' => $this->settings[$id]['help'],
+                'label' => $field_label,
                 'label_check' => $this->settings[$id]['label_check']
             ));
         }
@@ -121,17 +149,20 @@ class WPUBaseSettings {
             echo '<label><input type="checkbox" ' . $name . ' ' . $id . ' ' . checked($checked_val, '1', 0) . ' value="1" /> ' . $args['label_check'] . '</label>';
             break;
         case 'textarea':
-            echo '<textarea ' . $name . ' ' . $id . ' cols="20" rows="5">' . esc_attr($options[$args['id']]) . '</textarea>';
+            echo '<textarea ' . $name . ' ' . $id . ' cols="50" rows="5">' . esc_attr($options[$args['id']]) . '</textarea>';
             break;
         case 'url':
         case 'number':
         case 'email':
+        case 'hidden':
         case 'text':
             echo '<input ' . $name . ' ' . $id . ' type="' . $args['type'] . '" value="' . esc_attr($options[$args['id']]) . '" />';
         }
-
-        if (!empty($args['help'])) {
+        if (!empty($args['help']) && $args['type'] != 'hidden') {
             echo '<div><small>' . $args['help'] . '</small></div>';
+        }
+        if (empty($args['label']) && $args['type'] == 'hidden') {
+            echo '<script>jQuery(document).ready(function(){jQuery("#' . $args['id'] . '").closest(".form-table").addClass("screen-reader-text").css("width","10px")});</script>';
         }
     }
 }
