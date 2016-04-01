@@ -4,7 +4,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: http://github.com/Darklg/WPUtilities
 Description: A framework for a WordPress plugin
-Version: 1.19
+Version: 1.20
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -19,7 +19,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseMessages'
         ),
         'admindatas' => array(
-            'namespace' => 'admindatas_1_1_0',
+            'namespace' => 'admindatas_2_0',
             'name' => 'WPUBaseAdminDatas'
         ),
         'adminpage' => array(
@@ -82,7 +82,7 @@ class WPUBasePlugin {
         // Check for utilities class
         foreach ($this->utilities_classes as $id => $item) {
             include dirname(__FILE__) . '/inc/' . $item['name'] . '.php';
-            $className = $item['namespace'].'\\'.$item['name'];
+            $className = $item['namespace'] . '\\' . $item['name'];
             $this->tools[$id] = new $className;
         }
     }
@@ -128,7 +128,6 @@ class WPUBasePlugin {
                 )
             )
         );
-
 
         // Load tools
         $this->load_tools();
