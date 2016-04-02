@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_0;
+namespace admindatas_2_0_1;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.0
+Version: 2.0.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -19,7 +19,7 @@ class WPUBaseAdminDatas {
     public function __construct() {
     }
 
-    public function start($settings = array()) {
+    public function init($settings = array()) {
         $this->apply_settings($settings);
         $this->check_database();
     }
@@ -130,6 +130,7 @@ class WPUBaseAdminDatas {
         return array(
             'pagenum' => $pagenum,
             'max_pages' => $max_pages,
+            'max_elements' => $elements_count,
             'limit' => $limit
         );
     }
@@ -180,7 +181,7 @@ class WPUBaseAdminDatas {
         }
 
         // Default pagenum & max pages
-        if (!isset($args['pagenum']) || !isset($args['max_pages']) || !isset($args['limit'])) {
+        if (!isset($args['pagenum']) || !isset($args['max_pages']) || !isset($args['limit']) || !isset($args['max_elements'])) {
             $pager = $this->get_pager_limit($args['perpage']);
             if (!isset($args['pagenum'])) {
                 $args['pagenum'] = $pager['pagenum'];
@@ -190,6 +191,9 @@ class WPUBaseAdminDatas {
             }
             if (!isset($args['limit'])) {
                 $args['limit'] = $pager['limit'];
+            }
+            if (!isset($args['max_elements'])) {
+                $args['max_elements'] = $pager['max_elements'];
             }
         }
 
@@ -208,7 +212,12 @@ class WPUBaseAdminDatas {
         ));
 
         if ($page_links) {
-            $pagination = '<div class="tablenav"><div class="tablenav-pages alignleft actions bulkactions" style="margin: 1em 0">' . $page_links . '</div><br class="clear" /></div>';
+            $start_element = ($args['pagenum'] - 1) * $args['perpage'] + 1;
+            $end_element = min($args['pagenum'] * $args['perpage'], $args['max_elements']);
+            $pagination = '<div style="margin: 1em 0" class="tablenav">';
+            $pagination .= '<div class="alignleft">' . sprintf(__('Items %s - %s'), $start_element, $end_element) . '</div>';
+            $pagination .= '<div class="tablenav-pages alignright actions bulkactions">' . $page_links . '</div>';
+            $pagination .= '<br class="clear" /></div>';
         }
 
         $content = '<table class="wp-list-table widefat fixed striped">';
@@ -236,7 +245,7 @@ class WPUBaseAdminDatas {
 /*
  * Init class :
  * $WPUBaseAdminDatas = new WPUBaseAdminDatas();
- * $WPUBaseAdminDatas->start(array(
+ * $WPUBaseAdminDatas->init(array(
  *     'plugin_id' => 'my_plugin',
  *     'table_name' => 'my_table',
  *     'table_fields' => array(
