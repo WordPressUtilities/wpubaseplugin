@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_0_1;
+namespace admindatas_2_1;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.0.1
+Version: 2.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -29,13 +29,11 @@ class WPUBaseAdminDatas {
             'plugin_id' => 'my_plugin',
             'table_name' => 'my_table',
             'table_fields' => array(
-                'creation' => array(
-                    'name' => 'date',
-                    'sql' => 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
+                'value_1' => array(
+                    'public_name' => 'Value 1'
                 ),
-                'value' => array(
-                    'name' => 'Value',
-                    'sql' => 'varchar(100) DEFAULT NULL'
+                'value_2' => array(
+                    'public_name' => 'Value 2'
                 )
             )
         );
@@ -52,6 +50,20 @@ class WPUBaseAdminDatas {
         if (isset($settings['table_fields']['id'])) {
             unset($settings['table_fields']['id']);
         }
+        // Remove creation column
+        if (isset($settings['table_fields']['creation'])) {
+            unset($settings['table_fields']['creation']);
+        }
+
+        // Build query
+        foreach ($settings['table_fields'] as $id => $field) {
+            if (!isset($field['public_name'])) {
+                $settings['table_fields'][$id]['public_name'] = $id;
+            }
+            if (!isset($field['type'])) {
+                $settings['table_fields'][$id]['type'] = isset($field['sql']) ? 'sql' : 'varchar';
+            }
+        }
 
         $this->settings = $settings;
     }
@@ -66,12 +78,10 @@ class WPUBaseAdminDatas {
 
         // Assemble fields
         $fields_query = array(
-            'id mediumint(8) unsigned NOT NULL auto_increment'
+            'id mediumint(8) unsigned NOT NULL auto_increment',
+            'creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP',
+            'PRIMARY KEY (id)'
         );
-        foreach ($this->settings['table_fields'] as $id => $field) {
-            $fields_query[] = $id . ' ' . $field['sql'];
-        }
-        $fields_query[] = 'PRIMARY KEY  (id)';
 
         // Build query
         $sql_query = "CREATE TABLE " . $tablename;
@@ -80,12 +90,29 @@ class WPUBaseAdminDatas {
 
         // If query has changed since last time
         $sql_option_name = $this->settings['plugin_id'] . '_' . $this->settings['table_name'] . '_version';
-        $sql_md5 = md5($sql_query);
+        $sql_md5 = md5(serialize($this->settings['table_fields']));
         $sql_option_value = get_option($sql_option_name);
         if ($sql_md5 != $sql_option_value) {
             // Update or create table
             require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-            $delt = dbDelta($sql_query);
+
+            // Create table
+            maybe_create_table($tablename, $sql_query);
+
+            foreach ($this->settings['table_fields'] as $column_name => $col) {
+                switch ($col['type']) {
+                case 'varchar':
+                    $col_sql = 'varchar(100) DEFAULT NULL';
+                    break;
+                case 'timestamp':
+                    $col_sql = 'TIMESTAMP';
+                    break;
+                default:
+                    $col_sql = $col['sql'];
+                }
+
+                maybe_add_column($tablename, $column_name, 'ALTER TABLE ' . $tablename . ' ADD ' . $column_name . ' ' . $col_sql);
+            }
 
             // Update option hash
             update_option($sql_option_name, $sql_md5);
@@ -174,9 +201,9 @@ class WPUBaseAdminDatas {
         // Default columns
         if (!isset($args['columns'])) {
             // Add ID
-            $args['columns'] = array('id' => 'ID');
+            $args['columns'] = array('id' => 'ID', 'creation' => 'Creation date');
             foreach ($this->settings['table_fields'] as $id => $field) {
-                $args['columns'][$id] = $field['name'];
+                $args['columns'][$id] = $field['public_name'];
             }
         }
 
@@ -249,12 +276,8 @@ class WPUBaseAdminDatas {
  *     'plugin_id' => 'my_plugin',
  *     'table_name' => 'my_table',
  *     'table_fields' => array(
- *         'creation' => array(
- *             'name' => 'date',
- *             'sql' => 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
- *         ),
  *         'value' => array(
- *             'name' => 'Value',
+ *             'public_name' => 'Value',
  *             'sql' => 'varchar(100) DEFAULT NULL'
  *         )
  *     )
