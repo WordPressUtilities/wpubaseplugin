@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_1;
+namespace admindatas_2_1_1;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.1
+Version: 2.1.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -256,8 +256,9 @@ class WPUBaseAdminDatas {
         $content .= '<tbody id="the-list">';
         foreach ($values as $id => $vals) {
             $content .= '<tr>';
-            foreach ($vals as $val) {
-                $content .= '<td>' . (empty($val) ? '&nbsp;' : $val) . '</td>';
+            foreach ($vals as $cell_id => $val) {
+                $val = (empty($val) ? '&nbsp;' : $val);
+                $content .= '<td>' . apply_filters('wpubaseadmindatas_cellcontent', $val, $cell_id, $this->settings) . '</td>';
             }
             $content .= '</tr>';
         }
