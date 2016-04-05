@@ -3,24 +3,24 @@
 /*
 Class Name: WPU Base Admin page
 Description: A class to handle pages in WordPress
-Version: 1.2.3
+Version: 1.2.4
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
 
-namespace adminpage_1_2_3;
+namespace adminpage_1_2_4;
 
 class WPUBaseAdminPage {
 
-    function __construct(){}
+    public function __construct() {}
 
     /* ----------------------------------------------------------
       Script
     ---------------------------------------------------------- */
 
-    function init($parent, $pages) {
+    public function init($parent, $pages) {
         $this->parent = $parent;
         $this->pages = $pages;
         $this->prefix = $this->parent->options['id'] . '-';
@@ -30,7 +30,7 @@ class WPUBaseAdminPage {
         ));
         add_action('admin_bar_menu', array(&$this,
             'set_adminbar_menu'
-        ) , 100);
+        ), 100);
 
         // Only on a plugin admin page
         $page = $this->get_page();
@@ -41,7 +41,7 @@ class WPUBaseAdminPage {
         }
     }
 
-    function set_pages($pages) {
+    public function set_pages($pages) {
         foreach ($pages as $id => $page) {
             $page['id'] = $this->prefix . $id;
             $page['url'] = admin_url('admin.php?page=' . $page['id']);
@@ -76,12 +76,15 @@ class WPUBaseAdminPage {
             if (!isset($page['has_file'])) {
                 $page['has_file'] = false;
             }
+            if (!isset($page['has_form'])) {
+                $page['has_form'] = true;
+            }
             $pages[$id] = $page;
         }
         return $pages;
     }
 
-    function set_admin_menu() {
+    public function set_admin_menu() {
         $parent = false;
         foreach ($this->pages as $id => $page) {
 
@@ -91,15 +94,14 @@ class WPUBaseAdminPage {
             );
             if (array_key_exists($page['parent'], $this->pages)) {
                 add_submenu_page($this->prefix . $page['parent'], $page['name'], $page['menu_name'], $page['level'], $page_id, $page_action);
-            }
-            else {
+            } else {
                 add_menu_page($page['name'], $page['menu_name'], $page['level'], $page_id, $page_action, $page['icon_url']);
                 add_submenu_page($page_id, $page['name'], $page['name'], $page['level'], $page_id, $page_action);
             }
         }
     }
 
-    function set_adminbar_menu($admin_bar) {
+    public function set_adminbar_menu($admin_bar) {
         foreach ($this->pages as $id => $page) {
             if (!$page['display_banner_menu']) {
                 continue;
@@ -109,8 +111,8 @@ class WPUBaseAdminPage {
                 'title' => $page['menu_name'],
                 'href' => $page['url'],
                 'meta' => array(
-                    'title' => $page['menu_name'],
-                ) ,
+                    'title' => $page['menu_name']
+                )
             );
             if (isset($page['parent']) && array_key_exists($page['parent'], $this->pages)) {
                 $menu_details['parent'] = $this->prefix . $page['parent'];
@@ -119,23 +121,27 @@ class WPUBaseAdminPage {
         }
     }
 
-    function set_admin_page_main() {
+    public function set_admin_page_main() {
         $page = $this->get_page();
 
         echo $this->get_wrapper_start();
 
         // Default Form
-        echo '<form action="' . admin_url('admin-post.php') . '" method="post" ' . ($this->pages[$page]['has_file'] ? ' enctype="multipart/form-data"' : '') . '><div>';
-        echo '<input type="hidden" name="action" value="' . $this->parent->options['id'] . '">';
-        echo '<input type="hidden" name="page_name" value="' . $page . '" />';
-        wp_nonce_field('action-main-form-' . $page, 'action-main-form-' . $this->parent->options['id'] . '-' . $page);
+        if ($this->pages[$page]['has_form']):
+            echo '<form action="' . admin_url('admin-post.php') . '" method="post" ' . ($this->pages[$page]['has_file'] ? ' enctype="multipart/form-data"' : '') . '><div>';
+            echo '<input type="hidden" name="action" value="' . $this->parent->options['id'] . '">';
+            echo '<input type="hidden" name="page_name" value="' . $page . '" />';
+            wp_nonce_field('action-main-form-' . $page, 'action-main-form-' . $this->parent->options['id'] . '-' . $page);
+        endif;
         call_user_func($this->pages[$page]['function_content']);
-        echo '</div></form>';
+        if ($this->pages[$page]['has_form']):
+            echo '</div></form>';
+        endif;
 
         echo $this->get_wrapper_end();
     }
 
-    function set_admin_page_main_postAction() {
+    public function set_admin_page_main_postAction() {
         $page = $this->get_page();
         $action_id = 'action-main-form-' . $this->parent->options['id'] . '-' . $page;
         if (empty($_POST) || !isset($_POST[$action_id]) || !wp_verify_nonce($_POST[$action_id], 'action-main-form-' . $page)) {
@@ -164,4 +170,3 @@ class WPUBaseAdminPage {
         return $page;
     }
 }
-

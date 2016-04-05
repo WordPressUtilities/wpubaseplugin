@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_1_1;
+namespace admindatas_2_2;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.1.1
+Version: 2.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -207,9 +207,28 @@ class WPUBaseAdminDatas {
             }
         }
 
+        // Filter results
+        $where_glue = (isset($_GET['where_glue']) && in_array($_GET['where_glue'], array('AND', 'OR'))) ? $_GET['where_glue'] : 'AND';
+        $where = array();
+        $where_text = isset($_GET['where_text']) ? trim($_GET['where_text']) : '';
+        if (!empty($where_text)) {
+            $where_glue = 'OR';
+            foreach ($args['columns'] as $id => $name) {
+                if ($id != 'id' && $id != 'creation') {
+                    $where[] = "$id LIKE '%" . esc_sql($where_text) . "%'";
+                }
+            }
+        }
+
+        // Build filter query
+        $sql_where = '';
+        if (!empty($where)) {
+            $sql_where = " WHERE " . implode(" " . $where_glue . " ", $where) . " ";
+        }
+
         // Default pagenum & max pages
         if (!isset($args['pagenum']) || !isset($args['max_pages']) || !isset($args['limit']) || !isset($args['max_elements'])) {
-            $pager = $this->get_pager_limit($args['perpage']);
+            $pager = $this->get_pager_limit($args['perpage'], $sql_where);
             if (!isset($args['pagenum'])) {
                 $args['pagenum'] = $pager['pagenum'];
             }
@@ -226,11 +245,23 @@ class WPUBaseAdminDatas {
 
         // Default list
         if (empty($values) || !is_array($values)) {
-            $values = $wpdb->get_results("SELECT " . implode(", ", array_keys($args['columns'])) . " FROM " . $tablename . " " . $args['limit']);
+            $values = $wpdb->get_results("SELECT " . implode(", ", array_keys($args['columns'])) . " FROM " . $tablename . " " . $sql_where . " " . $args['limit']);
         }
 
+        $screen = get_current_screen();
+        $page_id = '';
+        if (property_exists($screen, 'parent_base')) {
+            $page_id = $screen->parent_base;
+        }
+
+        $url_items = array(
+            'pagenum' => '%#%',
+            'where_glue' => $where_glue,
+            'where_text' => $where_text,
+            'page' => $page_id
+        );
         $page_links = paginate_links(array(
-            'base' => add_query_arg('pagenum', '%#%'),
+            'base' => add_query_arg($url_items),
             'format' => '',
             'prev_text' => '&laquo;',
             'next_text' => '&raquo;',
@@ -241,11 +272,19 @@ class WPUBaseAdminDatas {
         if ($page_links) {
             $start_element = ($args['pagenum'] - 1) * $args['perpage'] + 1;
             $end_element = min($args['pagenum'] * $args['perpage'], $args['max_elements']);
-            $pagination = '<div style="margin: 1em 0" class="tablenav">';
+            $pagination = '<div style="margin:1em 0" class="tablenav">';
             $pagination .= '<div class="alignleft">' . sprintf(__('Items %s - %s'), $start_element, $end_element) . '</div>';
             $pagination .= '<div class="tablenav-pages alignright actions bulkactions">' . $page_links . '</div>';
             $pagination .= '<br class="clear" /></div>';
         }
+
+        $search_form = '<form style="margin:1em 0" action="' . admin_url("admin.php") . '" method="get"><p class="search-box">';
+        $search_form .= '<input type="hidden" name="page" value="' . esc_attr($page_id) . '" />';
+        $search_form .= '<input type="search" name="where_text" value="' . esc_attr($where_text) . '" />';
+        ob_start();
+        submit_button(__('Search'), '', 'submit', false);
+        $search_form .= ob_get_clean();
+        $search_form .= '</p><br class="clear" /></form>';
 
         $content = '<table class="wp-list-table widefat fixed striped">';
         if (isset($args['columns']) && is_array($args['columns']) && !empty($args['columns'])) {
@@ -264,6 +303,7 @@ class WPUBaseAdminDatas {
         }
         $content .= '</tbody>';
         $content .= '</table>';
+        $content .= $search_form;
         $content .= $pagination;
 
         return $content;
