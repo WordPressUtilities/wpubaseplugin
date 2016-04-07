@@ -1,10 +1,11 @@
 <?php
 namespace wpubasecron_0_1;
 
+
 /*
 Class Name: WPU Base Cron
 Description: A class to handle crons
-Version: 0.1
+Version: 0.1.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -23,6 +24,7 @@ class WPUBaseCron {
         /* Internal values */
         $this->cronoption = $this->cronhook . '_croninterval';
         $this->cronschedule = $this->cronhook . '_schedule';
+
         /* Hooks */
         add_filter('cron_schedules', array(&$this,
             'add_schedule'
@@ -61,6 +63,7 @@ class WPUBaseCron {
     /* Destroy cron */
     public function uninstall() {
         wp_clear_scheduled_hook($this->cronhook);
+        delete_option($this->cronoption);
         flush_rewrite_rules();
     }
 }
@@ -73,8 +76,8 @@ class WPUBaseCron {
  ## plugins_loaded ##
  $WPUBaseCron->init(array(
      'pluginname' => 'Base Plugin',
-     'cronhook' => 'wpubaseplugin',
-     'croninterval' => 75
+     'cronhook' => 'wpubaseplugin__cron_hook',
+     'croninterval' => 900
  ));
 
  ## init ## (if ->init() was not triggered from plugins_loaded)
