@@ -312,8 +312,8 @@ class WPUBaseAdminDatas {
 
 /*
  * Init class :
- * $WPUBaseAdminDatas = new WPUBaseAdminDatas();
- * $WPUBaseAdminDatas->init(array(
+ * $this->baseadmindatas = new \wpubaseplugin\WPUBaseAdminDatas();
+ * $this->baseadmindatas->init(array(
  *     'plugin_id' => 'my_plugin',
  *     'table_name' => 'my_table',
  *     'table_fields' => array(
@@ -327,11 +327,11 @@ class WPUBaseAdminDatas {
  *
  * Display table :
  * - Default :
- * echo $WPUBaseAdminDatas->get_admin_table();
+ * echo $this->baseadmindatas->get_admin_table();
  *
  * - Advanced :
  * $array_values = false; ($array_values are automatically retrieved if not a valid array)
- * echo $WPUBaseAdminDatas->get_admin_table(
+ * echo $this->baseadmindatas->get_admin_table(
  *     $array_values,
  *     array(
  *         'perpage' => 10,

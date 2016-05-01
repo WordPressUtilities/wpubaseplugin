@@ -1,10 +1,10 @@
 <?php
-namespace messages_1_2_1;
+namespace messages_1_3;
 
 /*
 Class Name: WPU Base Messages
 Description: A class to handle messages in WordPress
-Version: 1.2.1
+Version: 1.3
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -20,6 +20,9 @@ class WPUBaseMessages {
     );
 
     public function __construct($prefix = '') {
+        if (defined('DOING_CRON')) {
+            return;
+        }
 
         $current_user = wp_get_current_user();
         if (is_object($current_user)) {
@@ -38,6 +41,9 @@ class WPUBaseMessages {
 
     /* Set notices messages */
     public function set_message($id, $message, $group = '') {
+        if (defined('DOING_CRON')) {
+            return;
+        }
         $messages = (array) get_transient($this->transient_msg);
         if (!in_array($group, $this->notices_categories)) {
             $group = $this->notices_categories[0];
@@ -70,7 +76,7 @@ class WPUBaseMessages {
 // Messages
 if (is_admin()) {
     include 'inc/WPUBaseMessages.php';
-    $this->messages = new \wpuimporttwitter\WPUBaseMessages($this->options['plugin_id']);
+    $this->messages = new \wpubaseplugin\WPUBaseMessages($this->options['plugin_id']);
 }
 
 ## Load notices hook

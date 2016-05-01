@@ -1,7 +1,6 @@
 <?php
 namespace wpubasecron_0_1;
 
-
 /*
 Class Name: WPU Base Cron
 Description: A class to handle crons
@@ -71,19 +70,19 @@ class WPUBaseCron {
 
 /*
  include 'inc/WPUBaseCron.php';
- $WPUBaseCron = new WPUBaseCron();
+ $this->basecron = new \wpubaseplugin\WPUBaseCron();
 
  ## plugins_loaded ##
- $WPUBaseCron->init(array(
+ $this->basecron->init(array(
      'pluginname' => 'Base Plugin',
      'cronhook' => 'wpubaseplugin__cron_hook',
      'croninterval' => 900
  ));
 
  ## init ## (if ->init() was not triggered from plugins_loaded)
- $WPUBaseCron->check_cron();
+ $this->basecron->check_cron();
 
  ## uninstall hook ##
- $WPUBaseCron->uninstall();
+ $this->basecron->uninstall();
  *
  */
