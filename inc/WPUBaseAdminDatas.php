@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_2;
+namespace admindatas_2_3;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.2
+Version: 2.3
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -198,13 +198,18 @@ class WPUBaseAdminDatas {
             $args['perpage'] = $this->default_perpage;
         }
 
+        // Add ID
+        $default_columns = array(
+            'id' => 'ID',
+            'creation' => 'Creation date'
+        );
+        foreach ($this->settings['table_fields'] as $id => $field) {
+            $default_columns[$id] = $field['public_name'];
+        }
+
         // Default columns
         if (!isset($args['columns'])) {
-            // Add ID
-            $args['columns'] = array('id' => 'ID', 'creation' => 'Creation date');
-            foreach ($this->settings['table_fields'] as $id => $field) {
-                $args['columns'][$id] = $field['public_name'];
-            }
+            $args['columns'] = $default_columns;
         }
 
         // Filter results
@@ -220,11 +225,23 @@ class WPUBaseAdminDatas {
             }
         }
 
+        // Order results
+        if (!isset($args['order'])) {
+            $args['order'] = isset($_GET['order']) && in_array($_GET['order'], array('asc', 'desc')) ? $_GET['order'] : 'asc';
+        }
+
+        if (!isset($args['orderby'])) {
+            $args['orderby'] = isset($_GET['orderby']) && array_key_exists($_GET['orderby'], $default_columns) ? $_GET['orderby'] : 'id';
+        }
+
         // Build filter query
         $sql_where = '';
         if (!empty($where)) {
-            $sql_where = " WHERE " . implode(" " . $where_glue . " ", $where) . " ";
+            $sql_where .= " WHERE " . implode(" " . $where_glue . " ", $where) . " ";
         }
+
+        // Build order
+        $sql_order = ' ORDER BY ' . $args['orderby'] . ' ' . strtoupper($args['order']) . ' ';
 
         // Default pagenum & max pages
         if (!isset($args['pagenum']) || !isset($args['max_pages']) || !isset($args['limit']) || !isset($args['max_elements'])) {
@@ -245,7 +262,7 @@ class WPUBaseAdminDatas {
 
         // Default list
         if (empty($values) || !is_array($values)) {
-            $values = $wpdb->get_results("SELECT " . implode(", ", array_keys($args['columns'])) . " FROM " . $tablename . " " . $sql_where . " " . $args['limit']);
+            $values = $wpdb->get_results("SELECT " . implode(", ", array_keys($args['columns'])) . " FROM " . $tablename . " " . $sql_where . " " . $sql_order . " " . $args['limit']);
         }
 
         $screen = get_current_screen();
@@ -255,6 +272,8 @@ class WPUBaseAdminDatas {
         }
 
         $url_items = array(
+            'order' => $args['order'],
+            'orderby' => $args['orderby'],
             'pagenum' => '%#%',
             'where_glue' => $where_glue,
             'where_text' => $where_text,
@@ -288,7 +307,16 @@ class WPUBaseAdminDatas {
 
         $content = '<table class="wp-list-table widefat fixed striped">';
         if (isset($args['columns']) && is_array($args['columns']) && !empty($args['columns'])) {
-            $labels = '<tr><th>' . implode('</th><th>', $args['columns']) . '</th></tr>';
+            $labels = '<tr>';
+            foreach ($args['columns'] as $id_col => $name_col) {
+                $url_items_tmp = $url_items;
+                $url_items_tmp['pagenum'] = 1;
+                $url_items_tmp['orderby'] = $id_col;
+                $url_items_tmp['order'] = $args['order'] == 'asc' ? 'desc' : 'asc';
+                $sort_link = add_query_arg($url_items_tmp);
+                $labels .= '<th class="sortable ' . $args['order'] . ' ' . ($id_col == $args['orderby'] ? 'sorted' : '') . '"><a href="' . $sort_link . '"><span>' . $name_col . '</span><span class="sorting-indicator"></span></a></th>';
+            }
+            $labels .= '</tr>';
             $content .= '<thead>' . $labels . '</thead>';
             $content .= '<tfoot>' . $labels . '</tfoot>';
         }
