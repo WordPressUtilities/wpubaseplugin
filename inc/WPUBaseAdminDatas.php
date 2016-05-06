@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_3;
+namespace admindatas_2_4;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.3
+Version: 2.4
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -22,6 +22,9 @@ class WPUBaseAdminDatas {
     public function init($settings = array()) {
         $this->apply_settings($settings);
         $this->check_database();
+        add_action('admin_post_admindatas_' . $this->settings['plugin_id'], array(&$this,
+            'delete_lines_postAction'
+        ));
     }
 
     public function apply_settings($settings) {
@@ -163,6 +166,41 @@ class WPUBaseAdminDatas {
     }
 
     /* ----------------------------------------------------------
+      Delete lines
+    ---------------------------------------------------------- */
+
+    public function delete_lines_postAction() {
+        if (!empty($_POST) && isset($_POST['select_line'], $_POST['page']) && is_array($_POST['select_line'])) {
+            $action_id = 'action-main-form-admin-datas-' . $_POST['page'];
+            if (isset($_POST[$action_id]) && wp_verify_nonce($_POST[$action_id], 'action-main-form-' . $_POST['page'])) {
+                $this->delete_lines($_POST['select_line']);
+            }
+        }
+        if (isset($_POST['page'])) {
+            wp_redirect(admin_url('admin.php?page=' . esc_attr($_POST['page'])));
+            die;
+        }
+    }
+
+    public function delete_lines($lines = array()) {
+        global $wpdb;
+        $tablename = $wpdb->prefix . $this->settings['table_name'];
+        $_lines = array();
+        foreach ($lines as $line) {
+            // Stop if a value is not valid
+            if (!is_numeric($line)) {
+                break;
+            }
+            $_lines[] = $line;
+        }
+        if (!empty($_lines)) {
+            $wpdb->query(
+                "DELETE FROM ${tablename} WHERE ID IN(" . implode(",", $_lines) . ");"
+            );
+        }
+    }
+
+    /* ----------------------------------------------------------
       Utilities : Export
     ---------------------------------------------------------- */
 
@@ -259,7 +297,6 @@ class WPUBaseAdminDatas {
                 $args['max_elements'] = $pager['max_elements'];
             }
         }
-
         // Default list
         if (empty($values) || !is_array($values)) {
             $values = $wpdb->get_results("SELECT " . implode(", ", array_keys($args['columns'])) . " FROM " . $tablename . " " . $sql_where . " " . $sql_order . " " . $args['limit']);
@@ -299,15 +336,27 @@ class WPUBaseAdminDatas {
 
         $search_form = '<form style="margin:1em 0" action="' . admin_url("admin.php") . '" method="get"><p class="search-box">';
         $search_form .= '<input type="hidden" name="page" value="' . esc_attr($page_id) . '" />';
+        $search_form .= '<input type="hidden" name="order" value="' . esc_attr($args['order']) . '" />';
+        $search_form .= '<input type="hidden" name="orderby" value="' . esc_attr($args['orderby']) . '" />';
         $search_form .= '<input type="search" name="where_text" value="' . esc_attr($where_text) . '" />';
         ob_start();
         submit_button(__('Search'), '', 'submit', false);
         $search_form .= ob_get_clean();
         $search_form .= '</p><br class="clear" /></form>';
 
-        $content = '<table class="wp-list-table widefat fixed striped">';
+        $has_id = is_object($values[0]) && isset($values[0]->id);
+
+        $content = '<form action="' . admin_url('admin-post.php') . '" method="post">';
+        $content .= '<input type="hidden" name="action" value="admindatas_' . $this->settings['plugin_id'] . '">';
+        $content .= '<input type="hidden" name="page" value="' . esc_attr($page_id) . '" />';
+        $content .= wp_nonce_field('action-main-form-' . $page_id, 'action-main-form-admin-datas-' . $page_id, true, false);
+
+        $content .= '<table class="wp-list-table widefat fixed striped">';
         if (isset($args['columns']) && is_array($args['columns']) && !empty($args['columns'])) {
             $labels = '<tr>';
+            if ($has_id) {
+                $labels .= '<th class="column-cb check-column"></th>';
+            }
             foreach ($args['columns'] as $id_col => $name_col) {
                 $url_items_tmp = $url_items;
                 $url_items_tmp['pagenum'] = 1;
@@ -323,6 +372,9 @@ class WPUBaseAdminDatas {
         $content .= '<tbody id="the-list">';
         foreach ($values as $id => $vals) {
             $content .= '<tr>';
+            if ($has_id) {
+                $content .= '<th scope="row" class="check-column" class="column-cb check-column"><input type="checkbox" name="select_line[' . $vals->id . ']" value="' . $vals->id . '" /></th>';
+            }
             foreach ($vals as $cell_id => $val) {
                 $val = (empty($val) ? '&nbsp;' : $val);
                 $content .= '<td>' . apply_filters('wpubaseadmindatas_cellcontent', $val, $cell_id, $this->settings) . '</td>';
@@ -331,6 +383,8 @@ class WPUBaseAdminDatas {
         }
         $content .= '</tbody>';
         $content .= '</table>';
+        $content .= '<p style="float: left;">' . get_submit_button(__('Delete'), 'delete', 'delete_lines', false) . '</p>';
+        $content .= '</form>';
         $content .= $search_form;
         $content .= $pagination;
 
