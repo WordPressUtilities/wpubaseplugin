@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_4;
+namespace admindatas_2_5;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.4
+Version: 2.5
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -238,16 +238,21 @@ class WPUBaseAdminDatas {
 
         // Add ID
         $default_columns = array(
-            'id' => 'ID',
-            'creation' => 'Creation date'
+            'creation' => 'Creation date',
+            'id' => 'ID'
         );
+        $base_columns = array();
         foreach ($this->settings['table_fields'] as $id => $field) {
-            $default_columns[$id] = $field['public_name'];
+            if (!isset($args['primary_column'])) {
+                $args['primary_column'] = $id;
+            }
+            $base_columns[$id] = $field['public_name'];
         }
+        $base_columns = $base_columns + $default_columns;
 
         // Default columns
         if (!isset($args['columns'])) {
-            $args['columns'] = $default_columns;
+            $args['columns'] = $base_columns;
         }
 
         // Filter results
@@ -334,7 +339,7 @@ class WPUBaseAdminDatas {
             $pagination .= '<br class="clear" /></div>';
         }
 
-        $search_form = '<form style="margin:1em 0" action="' . admin_url("admin.php") . '" method="get"><p class="search-box">';
+        $search_form = '<form class="admindatas-search-form" action="' . admin_url("admin.php") . '" method="get"><p class="search-box">';
         $search_form .= '<input type="hidden" name="page" value="' . esc_attr($page_id) . '" />';
         $search_form .= '<input type="hidden" name="order" value="' . esc_attr($args['order']) . '" />';
         $search_form .= '<input type="hidden" name="orderby" value="' . esc_attr($args['orderby']) . '" />';
@@ -342,7 +347,7 @@ class WPUBaseAdminDatas {
         ob_start();
         submit_button(__('Search'), '', 'submit', false);
         $search_form .= ob_get_clean();
-        $search_form .= '</p><br class="clear" /></form>';
+        $search_form .= '</p><br class="clear" /></form><div class="clear"></div>';
 
         $has_id = is_object($values[0]) && isset($values[0]->id);
 
@@ -355,7 +360,7 @@ class WPUBaseAdminDatas {
         if (isset($args['columns']) && is_array($args['columns']) && !empty($args['columns'])) {
             $labels = '<tr>';
             if ($has_id) {
-                $labels .= '<th class="column-cb check-column"></th>';
+                $labels .= '<td class="manage-column column-cb check-column"><input type="checkbox" name="cb-select-all-%s" id="admindatas_sort_lines" value="" /></td>';
             }
             foreach ($args['columns'] as $id_col => $name_col) {
                 $url_items_tmp = $url_items;
@@ -363,11 +368,11 @@ class WPUBaseAdminDatas {
                 $url_items_tmp['orderby'] = $id_col;
                 $url_items_tmp['order'] = $args['order'] == 'asc' ? 'desc' : 'asc';
                 $sort_link = add_query_arg($url_items_tmp);
-                $labels .= '<th class="sortable ' . $args['order'] . ' ' . ($id_col == $args['orderby'] ? 'sorted' : '') . '"><a href="' . $sort_link . '"><span>' . $name_col . '</span><span class="sorting-indicator"></span></a></th>';
+                $labels .= '<th class="sortable '.($id_col == $args['primary_column'] ? 'column-primary' : '').' ' . $args['order'] . ' ' . ($id_col == $args['orderby'] ? 'sorted' : '') . '"><a href="' . $sort_link . '"><span>' . $name_col . '</span><span class="sorting-indicator"></span></a></th>';
             }
             $labels .= '</tr>';
-            $content .= '<thead>' . $labels . '</thead>';
-            $content .= '<tfoot>' . $labels . '</tfoot>';
+            $content .= '<thead>' . sprintf($labels, 1) . '</thead>';
+            $content .= '<tfoot>' . sprintf($labels, 2) . '</tfoot>';
         }
         $content .= '<tbody id="the-list">';
         foreach ($values as $id => $vals) {
@@ -377,17 +382,27 @@ class WPUBaseAdminDatas {
             }
             foreach ($vals as $cell_id => $val) {
                 $val = (empty($val) ? '&nbsp;' : $val);
-                $content .= '<td>' . apply_filters('wpubaseadmindatas_cellcontent', $val, $cell_id, $this->settings) . '</td>';
+                $content .= '<td class="'.($cell_id == $args['primary_column'] ? 'column-primary' : '').'">' . apply_filters('wpubaseadmindatas_cellcontent', $val, $cell_id, $this->settings) . '</td>';
             }
             $content .= '</tr>';
         }
         $content .= '</tbody>';
         $content .= '</table>';
-        $content .= '<p style="float: left;">' . get_submit_button(__('Delete'), 'delete', 'delete_lines', false) . '</p>';
+        $content .= '<p class="admindatas-delete-button">' . get_submit_button(__('Delete'), 'delete', 'delete_lines', false) . '</p>';
         $content .= '</form>';
         $content .= $search_form;
         $content .= $pagination;
-
+        $content .= <<<HTML
+<style>
+@media (min-width:768px) {
+    .admindatas-delete-button {float: left;}
+}
+@media (max-width:767px) {
+    .admindatas-search-form {margin:1em 0;}
+    .admindatas-search-form .search-box {position: relative!important;height:auto;margin:0;}
+}
+</style>
+HTML;
         return $content;
     }
 }
