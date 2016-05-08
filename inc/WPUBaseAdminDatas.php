@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_5;
+namespace admindatas_2_5_1;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.5
+Version: 2.5.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -274,7 +274,7 @@ class WPUBaseAdminDatas {
         }
 
         if (!isset($args['orderby'])) {
-            $args['orderby'] = isset($_GET['orderby']) && array_key_exists($_GET['orderby'], $default_columns) ? $_GET['orderby'] : 'id';
+            $args['orderby'] = isset($_GET['orderby']) && array_key_exists($_GET['orderby'], $base_columns) ? $_GET['orderby'] : 'id';
         }
 
         // Build filter query
@@ -334,7 +334,7 @@ class WPUBaseAdminDatas {
             $start_element = ($args['pagenum'] - 1) * $args['perpage'] + 1;
             $end_element = min($args['pagenum'] * $args['perpage'], $args['max_elements']);
             $pagination = '<div style="margin:1em 0" class="tablenav">';
-            $pagination .= '<div class="alignleft">' . sprintf(__('Items %s - %s'), $start_element, $end_element) . '</div>';
+            $pagination .= '<div class="alignleft">' . sprintf(__('Items %s - %s', $this->settings['plugin_id']), $start_element, $end_element) . '</div>';
             $pagination .= '<div class="tablenav-pages alignright actions bulkactions">' . $page_links . '</div>';
             $pagination .= '<br class="clear" /></div>';
         }
@@ -368,7 +368,7 @@ class WPUBaseAdminDatas {
                 $url_items_tmp['orderby'] = $id_col;
                 $url_items_tmp['order'] = $args['order'] == 'asc' ? 'desc' : 'asc';
                 $sort_link = add_query_arg($url_items_tmp);
-                $labels .= '<th class="sortable '.($id_col == $args['primary_column'] ? 'column-primary' : '').' ' . $args['order'] . ' ' . ($id_col == $args['orderby'] ? 'sorted' : '') . '"><a href="' . $sort_link . '"><span>' . $name_col . '</span><span class="sorting-indicator"></span></a></th>';
+                $labels .= '<th class="sortable ' . ($id_col == $args['primary_column'] ? 'column-primary' : '') . ' ' . $args['order'] . ' ' . ($id_col == $args['orderby'] ? 'sorted' : '') . '"><a href="' . $sort_link . '"><span>' . $name_col . '</span><span class="sorting-indicator"></span></a></th>';
             }
             $labels .= '</tr>';
             $content .= '<thead>' . sprintf($labels, 1) . '</thead>';
@@ -382,7 +382,7 @@ class WPUBaseAdminDatas {
             }
             foreach ($vals as $cell_id => $val) {
                 $val = (empty($val) ? '&nbsp;' : $val);
-                $content .= '<td class="'.($cell_id == $args['primary_column'] ? 'column-primary' : '').'">' . apply_filters('wpubaseadmindatas_cellcontent', $val, $cell_id, $this->settings) . '</td>';
+                $content .= '<td class="' . ($cell_id == $args['primary_column'] ? 'column-primary' : '') . '">' . apply_filters('wpubaseadmindatas_cellcontent', $val, $cell_id, $this->settings) . '</td>';
             }
             $content .= '</tr>';
         }
@@ -394,11 +394,11 @@ class WPUBaseAdminDatas {
         $content .= $pagination;
         $content .= <<<HTML
 <style>
+.admindatas-search-form {margin:1em 0;}
 @media (min-width:768px) {
     .admindatas-delete-button {float: left;}
 }
 @media (max-width:767px) {
-    .admindatas-search-form {margin:1em 0;}
     .admindatas-search-form .search-box {position: relative!important;height:auto;margin:0;}
 }
 </style>
