@@ -3,14 +3,14 @@
 /*
 Class Name: WPU Base Admin page
 Description: A class to handle pages in WordPress
-Version: 1.3
+Version: 1.3.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
 
-namespace adminpage_1_3;
+namespace adminpage_1_3_1;
 
 class WPUBaseAdminPage {
 
@@ -113,21 +113,35 @@ class WPUBaseAdminPage {
         if (!isset($_GET['page']) || !is_object($screen) || !property_exists($screen, 'base')) {
             return;
         }
-
-        $base_str = str_replace(array('wpubaseplugin-', 'toplevel_page_', '-main', 'base-plugin_page_'), '', $screen->base);
+        $base_str = str_replace(array($this->prefix, 'toplevel_page_'), '', $screen->base);
+        // Add help tabs
         if (isset($this->pages[$base_str]['page_help']) && !empty($this->pages[$base_str]['page_help'])) {
-
-            $screen->add_help_tab(array(
-                'id' => 'help-' . $base_str,
-                'title' => __('Help'),
-                'content' => $this->pages[$base_str]['page_help']
-            ));
+            $help_page = $this->pages[$base_str]['page_help'];
+            // If multiple one pages are available
+            if (is_array($help_page)) {
+                foreach ($help_page as $id => $help_tab) {
+                    $help_tab['title'] = isset($help_tab['title']) ? $help_tab['title'] : $id;
+                    $help_tab['content'] = isset($help_tab['content']) ? $help_tab['content'] : $help_tab['title'];
+                    $screen->add_help_tab(array(
+                        'id' => 'help-' . $base_str . '-' . $id,
+                        'title' => $help_tab['title'],
+                        'content' => $help_tab['content']
+                    ));
+                }
+            } else {
+                // If only one tab available
+                $screen->add_help_tab(array(
+                    'id' => 'help-' . $base_str,
+                    'title' => __('Help'),
+                    'content' => $help_page
+                ));
+            }
         }
 
-        // $screen->set_help_sidebar(
-        //     '<p><strong>' . __('For more information:') . '</strong></p>' .
-        //     '<p><a href="http://wordpress.org/support/" target="_blank">' . _('Support Forums') . '</a></p>'
-        // );
+        // Add help sidebar
+        if (isset($this->pages[$base_str]['page_help_sidebar']) && !empty($this->pages[$base_str]['page_help_sidebar'])) {
+            $screen->set_help_sidebar($this->pages[$base_str]['page_help_sidebar']);
+        }
     }
 
     public function set_adminbar_menu($admin_bar) {
