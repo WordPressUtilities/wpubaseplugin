@@ -3,6 +3,13 @@ Base Plugin
 
 A Framework to create your WordPress plugin.
 
+How to use only an utility class :
+---
+
+* Get the utility class file (like WPUBaseCron.php)
+* Change the namespace to your plugin ID (to avoid conflicts).
+* Include it into your plugin, using the method described in the file's README.
+
 How to start a new plugin with it :
 ---
 
@@ -27,4 +34,7 @@ What can you do with it ?
 
 * You can create admin pages.
 * You can create paginated tables in admin pages.
+* You can create a hook triggered by a cron.
+* You can set admin notices.
+* You can add settings.
 * ... and more !
