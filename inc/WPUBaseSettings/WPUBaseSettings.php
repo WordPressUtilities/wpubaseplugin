@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_5;
+namespace wpubasesettings_0_5_1;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.5
+Version: 0.5.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -23,6 +23,28 @@ class WPUBaseSettings {
         add_filter('option_page_capability_' . $this->settings_details['option_id'], array(&$this,
             'set_min_capability'
         ));
+    }
+
+    public function get_settings() {
+        $opt = get_option($this->settings_details['option_id']);
+        if (!is_array($opt)) {
+            $opt = array();
+        }
+        return $opt;
+    }
+
+    public function get_setting($id) {
+        $opt = $this->get_settings();
+        if (isset($opt[$id])) {
+            return $opt[$id];
+        }
+        return false;
+    }
+
+    public function update_setting($id, $value) {
+        $opt = $this->get_settings();
+        $opt[$id] = $value;
+        update_option($this->settings_details['option_id'], $opt);
     }
 
     public function set_min_capability() {
@@ -169,34 +191,3 @@ class WPUBaseSettings {
         }
     }
 }
-
-/*
-    ## INIT ##
-    $this->settings_details = array(
-        'plugin_id' => 'wpuimporttwitter',
-        'option_id' => 'wpuimporttwitter_options',
-        'sections' => array(
-            'import' => array(
-                'name' => __('Import Settings', 'wpuimporttwitter')
-            )
-        )
-    );
-    $this->settings = array(
-        'sources' => array(
-            'label' => __('Sources', 'wpuimporttwitter'),
-            'help' => __('One #hashtag or one @user per line.', 'wpuimporttwitter'),
-            'type' => 'textarea'
-        )
-    );
-    if (is_admin()) {
-        include 'inc/WPUBaseSettings.php';
-        new \wpuimporttwitter\WPUBaseSettings($this->settings_details,$this->settings);
-    }
-
-    ## IN ADMIN PAGE ##
-    echo '<form action="' . admin_url('options.php') . '" method="post">';
-    settings_fields($this->settings_details['option_id']);
-    do_settings_sections($this->options['plugin_id']);
-    echo submit_button(__('Save Changes', 'wpuimporttwitter'));
-    echo '</form>';
-*/

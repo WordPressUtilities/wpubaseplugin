@@ -66,23 +66,3 @@ class WPUBaseCron {
         flush_rewrite_rules();
     }
 }
-
-
-/*
- include 'inc/WPUBaseCron.php';
- $this->basecron = new \wpubaseplugin\WPUBaseCron();
-
- ## plugins_loaded ##
- $this->basecron->init(array(
-     'pluginname' => 'Base Plugin',
-     'cronhook' => 'wpubaseplugin__cron_hook',
-     'croninterval' => 900
- ));
-
- ## init ## (if ->init() was not triggered from plugins_loaded)
- $this->basecron->check_cron();
-
- ## uninstall hook ##
- $this->basecron->uninstall();
- *
- */

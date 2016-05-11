@@ -70,18 +70,3 @@ class WPUBaseMessages {
     }
 }
 
-/*
-
-## Load module
-// Messages
-if (is_admin()) {
-    include 'inc/WPUBaseMessages.php';
-    $this->messages = new \wpubaseplugin\WPUBaseMessages($this->options['plugin_id']);
-}
-
-## Load notices hook
-add_action('wpuimporttwitter_admin_notices', array(&$this->messages,
-    'admin_notices'
-));
-
-*/
