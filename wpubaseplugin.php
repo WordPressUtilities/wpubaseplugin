@@ -31,7 +31,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseSettings'
         ),
         'cron' => array(
-            'namespace' => 'wpubasecron_0_1',
+            'namespace' => 'wpubasecron_0_1_1',
             'name' => 'WPUBaseCron'
         )
     );

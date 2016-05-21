@@ -1,5 +1,5 @@
 <?php
-namespace wpubasecron_0_1;
+namespace wpubasecron_0_1_1;
 
 /*
 Class Name: WPU Base Cron
