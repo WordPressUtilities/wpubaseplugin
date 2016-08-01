@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_5_1;
+namespace wpubasesettings_0_5_2;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.5.1
+Version: 0.5.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -171,6 +171,7 @@ class WPUBaseSettings {
         $options = get_option($option_id);
         $name = ' name="' . $option_id . '[' . $args['id'] . ']" ';
         $id = ' id="' . $args['id'] . '" ';
+        $value = isset($options[$args['id']]) ? $options[$args['id']] : '';
 
         switch ($args['type']) {
         case 'checkbox':
@@ -178,13 +179,13 @@ class WPUBaseSettings {
             echo '<label><input type="checkbox" ' . $name . ' ' . $id . ' ' . checked($checked_val, '1', 0) . ' value="1" /> ' . $args['label_check'] . '</label>';
             break;
         case 'textarea':
-            echo '<textarea ' . $name . ' ' . $id . ' cols="50" rows="5">' . esc_attr($options[$args['id']]) . '</textarea>';
+            echo '<textarea ' . $name . ' ' . $id . ' cols="50" rows="5">' . esc_attr($value) . '</textarea>';
             break;
         case 'url':
         case 'number':
         case 'email':
         case 'text':
-            echo '<input ' . $name . ' ' . $id . ' type="' . $args['type'] . '" value="' . esc_attr($options[$args['id']]) . '" />';
+            echo '<input ' . $name . ' ' . $id . ' type="' . $args['type'] . '" value="' . esc_attr($value) . '" />';
         }
         if (!empty($args['help'])) {
             echo '<div><small>' . $args['help'] . '</small></div>';
