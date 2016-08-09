@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_5_2;
+namespace wpubasesettings_0_5_3;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.5.2
+Version: 0.5.3
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -129,11 +129,16 @@ class WPUBaseSettings {
             // Set a default value
             // - if not sent
             // - if user is not allowed
-            if (!isset($input[$id]) || !current_user_can($setting['user_cap'])) {
-                $input[$id] = isset($options[$id]) ? $options[$id] : '0';
+            if ($setting['type'] != 'checkbox') {
+                if (!isset($input[$id]) || !current_user_can($setting['user_cap'])) {
+                    $input[$id] = isset($options[$id]) ? $options[$id] : '0';
+                }
+                $option_id = $input[$id];
             }
-            $option_id = $input[$id];
             switch ($setting['type']) {
+            case 'checkbox':
+                $option_id = isset($input[$id]) ? '1' : '0';
+                break;
             case 'email':
                 if (filter_var($input[$id], FILTER_VALIDATE_EMAIL) === false) {
                     $option_id = '';
@@ -192,3 +197,34 @@ class WPUBaseSettings {
         }
     }
 }
+
+/*
+    ## INIT ##
+    $this->settings_details = array(
+        'plugin_id' => 'wpuimporttwitter',
+        'option_id' => 'wpuimporttwitter_options',
+        'sections' => array(
+            'import' => array(
+                'name' => __('Import Settings', 'wpuimporttwitter')
+            )
+        )
+    );
+    $this->settings = array(
+        'sources' => array(
+            'label' => __('Sources', 'wpuimporttwitter'),
+            'help' => __('One #hashtag or one @user per line.', 'wpuimporttwitter'),
+            'type' => 'textarea'
+        )
+    );
+    if (is_admin()) {
+        include 'inc/WPUBaseSettings.php';
+        new \wpuimporttwitter\WPUBaseSettings($this->settings_details,$this->settings);
+    }
+
+    ## IN ADMIN PAGE ##
+    echo '<form action="' . admin_url('options.php') . '" method="post">';
+    settings_fields($this->settings_details['option_id']);
+    do_settings_sections($this->options['plugin_id']);
+    echo submit_button(__('Save Changes', 'wpuimporttwitter'));
+    echo '</form>';
+*/
