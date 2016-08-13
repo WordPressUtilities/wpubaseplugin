@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_5_3;
+namespace wpubasesettings_0_5_4;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.5.3
+Version: 0.5.4
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -126,6 +126,15 @@ class WPUBaseSettings {
     public function options_validate($input) {
         $options = get_option($this->settings_details['option_id']);
         foreach ($this->settings as $id => $setting) {
+
+            // If regex : use it to validate the field
+            if (isset($setting['regex'])) {
+                if (isset($input[$id]) && preg_match($setting['regex'], $input[$id])) {
+                    $options[$id] = $input[$id];
+                }
+                continue;
+            }
+
             // Set a default value
             // - if not sent
             // - if user is not allowed
@@ -195,6 +204,12 @@ class WPUBaseSettings {
         if (!empty($args['help'])) {
             echo '<div><small>' . $args['help'] . '</small></div>';
         }
+    }
+
+    public static function isRegex($str0) {
+        /* Thx http://stackoverflow.com/a/16098097 */
+        $regex = "/^\/[\s\S]+\/$/";
+        return preg_match($regex, $str0);
     }
 }
 
