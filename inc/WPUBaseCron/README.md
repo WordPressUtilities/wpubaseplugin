@@ -14,9 +14,9 @@ $this->basecron = new \wpubaseplugin\WPUBaseCron();
 
 ```php
 $this->basecron->init(array(
-    'pluginname' => 'Base Plugin',
-    'cronhook' => 'wpubaseplugin__cron_hook',
-    'croninterval' => 900
+    'pluginname' => 'Base Plugin', // Default : [Namespace]
+    'cronhook' => 'wpubaseplugin__cron_hook', // Default : [namespace__cron_hook]
+    'croninterval' => 900 // Default : [3600]
 ));
 ```
 
