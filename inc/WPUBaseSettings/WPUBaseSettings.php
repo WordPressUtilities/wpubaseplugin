@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_5_4;
+namespace wpubasesettings_0_6;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.5.4
+Version: 0.6
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -183,7 +183,8 @@ class WPUBaseSettings {
     public function render__field($args = array()) {
         $option_id = $this->settings_details['option_id'];
         $options = get_option($option_id);
-        $name = ' name="' . $option_id . '[' . $args['id'] . ']" ';
+        $name_val = $option_id . '[' . $args['id'] . ']';
+        $name = ' name="' . $name_val . '" ';
         $id = ' id="' . $args['id'] . '" ';
         $value = isset($options[$args['id']]) ? $options[$args['id']] : '';
 
@@ -194,6 +195,12 @@ class WPUBaseSettings {
             break;
         case 'textarea':
             echo '<textarea ' . $name . ' ' . $id . ' cols="50" rows="5">' . esc_attr($value) . '</textarea>';
+            break;
+        case 'editor':
+            wp_editor($value, $option_id . '_' . $args['id'], array(
+                'textarea_rows' => 3,
+                'textarea_name' => $name_val
+            ));
             break;
         case 'url':
         case 'number':
