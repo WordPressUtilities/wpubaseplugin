@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_6;
+namespace wpubasesettings_0_7;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.6
+Version: 0.7
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -89,6 +89,7 @@ class WPUBaseSettings {
             $settings[$id]['help'] = isset($input['help']) ? $input['help'] : '';
             $settings[$id]['type'] = isset($input['type']) ? $input['type'] : 'text';
             $settings[$id]['section'] = isset($input['section']) ? $input['section'] : $default_section;
+            $settings[$id]['datas'] = isset($input['datas']) && is_array($input['datas']) ? $input['datas'] : array(__('No'), __('Yes'));
             $settings[$id]['user_cap'] = $this->settings_details['sections'][$settings[$id]['section']]['user_cap'];
         }
 
@@ -116,6 +117,7 @@ class WPUBaseSettings {
                 'name' => $this->settings_details['option_id'] . '[' . $id . ']',
                 'id' => $id,
                 'label_for' => $id,
+                'datas' => $this->settings[$id]['datas'],
                 'type' => $this->settings[$id]['type'],
                 'help' => $this->settings[$id]['help'],
                 'label_check' => $this->settings[$id]['label_check']
@@ -195,6 +197,13 @@ class WPUBaseSettings {
             break;
         case 'textarea':
             echo '<textarea ' . $name . ' ' . $id . ' cols="50" rows="5">' . esc_attr($value) . '</textarea>';
+            break;
+        case 'select':
+            echo '<select ' . $name . ' ' . $id . '>';
+            foreach ($args['datas'] as $_id => $_data) {
+                echo '<option value="' . esc_attr($_id) . '" ' . ($value == $_id ? 'selected="selected"' : '') . '>' . $_data . '</option>';
+            }
+            echo '</select>';
             break;
         case 'editor':
             wp_editor($value, $option_id . '_' . $args['id'], array(
