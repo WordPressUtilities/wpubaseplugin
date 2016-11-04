@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_7;
+namespace wpubasesettings_0_7_1;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.7
+Version: 0.7.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -133,14 +133,17 @@ class WPUBaseSettings {
             if (isset($setting['regex'])) {
                 if (isset($input[$id]) && preg_match($setting['regex'], $input[$id])) {
                     $options[$id] = $input[$id];
+                } else {
+                    if (isset($setting['default'])) {
+                        $options[$id] = $setting['default'];
+                    }
                 }
                 continue;
             }
 
             // Set a default value
-            // - if not sent
-            // - if user is not allowed
             if ($setting['type'] != 'checkbox') {
+                // - if not sent or if user is not allowed
                 if (!isset($input[$id]) || !current_user_can($setting['user_cap'])) {
                     $input[$id] = isset($options[$id]) ? $options[$id] : '0';
                 }
@@ -149,6 +152,11 @@ class WPUBaseSettings {
             switch ($setting['type']) {
             case 'checkbox':
                 $option_id = isset($input[$id]) ? '1' : '0';
+                break;
+            case 'select':
+                if (!array_key_exists($input[$id], $setting['datas'])) {
+                    $option_id = key($setting['datas']);
+                }
                 break;
             case 'email':
                 if (filter_var($input[$id], FILTER_VALIDATE_EMAIL) === false) {
