@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_8;
+namespace wpubasesettings_0_8_1;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.8
+Version: 0.8.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -261,7 +261,6 @@ class WPUBaseSettings {
 
     public function admin_settings() {
         echo '<div class="wrap"><h1>' . get_admin_page_title() . '</h1>';
-        settings_errors($this->settings_details['option_id']);
         if (current_user_can($this->settings_details['user_cap'])) {
             echo '<hr />';
             echo '<form action="' . admin_url('options.php') . '" method="post">';
