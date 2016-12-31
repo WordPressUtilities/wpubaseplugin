@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_7_2;
+namespace wpubasesettings_0_8;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.7.2
+Version: 0.8
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -23,6 +23,12 @@ class WPUBaseSettings {
         add_filter('option_page_capability_' . $this->settings_details['option_id'], array(&$this,
             'set_min_capability'
         ));
+
+        if (isset($settings_details['create_page']) && $settings_details['create_page']) {
+            add_action('admin_menu', array(&$this,
+                'admin_menu'
+            ));
+        }
     }
 
     public function get_settings() {
@@ -65,6 +71,12 @@ class WPUBaseSettings {
         }
         if (!isset($settings_details['user_cap'])) {
             $settings_details['user_cap'] = 'manage_options';
+        }
+        if (!isset($settings_details['option_id'])) {
+            $settings_details['option_id'] = $settings_details['plugin_id'] . '_options';
+        }
+        if (!isset($settings_details['parent_page'])) {
+            $settings_details['parent_page'] = 'options-general.php';
         }
         foreach ($settings_details['sections'] as $id => $section) {
             if (!isset($section['user_cap'])) {
@@ -238,12 +250,40 @@ class WPUBaseSettings {
         $regex = "/^\/[\s\S]+\/$/";
         return preg_match($regex, $str0);
     }
+
+    /* Base settings */
+
+    public function admin_menu() {
+        add_submenu_page($this->settings_details['parent_page'], $this->settings_details['plugin_name'] . ' - ' . __('Settings'), $this->settings_details['plugin_name'], $this->settings_details['user_cap'], $this->settings_details['plugin_id'], array(&$this,
+            'admin_settings'
+        ), '', 110);
+    }
+
+    public function admin_settings() {
+        echo '<div class="wrap"><h1>' . get_admin_page_title() . '</h1>';
+        settings_errors($this->settings_details['option_id']);
+        if (current_user_can($this->settings_details['user_cap'])) {
+            echo '<hr />';
+            echo '<form action="' . admin_url('options.php') . '" method="post">';
+            settings_fields($this->settings_details['option_id']);
+            do_settings_sections($this->settings_details['plugin_id']);
+            echo submit_button(__('Save'));
+            echo '</form>';
+        }
+        echo '</div>';
+    }
 }
 
 /*
     ## INIT ##
     $this->settings_details = array(
+        # Create admin page
+        'create_page' => true,
+        'parent_page' => 'tools.php',
+        'plugin_name' => 'Maps Autocomplete',
+        # Default
         'plugin_id' => 'wpuimporttwitter',
+        'user_cap' => 'manage_options',
         'option_id' => 'wpuimporttwitter_options',
         'sections' => array(
             'import' => array(
@@ -263,7 +303,7 @@ class WPUBaseSettings {
         new \wpuimporttwitter\WPUBaseSettings($this->settings_details,$this->settings);
     }
 
-    ## IN ADMIN PAGE ##
+    ## IN ADMIN PAGE if no auto create_page ##
     echo '<form action="' . admin_url('options.php') . '" method="post">';
     settings_fields($this->settings_details['option_id']);
     do_settings_sections($this->options['plugin_id']);
