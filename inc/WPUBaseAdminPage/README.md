@@ -39,6 +39,7 @@ $pages_options = array(
 );
 
 // Init admin page
-$this->adminpages = new \wpubaseplugin\WPUBaseAdminPage($pages_options, $admin_pages);
+$this->adminpages = new \wpubaseplugin\WPUBaseAdminPage();
+$this->adminpages->init($pages_options, $admin_pages);
 
 ```
