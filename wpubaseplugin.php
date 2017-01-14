@@ -4,7 +4,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: http://github.com/Darklg/WPUtilities
 Description: A framework for a WordPress plugin
-Version: 2.5.1
+Version: 2.6
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -23,7 +23,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseAdminDatas'
         ),
         'adminpage' => array(
-            'namespace' => 'adminpage_1_3_1',
+            'namespace' => 'adminpage_1_4',
             'name' => 'WPUBaseAdminPage'
         ),
         'settings' => array(
@@ -42,6 +42,8 @@ class WPUBasePlugin {
             'message_url' => '<a target="_blank" href="https://github.com/WordPressUtilities/wpuoptions">WPU Options</a>'
         )
     );
+
+    public $tools = array();
 
     /* ----------------------------------------------------------
       Construct
@@ -65,10 +67,11 @@ class WPUBasePlugin {
         global $wpdb;
         $this->options = array(
             'id' => 'wpubaseplugin',
-            'level' => 'manage_options'
+            'level' => 'manage_options',
+            'basename' => plugin_basename(__FILE__)
         );
 
-        load_plugin_textdomain($this->options['id'], false, dirname(plugin_basename(__FILE__)) . '/lang/');
+        load_plugin_textdomain($this->options['id'], false, dirname($this->options['basename']) . '/lang/');
 
         // Allow translation for plugin name
         $this->options['name'] = __('Base Plugin', 'wpubaseplugin');
@@ -114,6 +117,8 @@ class WPUBasePlugin {
             'main' => array(
                 'menu_name' => 'Base plugin',
                 'name' => 'Main page',
+                'settings_link' => true,
+                'settings_name' => 'Settings',
                 'function_content' => array(&$this,
                     'page_content__main'
                 ),
@@ -147,7 +152,7 @@ class WPUBasePlugin {
         }
 
         // Init admin page
-        $this->tools['adminpage']->init($this, $admin_pages);
+        $this->tools['adminpage']->init($this->options, $admin_pages);
 
     }
 
@@ -194,7 +199,7 @@ class WPUBasePlugin {
     }
 
     public function page_action__main() {
-        $this->parent->tools['messages']->set_message('success_postaction_main', 'Success Main !');
+        $this->tools['messages']->set_message('success_postaction_main', 'Success Main !');
     }
 
     /* Subpage
@@ -206,7 +211,7 @@ class WPUBasePlugin {
     }
 
     public function page_action__subpage() {
-        $this->parent->tools['messages']->set_message('success_postaction_subpage', 'Success subpage !');
+        $this->tools['messages']->set_message('success_postaction_subpage', 'Success subpage !');
     }
 
     /* ----------------------------------------------------------

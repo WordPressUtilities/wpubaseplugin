@@ -19,8 +19,6 @@ $this->baseadmindatas->init(array(
 ));
 ```
 
-
-
 ## Display table :
 
 - Default :
