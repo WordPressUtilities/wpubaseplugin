@@ -1,11 +1,11 @@
 <?php
 
-namespace adminpage_1_4_1;
+namespace adminpage_1_4_2;
 
 /*
 Class Name: WPU Base Admin page
 Description: A class to handle pages in WordPress
-Version: 1.4.1
+Version: 1.4.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -114,16 +114,21 @@ class WPUBaseAdminPage {
             $page_action = array(&$this,
                 'set_admin_page_main'
             );
+            $page_title = $page['name'];
+            if (isset($page['page_title'])) {
+                $page_title = $page['page_title'];
+            }
+
             // A parent is defined
             if (array_key_exists($page['parent'], $this->pages)) {
-                $this->page_hook = add_submenu_page($this->prefix . $page['parent'], $page['name'], $page['menu_name'], $page['level'], $page_id, $page_action);
+                $this->page_hook = add_submenu_page($this->prefix . $page['parent'], $page_title, $page['menu_name'], $page['level'], $page_id, $page_action);
                 // A section is defined
             } elseif (!empty($page['section'])) {
-                $this->page_hook = add_submenu_page($page['section'], $page['name'], $page['menu_name'], $page['level'], $page_id, $page_action);
+                $this->page_hook = add_submenu_page($page['section'], $page_title, $page['menu_name'], $page['level'], $page_id, $page_action);
             } else {
                 // Create a parent menu page
                 add_menu_page($page['name'], $page['menu_name'], $page['level'], $page_id, $page_action, $page['icon_url']);
-                $this->page_hook = add_submenu_page($page_id, $page['name'], $page['name'], $page['level'], $page_id, $page_action);
+                $this->page_hook = add_submenu_page($page_id, $page_title, $page['name'], $page['level'], $page_id, $page_action);
             }
             add_action('load-' . $this->page_hook, array(&$this, 'add_help'), 10, 1);
         }
