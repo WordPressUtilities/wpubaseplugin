@@ -1,11 +1,11 @@
 <?php
 
-namespace adminpage_1_4_2;
+namespace adminpage_1_5;
 
 /*
 Class Name: WPU Base Admin page
 Description: A class to handle pages in WordPress
-Version: 1.4.2
+Version: 1.5
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -40,11 +40,21 @@ class WPUBaseAdminPage {
             'add_settings_link'
         ));
         // Only on a plugin admin page
-        $page = $this->get_page();
-        if (array_key_exists($page, $this->pages)) {
+        $current_page = $this->get_page();
+        if (array_key_exists($current_page, $this->pages)) {
             add_action('admin_post_' . $this->options['id'], array(&$this,
                 'set_admin_page_main_postAction'
             ));
+        }
+        foreach ($this->pages as $p_id => $p) {
+            if ($p_id == $current_page) {
+                foreach ($p['actions'] as $action) {
+                    add_action($action[0], $action[1]);
+                }
+                foreach ($p['filters'] as $$filter) {
+                    add_filter($filter[0], $filter[1]);
+                }
+            }
         }
     }
 
@@ -69,6 +79,12 @@ class WPUBaseAdminPage {
             }
             if (!isset($page['parent'])) {
                 $page['parent'] = '';
+            }
+            if (!isset($page['actions'])) {
+                $page['actions'] = array();
+            }
+            if (!isset($page['filters'])) {
+                $page['filters'] = array();
             }
             if (!isset($page['display_banner_menu'])) {
                 $page['display_banner_menu'] = false;
