@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_8_1;
+namespace wpubasesettings_0_9;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.8.1
+Version: 0.9
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -12,11 +12,23 @@ License URI: http://opensource.org/licenses/MIT
 */
 
 class WPUBaseSettings {
+
+    private $hook_page = false;
+    private $has_media_setting = false;
+
     public function __construct($settings_details = array(), $settings = array()) {
         if (empty($settings_details) || empty($settings)) {
             return;
         }
         $this->set_datas($settings_details, $settings);
+
+        $this->has_media_setting = false;
+        foreach ($this->settings as $setting) {
+            if ($setting['type'] == 'media') {
+                $this->has_media_setting = true;
+            }
+        }
+
         add_action('admin_init', array(&$this,
             'add_settings'
         ));
@@ -180,6 +192,7 @@ class WPUBaseSettings {
                     $option_id = '';
                 }
                 break;
+            case 'media':
             case 'number':
                 if (!is_numeric($input[$id])) {
                     $option_id = 0;
@@ -221,6 +234,24 @@ class WPUBaseSettings {
         case 'textarea':
             echo '<textarea ' . $name . ' ' . $id . ' cols="50" rows="5">' . esc_attr($value) . '</textarea>';
             break;
+        case 'media':
+            $img_src = '';
+            if (is_numeric($value)) {
+                $tmp_src = wp_get_attachment_image_src($value, 'medium');
+                if (is_array($tmp_src)) {
+                    $img_src = ' src="' . esc_attr($tmp_src[0]) . '" ';
+                }
+            }
+            echo '<div class="wpubasesettings-mediabox">';
+            echo '<input ' . $name . ' ' . $id . ' type="hidden" value="' . esc_attr($value) . '" />';
+            /* Preview */
+            echo '<div class="img-preview" style="' . (empty($img_src) ? 'display:none;' : '') . '">';
+            echo '<a href="#" class="x">&times;</a>';
+            echo '<img ' . $img_src . ' alt="" />';
+            echo '</div>';
+            echo submit_button(__('Upload New Media'), 'secondary', 'wpubassettings-upload-' . $args['id'], false, array('type' => 'button'));
+            echo '</div>';
+            break;
         case 'select':
             echo '<select ' . $name . ' ' . $id . '>';
             foreach ($args['datas'] as $_id => $_data) {
@@ -251,12 +282,104 @@ class WPUBaseSettings {
         return preg_match($regex, $str0);
     }
 
+    /* Media */
+    public function load_assets() {
+        if (!$this->has_media_setting) {
+            return;
+        }
+        add_action('admin_print_scripts', array(&$this, 'admin_scripts'));
+        add_action('admin_print_styles', array(&$this, 'admin_styles'));
+        add_action('admin_head', array(&$this, 'admin_head'));
+        add_action('admin_footer', array(&$this, 'admin_footer'));
+    }
+
+    public function admin_scripts() {
+        wp_enqueue_script('media-upload');
+        wp_enqueue_media();
+    }
+
+    public function admin_styles() {
+        wp_enqueue_style('thickbox');
+    }
+
+    public function admin_head() {
+        echo <<<EOT
+<style>
+.wpubasesettings-mediabox .img-preview {
+    z-index: 1;
+    position: relative;
+}
+
+.wpubasesettings-mediabox .img-preview img {
+    max-width: 100px;
+}
+
+.wpubasesettings-mediabox .img-preview .x {
+    z-index: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 0.2em;
+    text-decoration: none;
+    font-weight: bold;
+    line-height: 1;
+    color: #000;
+    background-color: #fff;
+}
+</style>
+EOT;
+    }
+
+    public function admin_footer() {
+        echo <<<EOT
+<script>
+/* Delete image */
+jQuery('.wpubasesettings-mediabox .x').click(function(e) {
+    var \$this = jQuery(this),
+        \$parent = \$this.closest('.wpubasesettings-mediabox'),
+        \$imgPreview = \$parent.find('.img-preview');
+        \$imgField = \$parent.find('input[type="hidden"]');
+    e.preventDefault();
+    \$imgPreview.css({'display':'none'});
+    \$imgField.val('');
+});
+
+/* Add image */
+jQuery('.wpubasesettings-mediabox input[type="submit"]').click(function(e) {
+    var \$this = jQuery(this),
+        \$parent = \$this.closest('.wpubasesettings-mediabox'),
+        \$imgPreview = \$parent.find('.img-preview');
+        \$imgField = \$parent.find('input[type="hidden"]');
+
+    var frame = wp.media({multiple: false });
+
+    // When an image is selected in the media frame...
+    frame.on('select', function() {
+        var attachment = frame.state().get('selection').first().toJSON();
+        \$imgPreview.css({'display':'block'});
+        \$imgPreview.find('img').attr('src',attachment.url);
+        // Send the attachment id to our hidden input
+        \$imgField.val(attachment.id);
+        console.log(\$imgField);
+    });
+
+    // Finally, open the modal on click
+    frame.open();
+
+    e.preventDefault();
+});
+
+</script>
+EOT;
+    }
+
     /* Base settings */
 
     public function admin_menu() {
-        add_submenu_page($this->settings_details['parent_page'], $this->settings_details['plugin_name'] . ' - ' . __('Settings'), $this->settings_details['plugin_name'], $this->settings_details['user_cap'], $this->settings_details['plugin_id'], array(&$this,
+        $this->hook_page = add_submenu_page($this->settings_details['parent_page'], $this->settings_details['plugin_name'] . ' - ' . __('Settings'), $this->settings_details['plugin_name'], $this->settings_details['user_cap'], $this->settings_details['plugin_id'], array(&$this,
             'admin_settings'
         ), '', 110);
+        add_action('load-' . $this->hook_page, array(&$this, 'load_assets'));
     }
 
     public function admin_settings() {
@@ -299,7 +422,12 @@ class WPUBaseSettings {
     );
     if (is_admin()) {
         include 'inc/WPUBaseSettings.php';
-        new \wpuimporttwitter\WPUBaseSettings($this->settings_details,$this->settings);
+        $settings_obj = new \wpuimporttwitter\WPUBaseSettings($this->settings_details, $this->settings);
+
+        ## if no auto create_page and medias ##
+        if(isset($_GET['page']) && $_GET['page'] == 'wpuimporttwitter'){
+            add_action('admin_init', array(&$settings_obj, 'load_assets'));
+        }
     }
 
     ## IN ADMIN PAGE if no auto create_page ##
