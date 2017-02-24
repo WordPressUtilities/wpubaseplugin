@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_9;
+namespace wpubasesettings_0_9_1;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.9
+Version: 0.9.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -89,6 +89,13 @@ class WPUBaseSettings {
         }
         if (!isset($settings_details['parent_page'])) {
             $settings_details['parent_page'] = 'options-general.php';
+        }
+        if (!isset($settings_details['sections']) || empty($settings_details['sections'])) {
+            $settings_details['sections'] = array(
+                'default' => array(
+                    'name' => __('Settings')
+                )
+            );
         }
         foreach ($settings_details['sections'] as $id => $section) {
             if (!isset($section['user_cap'])) {
@@ -249,7 +256,7 @@ class WPUBaseSettings {
             echo '<a href="#" class="x">&times;</a>';
             echo '<img ' . $img_src . ' alt="" />';
             echo '</div>';
-            echo submit_button(__('Upload New Media'), 'secondary', 'wpubassettings-upload-' . $args['id'], false, array('type' => 'button'));
+            echo '<button type="button" class="button">' . __('Upload New Media') . '</button>';
             echo '</div>';
             break;
         case 'select':
@@ -345,7 +352,7 @@ jQuery('.wpubasesettings-mediabox .x').click(function(e) {
 });
 
 /* Add image */
-jQuery('.wpubasesettings-mediabox input[type="submit"]').click(function(e) {
+jQuery('.wpubasesettings-mediabox .button').click(function(e) {
     var \$this = jQuery(this),
         \$parent = \$this.closest('.wpubasesettings-mediabox'),
         \$imgPreview = \$parent.find('.img-preview');
@@ -384,6 +391,7 @@ EOT;
 
     public function admin_settings() {
         echo '<div class="wrap"><h1>' . get_admin_page_title() . '</h1>';
+        do_action('wpubasesettings_before_content_' . $this->hook_page);
         if (current_user_can($this->settings_details['user_cap'])) {
             echo '<hr />';
             echo '<form action="' . admin_url('options.php') . '" method="post">';
@@ -392,6 +400,7 @@ EOT;
             echo submit_button(__('Save'));
             echo '</form>';
         }
+        do_action('wpubasesettings_after_content_' . $this->hook_page);
         echo '</div>';
     }
 }
