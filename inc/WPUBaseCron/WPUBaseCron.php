@@ -1,10 +1,10 @@
 <?php
-namespace wpubasecron_0_2;
+namespace wpubasecron_0_2_1;
 
 /*
 Class Name: WPU Base Cron
 Description: A class to handle crons
-Version: 0.2
+Version: 0.2.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -54,8 +54,8 @@ class WPUBaseCron {
     public function check_cron() {
         $croninterval = get_option($this->cronoption);
         $schedule = wp_next_scheduled($this->cronhook);
-        // If no schedule cron or new interval
-        if (!$schedule || $croninterval != $this->croninterval) {
+        // If no schedule cron or new interval or incorrect interval
+        if (!$schedule || $croninterval != $this->croninterval || $schedule - time() > $croninterval) {
             $this->install();
         }
     }
