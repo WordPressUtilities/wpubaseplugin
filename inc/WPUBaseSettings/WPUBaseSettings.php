@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_9_1;
+namespace wpubasesettings_0_9_2;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.9.1
+Version: 0.9.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -40,6 +40,8 @@ class WPUBaseSettings {
             add_action('admin_menu', array(&$this,
                 'admin_menu'
             ));
+        } else {
+            add_action('init', array(&$this, 'load_assets'));
         }
     }
 
@@ -294,6 +296,7 @@ class WPUBaseSettings {
         if (!$this->has_media_setting) {
             return;
         }
+
         add_action('admin_print_scripts', array(&$this, 'admin_scripts'));
         add_action('admin_print_styles', array(&$this, 'admin_styles'));
         add_action('admin_head', array(&$this, 'admin_head'));
