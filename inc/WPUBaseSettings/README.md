@@ -23,7 +23,7 @@ $this->settings = array(
     )
 );
 if (is_admin()) {
-    include 'inc/WPUBaseSettings.php';
+    include dirname( __FILE__ ) . '/inc/WPUBaseSettings.php';
     new \wpuimporttwitter\WPUBaseSettings($this->settings_details,$this->settings);
 }
 ```

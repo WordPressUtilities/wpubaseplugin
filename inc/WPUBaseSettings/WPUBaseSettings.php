@@ -1,5 +1,5 @@
 <?php
-namespace wpubasesettings_0_9_2;
+namespace wpubasesettings_0_10_0;
 
 /*
 Class Name: WPU Base Settings
@@ -406,6 +406,25 @@ EOT;
         do_action('wpubasesettings_after_content_' . $this->hook_page);
         echo '</div>';
     }
+
+    /* Get settings */
+
+    public function get_setting_values() {
+        if (!isset($this->settings) || !is_array($this->settings)) {
+            return array();
+        }
+        $settings = get_option($this->settings_details['option_id']);
+        if (!is_array($settings)) {
+            $settings = array();
+        }
+        foreach ($this->settings as $key => $setting) {
+            if (!isset($settings[$key])) {
+                $settings[$key] = false;
+            }
+        }
+        return $settings;
+    }
+
 }
 
 /*
