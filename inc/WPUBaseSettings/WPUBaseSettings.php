@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_10_0;
+namespace wpubasesettings_0_10_1;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.9.2
+Version: 0.10.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -394,6 +394,7 @@ EOT;
 
     public function admin_settings() {
         echo '<div class="wrap"><h1>' . get_admin_page_title() . '</h1>';
+        settings_errors();
         do_action('wpubasesettings_before_content_' . $this->hook_page);
         if (current_user_can($this->settings_details['user_cap'])) {
             echo '<hr />';
@@ -409,17 +410,28 @@ EOT;
 
     /* Get settings */
 
-    public function get_setting_values() {
+    function get_setting_values(){
+        return $this->get_settings_values();
+    }
+
+    public function get_settings_values() {
         if (!isset($this->settings) || !is_array($this->settings)) {
             return array();
         }
+        /* Load settings */
         $settings = get_option($this->settings_details['option_id']);
         if (!is_array($settings)) {
             $settings = array();
         }
+        /* Set default values if not saved */
         foreach ($this->settings as $key => $setting) {
+            $tmp_value = false;
+            if(isset($setting['default_value'])){
+                $tmp_value = $setting['default_value']
+            }
             if (!isset($settings[$key])) {
-                $settings[$key] = false;
+                $settings[$key] = $tmp_value;
+                continue;
             }
         }
         return $settings;
