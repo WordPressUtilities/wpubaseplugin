@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_11_0;
+namespace wpubasesettings_0_11_2;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.11.0
+Version: 0.11.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -131,7 +131,7 @@ class WPUBaseSettings {
         /* Set multilingual fields */
         $new_settings = array();
         foreach ($settings as $id => $input) {
-            if (!isset($input['lang'])) {
+            if (!isset($input['lang']) || empty($languages)) {
                 $new_settings[$id] = $input;
                 continue;
             }
@@ -204,7 +204,7 @@ class WPUBaseSettings {
             }
             switch ($setting['type']) {
             case 'checkbox':
-                $option_id = isset($input[$id]) ? '1' : '0';
+                $option_id = isset($input[$id]) && !in_array($input[$id],array('0','')) ? '1' : '0';
                 break;
             case 'select':
                 if (!array_key_exists($input[$id], $setting['datas'])) {
