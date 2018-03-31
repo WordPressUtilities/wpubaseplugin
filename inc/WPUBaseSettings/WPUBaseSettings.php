@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_11_2;
+namespace wpubasesettings_0_12_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.11.2
+Version: 0.12.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -29,6 +29,7 @@ class WPUBaseSettings {
             }
         }
 
+        $opt = $this->get_settings();
         add_action('admin_init', array(&$this,
             'add_settings'
         ));
@@ -48,7 +49,9 @@ class WPUBaseSettings {
     public function get_settings() {
         $opt = get_option($this->settings_details['option_id']);
         if (!is_array($opt)) {
-            $opt = array();
+            /* Set default values */
+            $opt = $this->get_setting_values();
+            update_option($this->settings_details['option_id'], $opt);
         }
         return $opt;
     }
@@ -204,7 +207,7 @@ class WPUBaseSettings {
             }
             switch ($setting['type']) {
             case 'checkbox':
-                $option_id = isset($input[$id]) && !in_array($input[$id],array('0','')) ? '1' : '0';
+                $option_id = isset($input[$id]) && !in_array($input[$id], array('0', '')) ? '1' : '0';
                 break;
             case 'select':
                 if (!array_key_exists($input[$id], $setting['datas'])) {
@@ -444,7 +447,11 @@ EOT;
         foreach ($this->settings as $key => $setting) {
             /* Default fields */
             if (!isset($settings[$key]) && !isset($setting['translated_from'])) {
-                $settings[$key] = false;
+                $default_value = false;
+                if (isset($this->settings[$key], $this->settings[$key]['default'])) {
+                    $default_value = $this->settings[$key]['default'];
+                }
+                $settings[$key] = $default_value;
             }
             if (isset($setting['translated_from'], $setting['lang_id'], $settings[$key]) && $lang == $setting['lang_id'] && $settings[$key] !== false) {
                 $settings[$setting['translated_from']] = $settings[$key];
