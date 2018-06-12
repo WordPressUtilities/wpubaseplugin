@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_12_1;
+namespace wpubasesettings_0_12_2;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.12.1
+Version: 0.12.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -15,6 +15,7 @@ class WPUBaseSettings {
 
     private $hook_page = false;
     private $has_media_setting = false;
+    private $admin_url = false;
 
     public function __construct($settings_details = array(), $settings = array()) {
         if (empty($settings_details) || empty($settings)) {
@@ -41,6 +42,10 @@ class WPUBaseSettings {
             add_action('admin_menu', array(&$this,
                 'admin_menu'
             ));
+            $this->admin_url = admin_url($this->settings_details['parent_page'] . '?page=' . $this->settings_details['plugin_id']);
+            if (isset($settings_details['plugin_basename'])) {
+                add_filter("plugin_action_links_" . $settings_details['plugin_basename'], array(&$this, 'plugin_add_settings_link'));
+            }
         } else {
             add_action('init', array(&$this, 'load_assets'));
         }
@@ -413,6 +418,12 @@ EOT;
             'admin_settings'
         ), '', 110);
         add_action('load-' . $this->hook_page, array(&$this, 'load_assets'));
+    }
+
+    public function plugin_add_settings_link($links) {
+        $settings_link = '<a href="' . $this->admin_url . '">' . __('Settings') . '</a>';
+        array_push($links, $settings_link);
+        return $links;
     }
 
     public function admin_settings() {
