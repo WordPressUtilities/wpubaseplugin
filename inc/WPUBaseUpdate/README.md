@@ -1,7 +1,7 @@
-WPU Base Settings
+WPU Base Update
 ---
 
-Add settings in your plugin.
+Update your Github WordPress plugin from the plugins page admin.
 
 ## Insert in the INIT hook
 

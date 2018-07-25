@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseupdate_0_1_0;
+namespace wpubaseupdate_0_1_1;
 
 /*
 Class Name: WPU Base Update
 Description: A class to handle plugin update from github
-Version: 0.1.0
+Version: 0.1.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -30,7 +30,7 @@ class WPUBaseUpdate {
         $this->github_project = $github_project;
         $this->current_version = $current_version;
         $this->github_path = $this->github_username . '/' . $this->github_project;
-        $this->transient_name = strtolower($this->github_username . '_' . $this->github_project . '_info_aplugin_update');
+        $this->transient_name = strtolower($this->github_username . '_' . $this->github_project . '_info_plugin_update');
         $this->transient_expiration = HOUR_IN_SECONDS;
 
         /* Hook on plugin update */
@@ -40,6 +40,9 @@ class WPUBaseUpdate {
         add_filter('transient_update_plugins', array($this,
             'filter_update_plugins'
         ));
+        add_filter('upgrader_post_install', array($this,
+            'upgrader_post_install'
+        ), 10, 3);
     }
 
     public function filter_update_plugins($update_plugins) {
@@ -60,9 +63,12 @@ class WPUBaseUpdate {
                     continue;
                 }
                 /* Add plugin details */
-                $update_plugins->response[$this->github_project . '/' . $this->github_project . '.php'] = (object) array(
+                $plugin_id = $this->github_project . '/' . $this->github_project . '.php';
+                $update_plugins->response[$plugin_id] = (object) array(
                     'slug' => 'github-' . $this->github_project,
                     'new_version' => $plugin_version->name,
+                    'plugin' => $plugin_id,
+                    'destination_name' => $this->github_project,
                     'url' => 'https://github.com/' . $this->github_path,
                     'package' => $plugin_version->zipball_url
                 );
@@ -81,5 +87,18 @@ class WPUBaseUpdate {
         }
 
         return json_decode($plugin_update_body);
+    }
+
+    public function upgrader_post_install($true, $hook_extra, $result) {
+        /* Only for this plugin */
+        $base_plugin_name = $this->github_username . '-' . $this->github_project;
+        if (substr($result['destination_name'], 0, strlen($base_plugin_name)) === $base_plugin_name) {
+            $new_destination = $result['local_destination'] . '/' . $this->github_project . '/';
+            rename($result['destination'], $new_destination);
+            $result['destination'] = $new_destination;
+            $result['remote_destination'] = $new_destination;
+            $result['destination_name'] = $this->github_project;
+        }
+        return $result;
     }
 }
