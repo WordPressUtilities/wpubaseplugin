@@ -1,5 +1,5 @@
 <?php
-namespace wpudisplayinstagram;
+namespace wpubasecron_0_2_5;
 
 /*
 Class Name: WPU Base Cron
