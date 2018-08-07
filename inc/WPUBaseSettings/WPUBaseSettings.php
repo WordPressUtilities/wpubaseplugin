@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_12_2;
+namespace wpubasesettings_0_12_3;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.12.2
+Version: 0.12.3
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -61,8 +61,11 @@ class WPUBaseSettings {
         return $opt;
     }
 
-    public function get_setting($id) {
+    public function get_setting($id, $lang = false) {
         $opt = $this->get_settings();
+        if ($lang === true) {
+            $id = $this->get_current_language() . '__' . $id;
+        }
         if (isset($opt[$id])) {
             return $opt[$id];
         }
@@ -482,6 +485,16 @@ EOT;
             return qtranxf_getSortedLanguages();
         }
 
+        global $polylang;
+        if (function_exists('pll_the_languages') && is_object($polylang)) {
+            $poly_langs = $polylang->model->get_languages_list();
+            $languages = array();
+            foreach ($poly_langs as $lang) {
+                $languages[$lang->slug] = $lang->slug;
+            }
+            return $languages;
+        }
+
         return array();
 
     }
@@ -495,6 +508,10 @@ EOT;
         // Obtaining from Qtranslate X
         if (function_exists('qtranxf_getLanguage')) {
             return qtranxf_getLanguage();
+        }
+
+        if (function_exists('pll_current_language')) {
+            return pll_current_language();
         }
 
         return '';
