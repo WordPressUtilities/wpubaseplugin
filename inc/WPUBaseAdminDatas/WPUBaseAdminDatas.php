@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_5_1;
+namespace admindatas_2_6_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.5.1
+Version: 2.6.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -68,6 +68,10 @@ class WPUBaseAdminDatas {
             }
         }
 
+        if(!isset($settings['handle_database'])){
+            $settings['handle_database'] = true;
+        }
+
         $this->settings = $settings;
     }
 
@@ -76,6 +80,9 @@ class WPUBaseAdminDatas {
     ---------------------------------------------------------- */
 
     public function check_database() {
+        if($this->settings['handle_database']){
+            return;
+        }
         global $wpdb;
         $tablename = $wpdb->prefix . $this->settings['table_name'];
 
