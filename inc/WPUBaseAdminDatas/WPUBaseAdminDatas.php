@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_6_0;
+namespace admindatas_2_6_1;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.6.0
+Version: 2.6.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -15,6 +15,7 @@ License URI: http://opensource.org/licenses/MIT
 class WPUBaseAdminDatas {
 
     public $default_perpage = 20;
+    public $sql_option_name = false;
 
     public function __construct() {
     }
@@ -68,19 +69,28 @@ class WPUBaseAdminDatas {
             }
         }
 
-        if(!isset($settings['handle_database'])){
+        if (!isset($settings['handle_database'])) {
             $settings['handle_database'] = true;
         }
 
         $this->settings = $settings;
+
+        $this->sql_option_name = $this->settings['plugin_id'] . '_' . $this->settings['table_name'] . '_version';
     }
 
     /* ----------------------------------------------------------
       Database Creation
     ---------------------------------------------------------- */
 
+    public function drop_database() {
+        global $wpdb;
+        $tablename = $wpdb->prefix . $this->settings['table_name'];
+        $wpdb->query("DROP TABLE IF EXISTS " . $tablename);
+        delete_option($this->sql_option_name);
+    }
+
     public function check_database() {
-        if($this->settings['handle_database']){
+        if ($this->settings['handle_database']) {
             return;
         }
         global $wpdb;
@@ -99,9 +109,8 @@ class WPUBaseAdminDatas {
         $sql_query .= " DEFAULT CHARSET=utf8;";
 
         // If query has changed since last time
-        $sql_option_name = $this->settings['plugin_id'] . '_' . $this->settings['table_name'] . '_version';
         $sql_md5 = md5(serialize($this->settings['table_fields']));
-        $sql_option_value = get_option($sql_option_name);
+        $sql_option_value = get_option($this->sql_option_name);
         if ($sql_md5 != $sql_option_value) {
             // Update or create table
             require_once ABSPATH . 'wp-admin/includes/upgrade.php';
