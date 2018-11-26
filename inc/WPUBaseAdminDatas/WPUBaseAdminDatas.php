@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_6_1;
+namespace admindatas_2_6_2;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.6.1
+Version: 2.6.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -404,7 +404,9 @@ class WPUBaseAdminDatas {
         }
         $content .= '</tbody>';
         $content .= '</table>';
-        $content .= '<p class="admindatas-delete-button">' . get_submit_button(__('Delete'), 'delete', 'delete_lines', false) . '</p>';
+        if ($has_id) {
+            $content .= '<p class="admindatas-delete-button">' . get_submit_button(__('Delete'), 'delete', 'delete_lines', false) . '</p>';
+        }
         $content .= '</form>';
         $content .= $search_form;
         $content .= $pagination;
