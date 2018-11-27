@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_6_2;
+namespace admindatas_2_6_3;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.6.2
+Version: 2.6.3
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -134,7 +134,7 @@ class WPUBaseAdminDatas {
             }
 
             // Update option hash
-            update_option($sql_option_name, $sql_md5);
+            update_option($this->sql_option_name, $sql_md5);
         }
     }
 
