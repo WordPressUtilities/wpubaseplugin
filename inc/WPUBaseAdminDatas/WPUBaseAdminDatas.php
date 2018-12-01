@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_6_3;
+namespace admindatas_2_6_4;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.6.3
+Version: 2.6.4
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -17,8 +17,7 @@ class WPUBaseAdminDatas {
     public $default_perpage = 20;
     public $sql_option_name = false;
 
-    public function __construct() {
-    }
+    public function __construct() {}
 
     public function init($settings = array()) {
         $this->apply_settings($settings);
@@ -258,13 +257,15 @@ class WPUBaseAdminDatas {
             'id' => 'ID'
         );
         $base_columns = array();
-        foreach ($this->settings['table_fields'] as $id => $field) {
-            if (!isset($args['primary_column'])) {
-                $args['primary_column'] = $id;
+        if (isset($args['columns']) && is_array($args['columns'])) {
+            foreach ($args['columns'] as $id => $field) {
+                if (!isset($args['primary_column'])) {
+                    $args['primary_column'] = $id;
+                }
+                $base_columns[$id] = $field;
             }
-            $base_columns[$id] = $field['public_name'];
         }
-        $base_columns = $base_columns + $default_columns;
+        $base_columns = array_merge($base_columns,$default_columns);
 
         // Default columns
         if (!isset($args['columns'])) {
@@ -286,7 +287,7 @@ class WPUBaseAdminDatas {
 
         // Order results
         if (!isset($args['order'])) {
-            $args['order'] = isset($_GET['order']) && in_array($_GET['order'], array('asc', 'desc')) ? $_GET['order'] : 'asc';
+            $args['order'] = isset($_GET['order']) && in_array($_GET['order'], array('asc', 'desc')) ? $_GET['order'] : 'desc';
         }
 
         if (!isset($args['orderby'])) {
@@ -318,9 +319,11 @@ class WPUBaseAdminDatas {
                 $args['max_elements'] = $pager['max_elements'];
             }
         }
+
         // Default list
         if (empty($values) || !is_array($values)) {
-            $values = $wpdb->get_results("SELECT " . implode(", ", array_keys($args['columns'])) . " FROM " . $tablename . " " . $sql_where . " " . $sql_order . " " . $args['limit']);
+            $query = "SELECT " . implode(", ", array_keys($args['columns'])) . " FROM " . $tablename . " " . $sql_where . " " . $sql_order . " " . $args['limit'];
+            $values = $wpdb->get_results($query);
         }
 
         $screen = get_current_screen();
@@ -372,7 +375,7 @@ class WPUBaseAdminDatas {
         $content .= '<input type="hidden" name="page" value="' . esc_attr($page_id) . '" />';
         $content .= wp_nonce_field('action-main-form-' . $page_id, 'action-main-form-admin-datas-' . $page_id, true, false);
 
-        $content .= '<table class="wp-list-table widefat fixed striped">';
+        $content .= '<table class="wp-list-table widefat striped">';
         if (isset($args['columns']) && is_array($args['columns']) && !empty($args['columns'])) {
             $labels = '<tr>';
             if ($has_id) {
