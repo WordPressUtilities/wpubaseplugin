@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_7_0;
+namespace admindatas_2_8_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.7.0
+Version: 2.8.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -416,7 +416,12 @@ class WPUBaseAdminDatas {
             }
             foreach ($vals as $cell_id => $val) {
                 $val = (empty($val) ? '&nbsp;' : $val);
-                $content .= '<td class="' . ($cell_id == $args['primary_column'] ? 'column-primary' : '') . '">' . apply_filters('wpubaseadmindatas_cellcontent', $val, $cell_id, $this->settings) . '</td>';
+                $content .= '<td data-colname="' . esc_attr($args['columns'][$cell_id]) . '" class="' . ($cell_id == $args['primary_column'] ? 'column-primary' : '') . '">';
+                $content .= apply_filters('wpubaseadmindatas_cellcontent', $val, $cell_id, $this->settings);
+                if($cell_id == $args['primary_column']){
+                    $content .= '<button type="button" class="toggle-row"><span class="screen-reader-text">' . __( 'Show more details' ) . '</span></button>';
+                }
+                $content .= '</td>';
             }
             $content .= '</tr>';
         }
