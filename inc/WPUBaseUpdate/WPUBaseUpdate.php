@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseupdate_0_2_0;
+namespace wpubaseupdate_0_2_1;
 
 /*
 Class Name: WPU Base Update
 Description: A class to handle plugin update from github
-Version: 0.2.0
+Version: 0.2.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -21,8 +21,9 @@ class WPUBaseUpdate {
     private $transient_expiration;
     private $plugin_id;
     private $plugin_dir;
+    private $details;
 
-    public function __construct($github_username = false, $github_project = false, $current_version = false) {
+    public function __construct($github_username = false, $github_project = false, $current_version = false, $details = array()) {
         if (!$github_username || !$github_project || !$current_version) {
             return;
         }
@@ -36,6 +37,17 @@ class WPUBaseUpdate {
         $this->transient_expiration = HOUR_IN_SECONDS;
         $this->plugin_id = $this->github_project . '/' . $this->github_project . '.php';
         $this->plugin_dir = (defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR : WP_CONTENT_DIR . '/plugins') . '/' . $this->plugin_id;
+
+        if (!is_array($details)) {
+            $details = array();
+        }
+        if (!isset($details['tested'])) {
+            $details['tested'] = false;
+        }
+        if (!isset($details['requires'])) {
+            $details['requires'] = false;
+        }
+        $this->details = $details;
 
         /* Hook on plugin update */
         add_filter('site_transient_update_plugins', array($this,
@@ -117,9 +129,14 @@ class WPUBaseUpdate {
                     $plugin_info['sections']['changelog'] = wpautop($commit_info->commit->message);
                 }
 
+                if ($this->details['tested']) {
+                    $plugin_info['tested'] = $this->details['tested'];
+                }
+                if ($this->details['requires']) {
+                    $plugin_info['requires'] = $this->details['requires'];
+                }
+
                 /* Future info */
-                // $plugin_info['tested'] = "4.9";
-                // $plugin_info['requires'] = "4.9";
                 // $plugin_info['author_profile'] = 'https://profiles.wordpress.org/wordpressurl';
                 // $plugin_info['banners'] = array(
                 //     'low' => 'http://placehold.it/772x250',
