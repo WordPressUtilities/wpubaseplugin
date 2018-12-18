@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseupdate_0_3_0;
+namespace wpubaseupdate_0_3_1;
 
 /*
 Class Name: WPU Base Update
 Description: A class to handle plugin update from github
-Version: 0.3.0
+Version: 0.3.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -37,6 +37,11 @@ class WPUBaseUpdate {
         $this->transient_expiration = HOUR_IN_SECONDS;
         $this->plugin_id = $this->github_project . '/' . $this->github_project . '.php';
         $this->plugin_dir = (defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR : WP_CONTENT_DIR . '/plugins') . '/' . $this->plugin_id;
+
+        $gitpath = dirname($this->plugin_dir) . '/.git';
+        if (is_dir($gitpath) || file_exists($gitpath)) {
+            return;
+        }
 
         if (!is_array($details)) {
             $details = array();
@@ -129,17 +134,14 @@ class WPUBaseUpdate {
 
                 $plugin_info['sections']['changelog'] = $this->get_commit_info($plugin_version->commit->url, $plugin_version->commit->sha);
 
-                if ($this->details['tested']) {
-                    $plugin_info['tested'] = $this->details['tested'];
-                }
-                if ($this->details['requires']) {
-                    $plugin_info['requires'] = $this->details['requires'];
+                $_plugin_vars = array('tested', 'requires', 'homepage', 'donate_link', 'author_profile');
+                foreach ($_plugin_vars as $_plugin_var) {
+                    if (isset($this->details[$_plugin_var]) && $this->details[$_plugin_var]) {
+                        $plugin_info[$_plugin_var] = $this->details[$_plugin_var];
+                    }
                 }
 
                 /* Future info */
-                // $plugin_info['homepage'] = 'https://profiles.wordpress.org/wordpressurl';
-                // $plugin_info['donate_link'] = 'https://profiles.wordpress.org/wordpressurl';
-                // $plugin_info['author_profile'] = 'https://profiles.wordpress.org/wordpressurl';
                 // $plugin_info['banners'] = array(
                 //     'low' => 'http://placehold.it/772x250',
                 //     'high' => 'http://placehold.it/1544x500'
