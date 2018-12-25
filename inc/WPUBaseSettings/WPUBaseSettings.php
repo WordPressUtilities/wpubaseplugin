@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_12_3;
+namespace wpubasesettings_0_12_4;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.12.3
+Version: 0.12.4
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -401,7 +401,6 @@ jQuery('.wpubasesettings-mediabox .button').click(function(e) {
         \$imgPreview.find('img').attr('src',attachment.url);
         // Send the attachment id to our hidden input
         \$imgField.val(attachment.id);
-        console.log(\$imgField);
     });
 
     // Finally, open the modal on click
@@ -431,7 +430,6 @@ EOT;
 
     public function admin_settings() {
         echo '<div class="wrap"><h1>' . get_admin_page_title() . '</h1>';
-        settings_errors();
         do_action('wpubasesettings_before_content_' . $this->hook_page);
         if (current_user_can($this->settings_details['user_cap'])) {
             echo '<hr />';
@@ -485,6 +483,7 @@ EOT;
             return qtranxf_getSortedLanguages();
         }
 
+        // Obtaining from Polylang
         global $polylang;
         if (function_exists('pll_the_languages') && is_object($polylang)) {
             $poly_langs = $polylang->model->get_languages_list();
@@ -510,6 +509,7 @@ EOT;
             return qtranxf_getLanguage();
         }
 
+        // Obtaining from Polylang
         if (function_exists('pll_current_language')) {
             return pll_current_language();
         }
