@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseupdate_0_3_1;
+namespace wpubaseupdate_0_3_2;
 
 /*
 Class Name: WPU Base Update
 Description: A class to handle plugin update from github
-Version: 0.3.1
+Version: 0.3.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -46,12 +46,7 @@ class WPUBaseUpdate {
         if (!is_array($details)) {
             $details = array();
         }
-        if (!isset($details['tested'])) {
-            $details['tested'] = false;
-        }
-        if (!isset($details['requires'])) {
-            $details['requires'] = false;
-        }
+
         $this->details = $details;
 
         /* Hook on plugin update */
@@ -91,63 +86,65 @@ class WPUBaseUpdate {
     public function get_new_plugin_info() {
         $plugin_info = false;
         $body_json = $this->get_plugin_update_info();
-        if (is_array($body_json)) {
-            foreach ($body_json as $plugin_version) {
-                /* Skip older versions */
-                if (version_compare($plugin_version->name, $this->current_version) <= 0) {
-                    continue;
-                }
+        if (!is_array($body_json)) {
+            return false;
+        }
 
-                if (is_array($plugin_info)) {
-                    /* Update only changelog if other plugin info have been filled by a previous commit */
-                    $plugin_info['sections']['changelog'] .= $this->get_commit_info($plugin_version->commit->url, $plugin_version->commit->sha);
-                    continue;
-                }
-
-                /* Add plugin details */
-                $plugin_info = array(
-                    'name' => $this->github_project,
-                    'slug' => 'github-' . $this->github_project,
-                    'version' => $plugin_version->name,
-                    'new_version' => $plugin_version->name,
-                    'plugin' => $this->plugin_id,
-                    'destination_name' => $this->github_project,
-                    'url' => 'https://github.com/' . $this->github_path,
-                    'trunk' => $plugin_version->zipball_url,
-                    'download_link' => $plugin_version->zipball_url,
-                    'package' => $plugin_version->zipball_url,
-                    'sections' => array()
-                );
-
-                /* Fetch plugin data */
-                $plugin_data = get_plugin_data($this->plugin_dir);
-
-                if (isset($plugin_data['Author'])) {
-                    $plugin_info['author'] = $plugin_data['Author'];
-                }
-                if (isset($plugin_data['Name'])) {
-                    $plugin_info['name'] = $plugin_data['Name'];
-                }
-                if (isset($plugin_data['Description'])) {
-                    $plugin_info['sections']['description'] = $plugin_data['Description'];
-                }
-
-                $plugin_info['sections']['changelog'] = $this->get_commit_info($plugin_version->commit->url, $plugin_version->commit->sha);
-
-                $_plugin_vars = array('tested', 'requires', 'homepage', 'donate_link', 'author_profile');
-                foreach ($_plugin_vars as $_plugin_var) {
-                    if (isset($this->details[$_plugin_var]) && $this->details[$_plugin_var]) {
-                        $plugin_info[$_plugin_var] = $this->details[$_plugin_var];
-                    }
-                }
-
-                /* Future info */
-                // $plugin_info['banners'] = array(
-                //     'low' => 'http://placehold.it/772x250',
-                //     'high' => 'http://placehold.it/1544x500'
-                // );
-
+        foreach ($body_json as $plugin_version) {
+            /* Skip older versions */
+            if (version_compare($plugin_version->name, $this->current_version) <= 0) {
+                continue;
             }
+
+            if (is_array($plugin_info)) {
+                /* Update only changelog if other plugin info have been filled by a previous commit */
+                $plugin_info['sections']['changelog'] .= $this->get_commit_info($plugin_version->commit->url, $plugin_version->commit->sha);
+                continue;
+            }
+
+            /* Add plugin details */
+            $plugin_info = array(
+                'name' => $this->github_project,
+                'slug' => 'github-' . $this->github_project,
+                'version' => $plugin_version->name,
+                'new_version' => $plugin_version->name,
+                'plugin' => $this->plugin_id,
+                'destination_name' => $this->github_project,
+                'url' => 'https://github.com/' . $this->github_path,
+                'trunk' => $plugin_version->zipball_url,
+                'download_link' => $plugin_version->zipball_url,
+                'package' => $plugin_version->zipball_url,
+                'sections' => array()
+            );
+
+            /* Fetch plugin data */
+            $plugin_data = get_plugin_data($this->plugin_dir);
+
+            if (isset($plugin_data['Author'])) {
+                $plugin_info['author'] = $plugin_data['Author'];
+            }
+            if (isset($plugin_data['Name'])) {
+                $plugin_info['name'] = $plugin_data['Name'];
+            }
+            if (isset($plugin_data['Description'])) {
+                $plugin_info['sections']['description'] = $plugin_data['Description'];
+            }
+
+            $plugin_info['sections']['changelog'] = $this->get_commit_info($plugin_version->commit->url, $plugin_version->commit->sha);
+
+            $_plugin_vars = array('tested', 'requires', 'homepage', 'donate_link', 'author_profile');
+            foreach ($_plugin_vars as $_plugin_var) {
+                if (isset($this->details[$_plugin_var]) && $this->details[$_plugin_var]) {
+                    $plugin_info[$_plugin_var] = $this->details[$_plugin_var];
+                }
+            }
+
+            /* Future info */
+            // $plugin_info['banners'] = array(
+            //     'low' => 'http://placehold.it/772x250',
+            //     'high' => 'http://placehold.it/1544x500'
+            // );
+
         }
 
         return $plugin_info;
@@ -186,7 +183,7 @@ class WPUBaseUpdate {
         $transient_id = $this->github_project . '_commit_info_' . $sha . $this->current_version;
         if (false === ($commit_info = get_transient($transient_id))) {
             $commit_info = wp_remote_retrieve_body(wp_remote_get($commit));
-            set_transient($transient_id, $commit_info, $this->transient_expiration);
+            set_transient($transient_id, $commit_info, YEAR_IN_SECONDS);
         }
         return $this->get_nice_commit_diff(json_decode($commit_info));
     }
@@ -208,7 +205,11 @@ class WPUBaseUpdate {
         $base_plugin_name = $this->github_username . '-' . $this->github_project;
         if (substr($result['destination_name'], 0, strlen($base_plugin_name)) === $base_plugin_name) {
             $new_destination = $result['local_destination'] . '/' . $this->github_project . '/';
+
+            /* Move files to the correct destination */
             rename($result['destination'], $new_destination);
+
+            /* Set result vars */
             $result['destination'] = $new_destination;
             $result['remote_destination'] = $new_destination;
             $result['destination_name'] = $this->github_project;
