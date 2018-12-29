@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseupdate_0_3_2;
+namespace wpubaseupdate_0_4_0;
 
 /*
 Class Name: WPU Base Update
 Description: A class to handle plugin update from github
-Version: 0.3.2
+Version: 0.4.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -169,19 +169,43 @@ class WPUBaseUpdate {
 
     }
 
-    /* Retrieve infos from github */
+    /* Retrieve tag infos from github */
     private function get_plugin_update_info() {
         if (false === ($plugin_update_body = get_transient($this->transient_name))) {
             $plugin_update_body = wp_remote_retrieve_body(wp_remote_get('https://api.github.com/repos/' . $this->github_path . '/tags'));
             set_transient($this->transient_name, $plugin_update_body, $this->transient_expiration);
         }
+        return json_decode($plugin_update_body);
+    }
 
+    /* Retrieve commit infos from github */
+    private function get_plugin_commits_info() {
+        $transient_id = $this->transient_name . '_commits';
+        $url = 'https://api.github.com/repos/' . $this->github_path . '/commits';
+        if (false === ($plugin_update_body = get_transient($transient_id))) {
+            $plugin_update_body = wp_remote_retrieve_body(wp_remote_get($url));
+            set_transient($transient_id, $plugin_update_body, $this->transient_expiration);
+        }
         return json_decode($plugin_update_body);
     }
 
     private function get_commit_info($commit, $sha) {
+
+        $commit_info = false;
+        /* Try to obtain commit info from global commit infos */
+        $commits = $this->get_plugin_commits_info();
+        if (is_array($commits)) {
+            foreach ($commits as $_commit) {
+                if ($_commit->sha != $sha) {
+                    continue;
+                }
+                return $this->get_nice_commit_diff($_commit);
+            }
+        }
+
+        /* No luck : obtain infos from Commit API */
         $transient_id = $this->github_project . '_commit_info_' . $sha . $this->current_version;
-        if (false === ($commit_info = get_transient($transient_id))) {
+        if (!$commit_info && false === ($commit_info = get_transient($transient_id))) {
             $commit_info = wp_remote_retrieve_body(wp_remote_get($commit));
             set_transient($transient_id, $commit_info, YEAR_IN_SECONDS);
         }
