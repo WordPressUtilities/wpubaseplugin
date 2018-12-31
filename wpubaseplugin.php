@@ -4,7 +4,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: http://github.com/Darklg/WPUtilities
 Description: A framework for a WordPress plugin
-Version: 2.18.0
+Version: 2.18.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -12,6 +12,8 @@ License URI: http://opensource.org/licenses/MIT
 */
 
 class WPUBasePlugin {
+
+    public $version = '2.18.1';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -35,7 +37,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseCron'
         ),
         'update' => array(
-            'namespace' => 'wpubaseupdate_0_4_0',
+            'namespace' => 'wpubaseupdate_0_4_1',
             'name' => 'WPUBaseUpdate'
         )
     );
@@ -92,7 +94,10 @@ class WPUBasePlugin {
         $this->tools = array();
         // Check for utilities class
         foreach ($this->utilities_classes as $id => $item) {
-            include dirname(__FILE__) . '/inc/' . $item['name'] . '/' . $item['name'] . '.php';
+            if(isset($this->tools[$id])){
+                continue;
+            }
+            require_once dirname(__FILE__) . '/inc/' . $item['name'] . '/' . $item['name'] . '.php';
             $className = $item['namespace'] . '\\' . $item['name'];
             $this->tools[$id] = new $className;
         }

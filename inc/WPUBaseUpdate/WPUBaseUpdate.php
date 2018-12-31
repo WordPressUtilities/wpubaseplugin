@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseupdate_0_4_0;
+namespace wpubaseupdate_0_4_1;
 
 /*
 Class Name: WPU Base Update
 Description: A class to handle plugin update from github
-Version: 0.4.0
+Version: 0.4.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -14,9 +14,9 @@ Thanks: https://gist.github.com/danielbachhuber/7684646
 
 class WPUBaseUpdate {
 
+    public $current_version;
     private $github_username;
     private $github_project;
-    private $current_version;
     private $transient_name;
     private $transient_expiration;
     private $plugin_id;
@@ -24,6 +24,10 @@ class WPUBaseUpdate {
     private $details;
 
     public function __construct($github_username = false, $github_project = false, $current_version = false, $details = array()) {
+        $this->init();
+    }
+
+    public function init($github_username = false, $github_project = false, $current_version = false, $details = array()){
         if (!$github_username || !$github_project || !$current_version) {
             return;
         }
@@ -118,7 +122,10 @@ class WPUBaseUpdate {
             );
 
             /* Fetch plugin data */
-            $plugin_data = get_plugin_data($this->plugin_dir);
+            $plugin_data = array();
+            if(file_exists($this->plugin_dir)){
+                $plugin_data = get_plugin_data($this->plugin_dir);
+            }
 
             if (isset($plugin_data['Author'])) {
                 $plugin_info['author'] = $plugin_data['Author'];
@@ -170,7 +177,7 @@ class WPUBaseUpdate {
     }
 
     /* Retrieve tag infos from github */
-    private function get_plugin_update_info() {
+    public function get_plugin_update_info() {
         if (false === ($plugin_update_body = get_transient($this->transient_name))) {
             $plugin_update_body = wp_remote_retrieve_body(wp_remote_get('https://api.github.com/repos/' . $this->github_path . '/tags'));
             set_transient($this->transient_name, $plugin_update_body, $this->transient_expiration);
@@ -179,7 +186,7 @@ class WPUBaseUpdate {
     }
 
     /* Retrieve commit infos from github */
-    private function get_plugin_commits_info() {
+    public function get_plugin_commits_info() {
         $transient_id = $this->transient_name . '_commits';
         $url = 'https://api.github.com/repos/' . $this->github_path . '/commits';
         if (false === ($plugin_update_body = get_transient($transient_id))) {
