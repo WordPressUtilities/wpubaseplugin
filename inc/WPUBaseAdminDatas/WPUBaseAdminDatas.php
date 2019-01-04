@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_2_8_0;
+namespace admindatas_3_0_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 2.8.0
+Version: 3.0.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -17,6 +17,12 @@ class WPUBaseAdminDatas {
     public $default_perpage = 20;
     public $sql_option_name = false;
     public $pagename;
+    public $tablename;
+    public $user_level = 'edit_posts';
+    public $field_types = array(
+        'text',
+        'email'
+    );
 
     public function __construct() {}
 
@@ -26,6 +32,11 @@ class WPUBaseAdminDatas {
         add_action('admin_post_admindatas_' . $this->settings['plugin_id'], array(&$this,
             'delete_lines_postAction'
         ));
+        if ($this->settings['can_edit']) {
+            add_action('admin_post_admindatas_edit_' . $this->settings['plugin_id'], array(&$this,
+                'edit_line_postAction'
+            ));
+        }
     }
 
     public function apply_settings($settings) {
@@ -68,16 +79,38 @@ class WPUBaseAdminDatas {
             if (!isset($field['type'])) {
                 $settings['table_fields'][$id]['type'] = isset($field['sql']) ? 'sql' : 'varchar';
             }
+            if (!isset($field['field_type']) || !in_array($field['field_type'], $this->field_types)) {
+                $settings['table_fields'][$id]['field_type'] = 'text';
+            }
+            if (!isset($field['edit'])) {
+                $settings['table_fields'][$id]['edit'] = false;
+            }
+        }
+
+        if (!isset($settings['user_level'])) {
+            $settings['user_level'] = $this->user_level;
         }
 
         if (!isset($settings['handle_database'])) {
             $settings['handle_database'] = true;
         }
 
+        if (!isset($settings['can_edit']) || !current_user_can($settings['user_level'])) {
+            $settings['can_edit'] = false;
+        }
+
         $this->settings = $settings;
 
-        $this->pagename = admin_url($this->settings['admin_url'] . '?page=' . $this->settings['plugin_id']);
+        $this->user_level = $settings['user_level'];
+        $this->pageid = $this->settings['plugin_id'];
+        if (isset($this->settings['plugin_pageid'])) {
+            $this->pageid = $this->settings['plugin_pageid'];
+        }
+        $this->pagename = admin_url($this->settings['admin_url'] . '?page=' . $this->pageid);
         $this->sql_option_name = $this->settings['plugin_id'] . '_' . $this->settings['table_name'] . '_version';
+
+        global $wpdb;
+        $this->tablename = $wpdb->prefix . $this->settings['table_name'];
     }
 
     /* ----------------------------------------------------------
@@ -86,8 +119,7 @@ class WPUBaseAdminDatas {
 
     public function drop_database() {
         global $wpdb;
-        $tablename = $wpdb->prefix . $this->settings['table_name'];
-        $wpdb->query("DROP TABLE IF EXISTS " . $tablename);
+        $wpdb->query("DROP TABLE IF EXISTS " . $this->tablename);
         delete_option($this->sql_option_name);
     }
 
@@ -96,7 +128,6 @@ class WPUBaseAdminDatas {
             return;
         }
         global $wpdb;
-        $tablename = $wpdb->prefix . $this->settings['table_name'];
 
         // Assemble fields
         $fields_query = array(
@@ -106,7 +137,7 @@ class WPUBaseAdminDatas {
         );
 
         // Build query
-        $sql_query = "CREATE TABLE " . $tablename;
+        $sql_query = "CREATE TABLE " . $this->tablename;
         $sql_query .= " (\n" . implode(",\n", $fields_query) . "\n)";
         $sql_query .= " DEFAULT CHARSET=utf8;";
 
@@ -118,7 +149,7 @@ class WPUBaseAdminDatas {
             require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
             // Create table
-            maybe_create_table($tablename, $sql_query);
+            maybe_create_table($this->tablename, $sql_query);
 
             foreach ($this->settings['table_fields'] as $column_name => $col) {
                 switch ($col['type']) {
@@ -132,7 +163,7 @@ class WPUBaseAdminDatas {
                     $col_sql = $col['sql'];
                 }
 
-                maybe_add_column($tablename, $column_name, 'ALTER TABLE ' . $tablename . ' ADD ' . $column_name . ' ' . $col_sql);
+                maybe_add_column($this->tablename, $column_name, 'ALTER TABLE ' . $this->tablename . ' ADD ' . $column_name . ' ' . $col_sql);
             }
 
             // Update option hash
@@ -146,10 +177,9 @@ class WPUBaseAdminDatas {
 
     public function get_pager_limit($perpage = false, $req_details = '') {
         global $wpdb;
-        $tablename = $wpdb->prefix . $this->settings['table_name'];
 
         // Ensure good format for table name
-        if (empty($tablename) || !preg_match('/^([A-Za-z0-9_-]+)$/', $tablename)) {
+        if (empty($this->tablename) || !preg_match('/^([A-Za-z0-9_-]+)$/', $this->tablename)) {
             return array(
                 'pagenum' => 0,
                 'max_pages' => 0,
@@ -163,7 +193,7 @@ class WPUBaseAdminDatas {
         }
 
         // Get number of elements in table
-        $elements_count = $wpdb->get_var("SELECT COUNT(*) FROM " . $tablename . $req_details);
+        $elements_count = $wpdb->get_var("SELECT COUNT(*) FROM " . $this->tablename . $req_details);
 
         // Get max page number
         $max_pages = ceil($elements_count / $perpage);
@@ -184,11 +214,62 @@ class WPUBaseAdminDatas {
     }
 
     /* ----------------------------------------------------------
+      Lines
+    ---------------------------------------------------------- */
+
+    public function get_line($line_id) {
+        global $wpdb;
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM " . $this->tablename . " WHERE id=%d", $line_id), ARRAY_A);
+    }
+
+    /* ----------------------------------------------------------
+      Edit line
+    ---------------------------------------------------------- */
+
+    public function edit_line_postAction() {
+        if (current_user_can($this->user_level) && !empty($_POST) && isset($_POST['edit_line'], $_POST['admindatas_fields'], $_POST['page']) && is_numeric($_POST['edit_line']) && is_array($_POST['admindatas_fields'])) {
+            $action_id = 'action-edit-form-admin-datas-' . $_POST['page'];
+            if (isset($_POST[$action_id]) && wp_verify_nonce($_POST[$action_id], 'action-edit-form-' . $_POST['page'])) {
+                $this->edit_line($_POST['edit_line'], $_POST['admindatas_fields']);
+            }
+        }
+        if (isset($_POST['page'], $_POST['edit_line']) && is_numeric($_POST['edit_line'])) {
+            wp_redirect($this->pagename . '&item_id=' . $_POST['edit_line']);
+            die;
+        }
+    }
+
+    public function edit_line($item_id, $new_datas) {
+        $_datas = $this->get_line($item_id);
+        $_datas_update = array();
+        foreach ($new_datas as $key => $var) {
+            /* Old field */
+            if (!isset($_datas[$key])) {
+                continue;
+            }
+            /* Same value */
+            if ($_datas[$key] == $var) {
+                continue;
+            }
+            $_datas_update[$key] = $var;
+        }
+
+        if (!empty($_datas_update)) {
+            global $wpdb;
+            $wpdb->update(
+                $this->tablename,
+                $_datas_update,
+                array('ID' => $item_id)
+            );
+        }
+    }
+
+    /* ----------------------------------------------------------
       Delete lines
     ---------------------------------------------------------- */
 
     public function delete_lines_postAction() {
-        if (!empty($_POST) && isset($_POST['select_line'], $_POST['page']) && is_array($_POST['select_line'])) {
+        if (current_user_can($this->user_level) && !empty($_POST) && isset($_POST['select_line'], $_POST['page']) && is_array($_POST['select_line'])) {
             $action_id = 'action-main-form-admin-datas-' . $_POST['page'];
             if (isset($_POST[$action_id]) && wp_verify_nonce($_POST[$action_id], 'action-main-form-' . $_POST['page'])) {
                 $this->delete_lines($_POST['select_line']);
@@ -201,19 +282,18 @@ class WPUBaseAdminDatas {
     }
 
     public function delete_lines($lines = array()) {
-        global $wpdb;
-        $tablename = $wpdb->prefix . $this->settings['table_name'];
         $_lines = array();
         foreach ($lines as $line) {
-            // Stop if a value is not valid
+            // Stop if a line is not valid
             if (!is_numeric($line)) {
                 break;
             }
             $_lines[] = $line;
         }
         if (!empty($_lines)) {
+            global $wpdb;
             $wpdb->query(
-                "DELETE FROM ${tablename} WHERE ID IN(" . implode(",", $_lines) . ");"
+                "DELETE FROM " . $this->tablename . " WHERE ID IN(" . implode(",", $_lines) . ");"
             );
         }
     }
@@ -239,11 +319,66 @@ class WPUBaseAdminDatas {
       Utilities : Display
     ---------------------------------------------------------- */
 
+    public function get_admin_view($values = array(), $args = array()) {
+        if (isset($_GET['item_id']) && is_numeric($_GET['item_id'])) {
+            $_content = $this->get_admin_item($_GET['item_id']);
+        } else {
+            $args['is_admin_view'] = true;
+            $_content = $this->get_admin_table($values, $args);
+        }
+
+        return $_content;
+    }
+
+    public function get_admin_item($item_id) {
+        $_html = '';
+        $_html .= $item_id;
+        $page_id = $this->get_page_id();
+        $datas = $this->get_line($item_id);
+        if ($this->settings['can_edit']) {
+            $_html = '<form action="' . admin_url('admin-post.php') . '" method="post">';
+            $_html .= '<input type="hidden" name="action" value="admindatas_edit_' . $this->settings['plugin_id'] . '">';
+            $_html .= '<input type="hidden" name="page" value="' . esc_attr($page_id) . '" />';
+            $_html .= '<input type="hidden" name="edit_line" value="' . esc_attr($item_id) . '" />';
+            $_html .= wp_nonce_field('action-edit-form-' . $page_id, 'action-edit-form-admin-datas-' . $page_id, true, false);
+        }
+
+        $_html .= '<h3>#' . $item_id . '</h3>';
+        $_html .= '<a href="' . $this->pagename . '">' . __('Back') . '</a>';
+
+        $_html .= '<table class="form-table"><tbody>';
+        foreach ($this->settings['table_fields'] as $id => $field) {
+            $_fieldId = 'admindatas_fields_' . $id;
+            $_html .= '<tr>';
+            $_html .= '<th scope="row"><label for="' . $_fieldId . '">' . $field['public_name'] . ' :</label></th>';
+            $_html .= '<td>';
+            if ($this->settings['can_edit']) {
+                switch ($field['field_type']) {
+                default:
+                    $_html .= '<input type="' . $field['field_type'] . '" id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']" value="' . $datas[$id] . '" />';
+                }
+            } else {
+                $_html .= '<span>' . esc_html($datas[$id]) . '</span>';
+            }
+            $_html .= '</td>';
+            $_html .= '</tr>';
+        }
+        $_html .= '</tbody></table>';
+
+        if ($this->settings['can_edit']) {
+            $_html .= get_submit_button(__('Submit'), '', 'submit', false);
+            $_html .= '</form>';
+        }
+
+        return $_html;
+    }
+
     public function get_admin_table($values = array(), $args = array()) {
         global $wpdb;
 
         $pagination = '';
-        $tablename = $wpdb->prefix . $this->settings['table_name'];
+
+        $is_admin_view = isset($args['is_admin_view']) && $args['is_admin_view'];
 
         if (!is_array($args)) {
             $args = array();
@@ -327,17 +462,13 @@ class WPUBaseAdminDatas {
         $total_nb = 0;
         if (empty($values) || !is_array($values)) {
             $columns = array_keys($args['columns']);
-            $query = "SELECT " . implode(", ", $columns) . " FROM " . $tablename . " " . $sql_where . " " . $sql_order . " " . $args['limit'];
-            $query_total = "SELECT count(" . $columns[0] . ")  FROM " . $tablename . " " . $sql_where;
+            $query = "SELECT " . implode(", ", $columns) . " FROM " . $this->tablename . " " . $sql_where . " " . $sql_order . " " . $args['limit'];
+            $query_total = "SELECT count(" . $columns[0] . ")  FROM " . $this->tablename . " " . $sql_where;
             $values = $wpdb->get_results($query);
             $total_nb = $wpdb->get_var($query_total);
         }
 
-        $screen = get_current_screen();
-        $page_id = '';
-        if (property_exists($screen, 'parent_base')) {
-            $page_id = $screen->parent_base;
-        }
+        $page_id = $this->get_page_id();
 
         $url_items_clear = array(
             'order' => $args['order'],
@@ -404,6 +535,9 @@ class WPUBaseAdminDatas {
                 $sort_link = add_query_arg($url_items_tmp);
                 $labels .= '<th class="sortable ' . ($id_col == $args['primary_column'] ? 'column-primary' : '') . ' ' . $args['order'] . ' ' . ($id_col == $args['orderby'] ? 'sorted' : '') . '"><a href="' . $sort_link . '"><span>' . $name_col . '</span><span class="sorting-indicator"></span></a></th>';
             }
+            if ($has_id && $is_admin_view) {
+                $labels .= '<th></th>';
+            }
             $labels .= '</tr>';
             $content .= '<thead>' . sprintf($labels, 1) . '</thead>';
             $content .= '<tfoot>' . sprintf($labels, 2) . '</tfoot>';
@@ -418,10 +552,13 @@ class WPUBaseAdminDatas {
                 $val = (empty($val) ? '&nbsp;' : $val);
                 $content .= '<td data-colname="' . esc_attr($args['columns'][$cell_id]) . '" class="' . ($cell_id == $args['primary_column'] ? 'column-primary' : '') . '">';
                 $content .= apply_filters('wpubaseadmindatas_cellcontent', $val, $cell_id, $this->settings);
-                if($cell_id == $args['primary_column']){
-                    $content .= '<button type="button" class="toggle-row"><span class="screen-reader-text">' . __( 'Show more details' ) . '</span></button>';
+                if ($cell_id == $args['primary_column']) {
+                    $content .= '<button type="button" class="toggle-row"><span class="screen-reader-text">' . __('Show more details') . '</span></button>';
                 }
                 $content .= '</td>';
+            }
+            if ($has_id && $is_admin_view) {
+                $content .= '<td><a href="' . $this->pagename . '&item_id=' . $vals->id . '">' . ($this->settings['can_edit'] ? __('Edit') : __('View')) . '</a></td>';
             }
             $content .= '</tr>';
         }
@@ -445,5 +582,18 @@ class WPUBaseAdminDatas {
 </style>
 HTML;
         return $content;
+    }
+
+/* ----------------------------------------------------------
+      Helpers
+    ---------------------------------------------------------- */
+
+    public function get_page_id() {
+        $screen = get_current_screen();
+        $page_id = '';
+        if (property_exists($screen, 'parent_base')) {
+            $page_id = $screen->parent_base;
+        }
+        return $page_id;
     }
 }
