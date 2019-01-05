@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_3_0_0;
+namespace admindatas_3_1_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.0.0
+Version: 3.1.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -21,6 +21,10 @@ class WPUBaseAdminDatas {
     public $user_level = 'edit_posts';
     public $field_types = array(
         'text',
+        'url',
+        'textarea',
+        'date',
+        'number',
         'email'
     );
 
@@ -234,7 +238,11 @@ class WPUBaseAdminDatas {
             }
         }
         if (isset($_POST['page'], $_POST['edit_line']) && is_numeric($_POST['edit_line'])) {
-            wp_redirect($this->pagename . '&item_id=' . $_POST['edit_line']);
+            $_back_url = $this->pagename . '&item_id=' . $_POST['edit_line'];
+            if (isset($_POST['backquery'])) {
+                $_back_url = add_query_arg(array('backquery' => $_POST['backquery']), $_back_url);
+            }
+            wp_redirect($_back_url);
             die;
         }
     }
@@ -332,33 +340,51 @@ class WPUBaseAdminDatas {
 
     public function get_admin_item($item_id) {
         $_html = '';
-        $_html .= $item_id;
+
+        $_back_query = '';
+        $_back_url_args = array();
+        /* Save back query if valid */
+        if (isset($_GET['backquery'])) {
+            $_back_args = json_decode(base64_decode($_GET['backquery']));
+            if (is_object($_back_args)) {
+                $_back_url_args = (array) $_back_args;
+                $_back_query = $_GET['backquery'];
+            }
+        }
         $page_id = $this->get_page_id();
         $datas = $this->get_line($item_id);
         if ($this->settings['can_edit']) {
-            $_html = '<form action="' . admin_url('admin-post.php') . '" method="post">';
+            $_html .= '<form action="' . admin_url('admin-post.php') . '" method="post">';
             $_html .= '<input type="hidden" name="action" value="admindatas_edit_' . $this->settings['plugin_id'] . '">';
             $_html .= '<input type="hidden" name="page" value="' . esc_attr($page_id) . '" />';
+            if ($_back_query) {
+                $_html .= '<input type="hidden" name="backquery" value="' . esc_attr($_back_query) . '" />';
+            }
             $_html .= '<input type="hidden" name="edit_line" value="' . esc_attr($item_id) . '" />';
             $_html .= wp_nonce_field('action-edit-form-' . $page_id, 'action-edit-form-admin-datas-' . $page_id, true, false);
         }
 
         $_html .= '<h3>#' . $item_id . '</h3>';
-        $_html .= '<a href="' . $this->pagename . '">' . __('Back') . '</a>';
+        $_html .= '<a href="' . add_query_arg($_back_url_args, $this->pagename) . '">' . __('Back') . '</a>';
 
         $_html .= '<table class="form-table"><tbody>';
         foreach ($this->settings['table_fields'] as $id => $field) {
+            $value = htmlspecialchars($datas[$id], ENT_QUOTES, "UTF-8");
+
             $_fieldId = 'admindatas_fields_' . $id;
             $_html .= '<tr>';
             $_html .= '<th scope="row"><label for="' . $_fieldId . '">' . $field['public_name'] . ' :</label></th>';
             $_html .= '<td>';
             if ($this->settings['can_edit']) {
                 switch ($field['field_type']) {
+                case 'textarea':
+                    $_html .= '<textarea rows="5" cols="30" id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']">' . $value . '</textarea>';
+                    break;
                 default:
-                    $_html .= '<input type="' . $field['field_type'] . '" id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']" value="' . $datas[$id] . '" />';
+                    $_html .= '<input type="' . $field['field_type'] . '" id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']" value="' . $value . '" />';
                 }
             } else {
-                $_html .= '<span>' . esc_html($datas[$id]) . '</span>';
+                $_html .= '<span>' . esc_html($value) . '</span>';
             }
             $_html .= '</td>';
             $_html .= '</tr>';
@@ -480,6 +506,11 @@ class WPUBaseAdminDatas {
         $url_items['where_glue'] = $where_glue;
         $url_items['where_text'] = $where_text;
 
+        /* Back query used in single page */
+        $url_items_edit = $url_items;
+        unset($url_items_edit['pagenum']);
+        $_back_query = base64_encode(json_encode($url_items_edit));
+
         $page_links = paginate_links(array(
             'base' => add_query_arg($url_items),
             'format' => '',
@@ -558,7 +589,8 @@ class WPUBaseAdminDatas {
                 $content .= '</td>';
             }
             if ($has_id && $is_admin_view) {
-                $content .= '<td><a href="' . $this->pagename . '&item_id=' . $vals->id . '">' . ($this->settings['can_edit'] ? __('Edit') : __('View')) . '</a></td>';
+                $edit_url = add_query_arg(array('backquery' => $_back_query), $this->pagename . '&item_id=' . $vals->id);
+                $content .= '<td><a href="' . $edit_url . '">' . ($this->settings['can_edit'] ? __('Edit') : __('View')) . '</a></td>';
             }
             $content .= '</tr>';
         }
