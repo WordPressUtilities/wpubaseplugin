@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_3_1_0;
+namespace admindatas_3_2_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.1.0
+Version: 3.2.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -39,6 +39,11 @@ class WPUBaseAdminDatas {
         if ($this->settings['can_edit']) {
             add_action('admin_post_admindatas_edit_' . $this->settings['plugin_id'], array(&$this,
                 'edit_line_postAction'
+            ));
+        }
+        if ($this->settings['can_create']) {
+            add_action('admin_post_admindatas_create_' . $this->settings['plugin_id'], array(&$this,
+                'create_line_postAction'
             ));
         }
     }
@@ -89,6 +94,9 @@ class WPUBaseAdminDatas {
             if (!isset($field['edit'])) {
                 $settings['table_fields'][$id]['edit'] = false;
             }
+            if (!isset($field['create'])) {
+                $settings['table_fields'][$id]['create'] = false;
+            }
         }
 
         if (!isset($settings['user_level'])) {
@@ -99,8 +107,12 @@ class WPUBaseAdminDatas {
             $settings['handle_database'] = true;
         }
 
+        if (!isset($settings['can_create']) || !current_user_can($settings['user_level'])) {
+            $settings['can_create'] = false;
+        }
+
         if (!isset($settings['can_edit']) || !current_user_can($settings['user_level'])) {
-            $settings['can_edit'] = false;
+            $settings['can_edit'] = $settings['can_create'];
         }
 
         $this->settings = $settings;
@@ -227,6 +239,49 @@ class WPUBaseAdminDatas {
     }
 
     /* ----------------------------------------------------------
+      Create line
+    ---------------------------------------------------------- */
+
+    public function create_line_postAction() {
+        $_return_value = false;
+        if (current_user_can($this->user_level) && !empty($_POST) && isset($_POST['admindatas_fields'], $_POST['page']) && is_array($_POST['admindatas_fields'])) {
+            $action_id = 'action-create-form-admin-datas-' . $_POST['page'];
+            if (isset($_POST[$action_id]) && wp_verify_nonce($_POST[$action_id], 'action-create-form-' . $_POST['page'])) {
+                $_return_value = $this->create_line($_POST['admindatas_fields']);
+            }
+        }
+        if (isset($_POST['page']) && is_numeric($_return_value)) {
+            $_back_url = $this->pagename . '&item_id=' . $_return_value;
+            if (isset($_POST['backquery'])) {
+                $_back_url = add_query_arg(array('backquery' => $_POST['backquery']), $_back_url);
+            }
+            wp_redirect($_back_url);
+            die;
+        }
+    }
+
+    public function create_line($datas) {
+        $_datas_create = array();
+        $_return_value = false;
+        foreach ($this->settings['table_fields'] as $id => $field) {
+            if (isset($datas[$id])) {
+                $_datas_create[$id] = $datas[$id];
+            }
+        }
+        if (!empty($_datas_create)) {
+            global $wpdb;
+            $_return_value = $wpdb->insert(
+                $this->tablename,
+                $_datas_create
+            );
+        }
+        if ($_return_value) {
+            $_return_value = $wpdb->insert_id;
+        }
+        return $_return_value;
+    }
+
+    /* ----------------------------------------------------------
       Edit line
     ---------------------------------------------------------- */
 
@@ -330,6 +385,8 @@ class WPUBaseAdminDatas {
     public function get_admin_view($values = array(), $args = array()) {
         if (isset($_GET['item_id']) && is_numeric($_GET['item_id'])) {
             $_content = $this->get_admin_item($_GET['item_id']);
+        } elseif (isset($_GET['create'])) {
+            $_content = $this->get_admin_item();
         } else {
             $args['is_admin_view'] = true;
             $_content = $this->get_admin_table($values, $args);
@@ -338,11 +395,14 @@ class WPUBaseAdminDatas {
         return $_content;
     }
 
-    public function get_admin_item($item_id) {
+    public function get_admin_item($item_id = false) {
         $_html = '';
 
         $_back_query = '';
         $_back_url_args = array();
+        $page_id = $this->get_page_id();
+        $datas = $item_id ? $this->get_line($item_id) : array();
+
         /* Save back query if valid */
         if (isset($_GET['backquery'])) {
             $_back_args = json_decode(base64_decode($_GET['backquery']));
@@ -351,31 +411,43 @@ class WPUBaseAdminDatas {
                 $_back_query = $_GET['backquery'];
             }
         }
-        $page_id = $this->get_page_id();
-        $datas = $this->get_line($item_id);
-        if ($this->settings['can_edit']) {
+
+        /* Diff between edit & create form */
+        $_has_form = ($this->settings['can_edit'] && $item_id) || ($this->settings['can_create'] && !$item_id);
+
+        /* Actions */
+        $_form_action = $item_id ? 'admindatas_edit_' : 'admindatas_create_';
+        $_form_nonce = $item_id ? 'action-edit-form-' : 'action-create-form-';
+
+        if ($_has_form) {
             $_html .= '<form action="' . admin_url('admin-post.php') . '" method="post">';
-            $_html .= '<input type="hidden" name="action" value="admindatas_edit_' . $this->settings['plugin_id'] . '">';
+            $_html .= '<input type="hidden" name="action" value="' . $_form_action . $this->settings['plugin_id'] . '">';
             $_html .= '<input type="hidden" name="page" value="' . esc_attr($page_id) . '" />';
             if ($_back_query) {
                 $_html .= '<input type="hidden" name="backquery" value="' . esc_attr($_back_query) . '" />';
             }
-            $_html .= '<input type="hidden" name="edit_line" value="' . esc_attr($item_id) . '" />';
-            $_html .= wp_nonce_field('action-edit-form-' . $page_id, 'action-edit-form-admin-datas-' . $page_id, true, false);
+            if ($item_id) {
+                $_html .= '<input type="hidden" name="edit_line" value="' . esc_attr($item_id) . '" />';
+            }
+            $_html .= wp_nonce_field($_form_nonce . $page_id, $_form_nonce . 'admin-datas-' . $page_id, true, false);
         }
 
-        $_html .= '<h3>#' . $item_id . '</h3>';
+        if ($item_id) {
+            $_html .= '<h3>#' . $item_id . '</h3>';
+        } else {
+            $_html .= '<h3>' . __('New Post') . '</h3>';
+        }
         $_html .= '<a href="' . add_query_arg($_back_url_args, $this->pagename) . '">' . __('Back') . '</a>';
 
         $_html .= '<table class="form-table"><tbody>';
         foreach ($this->settings['table_fields'] as $id => $field) {
-            $value = htmlspecialchars($datas[$id], ENT_QUOTES, "UTF-8");
+            $value = isset($datas[$id]) ? htmlspecialchars($datas[$id], ENT_QUOTES, "UTF-8") : '';
 
             $_fieldId = 'admindatas_fields_' . $id;
             $_html .= '<tr>';
             $_html .= '<th scope="row"><label for="' . $_fieldId . '">' . $field['public_name'] . ' :</label></th>';
             $_html .= '<td>';
-            if ($this->settings['can_edit']) {
+            if ($_has_form) {
                 switch ($field['field_type']) {
                 case 'textarea':
                     $_html .= '<textarea rows="5" cols="30" id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']">' . $value . '</textarea>';
@@ -391,7 +463,7 @@ class WPUBaseAdminDatas {
         }
         $_html .= '</tbody></table>';
 
-        if ($this->settings['can_edit']) {
+        if ($_has_form) {
             $_html .= get_submit_button(__('Submit'), '', 'submit', false);
             $_html .= '</form>';
         }
@@ -551,7 +623,10 @@ class WPUBaseAdminDatas {
         $content .= '<input type="hidden" name="action" value="admindatas_' . $this->settings['plugin_id'] . '">';
         $content .= '<input type="hidden" name="page" value="' . esc_attr($page_id) . '" />';
         $content .= wp_nonce_field('action-main-form-' . $page_id, 'action-main-form-admin-datas-' . $page_id, true, false);
-
+        if ($has_id && $is_admin_view && $this->settings['can_create']) {
+            $new_url = add_query_arg(array('backquery' => $_back_query), $this->pagename . '&create=1');
+            $content .= '<p><a class="page-title-action" href="' . $new_url . '">' . __('New Post') . '</a></p>';
+        }
         $content .= '<table class="wp-list-table widefat striped">';
         if (isset($args['columns']) && is_array($args['columns']) && !empty($args['columns'])) {
             $labels = '<tr>';
