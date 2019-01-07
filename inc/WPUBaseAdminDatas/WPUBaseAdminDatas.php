@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_3_2_0;
+namespace admindatas_3_3_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.2.0
+Version: 3.3.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -264,9 +264,14 @@ class WPUBaseAdminDatas {
         $_datas_create = array();
         $_return_value = false;
         foreach ($this->settings['table_fields'] as $id => $field) {
-            if (isset($datas[$id])) {
-                $_datas_create[$id] = $datas[$id];
+            if (!isset($datas[$id])) {
+                continue;
             }
+            /* Invalid field */
+            if (!$this->validate_field_value($field, $datas[$id])) {
+                continue;
+            }
+            $_datas_create[$id] = $datas[$id];
         }
         if (!empty($_datas_create)) {
             global $wpdb;
@@ -306,12 +311,16 @@ class WPUBaseAdminDatas {
         $_datas = $this->get_line($item_id);
         $_datas_update = array();
         foreach ($new_datas as $key => $var) {
-            /* Old field */
-            if (!isset($_datas[$key])) {
-                continue;
-            }
             /* Same value */
             if ($_datas[$key] == $var) {
+                continue;
+            }
+            /* Fake field */
+            if (!isset($this->settings['table_fields'][$key])) {
+                continue;
+            }
+            /* Invalid field */
+            if (!$this->validate_field_value($this->settings['table_fields'][$key], $var)) {
                 continue;
             }
             $_datas_update[$key] = $var;
@@ -325,6 +334,30 @@ class WPUBaseAdminDatas {
                 array('ID' => $item_id)
             );
         }
+    }
+
+    /* ----------------------------------------------------------
+      Validate
+    ---------------------------------------------------------- */
+
+    public function validate_field_value($field, $value) {
+        switch ($field['field_type']) {
+        case 'email':
+            return !!filter_var($value, FILTER_VALIDATE_EMAIL);
+            break;
+
+        case 'url':
+            return !!filter_var($value, FILTER_VALIDATE_URL);
+            break;
+
+        case 'number':
+            return is_numeric($value);
+            break;
+
+        default:
+            return true;
+        }
+
     }
 
     /* ----------------------------------------------------------
