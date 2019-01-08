@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_3_3_0;
+namespace admindatas_3_3_1;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.3.0
+Version: 3.3.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -86,7 +86,7 @@ class WPUBaseAdminDatas {
                 $settings['table_fields'][$id]['public_name'] = $id;
             }
             if (!isset($field['type'])) {
-                $settings['table_fields'][$id]['type'] = isset($field['sql']) ? 'sql' : 'varchar';
+                $settings['table_fields'][$id]['type'] = isset($field['sql']) ? $field['type'] : 'varchar';
             }
             if (!isset($field['field_type']) || !in_array($field['field_type'], $this->field_types)) {
                 $settings['table_fields'][$id]['field_type'] = 'text';
@@ -153,7 +153,8 @@ class WPUBaseAdminDatas {
         );
 
         // Build query
-        $sql_query = "CREATE TABLE " . $this->tablename;
+        /* Two spaces to avoid temporary table WP fix */
+        $sql_query = "CREATE  TABLE " . $this->tablename;
         $sql_query .= " (\n" . implode(",\n", $fields_query) . "\n)";
         $sql_query .= " DEFAULT CHARSET=utf8;";
 
@@ -171,6 +172,9 @@ class WPUBaseAdminDatas {
                 switch ($col['type']) {
                 case 'varchar':
                     $col_sql = 'varchar(100) DEFAULT NULL';
+                    break;
+                case 'number':
+                    $col_sql = 'MEDIUMINT UNSIGNED';
                     break;
                 case 'timestamp':
                     $col_sql = 'TIMESTAMP';
