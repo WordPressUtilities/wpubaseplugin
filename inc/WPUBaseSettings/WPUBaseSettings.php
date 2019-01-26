@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_12_4;
+namespace wpubasesettings_0_12_5;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.12.4
+Version: 0.12.5
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -103,6 +103,9 @@ class WPUBaseSettings {
         if (!isset($settings_details['parent_page'])) {
             $settings_details['parent_page'] = 'options-general.php';
         }
+        if (!isset($settings_details['show_in_rest'])) {
+            $settings_details['show_in_rest'] = false;
+        }
         if (!isset($settings_details['sections']) || empty($settings_details['sections'])) {
             $settings_details['sections'] = array(
                 'default' => array(
@@ -161,8 +164,10 @@ class WPUBaseSettings {
     }
 
     public function add_settings() {
-        register_setting($this->settings_details['option_id'], $this->settings_details['option_id'], array(&$this,
-            'options_validate'
+        register_setting($this->settings_details['option_id'], $this->settings_details['option_id'], array(
+            'sanitize_callback' => array(&$this, 'options_validate'),
+            'show_in_rest' => $this->settings_details,
+            'default' => array()
         ));
         foreach ($this->settings_details['sections'] as $id => $section) {
             if (current_user_can($section['user_cap'])) {

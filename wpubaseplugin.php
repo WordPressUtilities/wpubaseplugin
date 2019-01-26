@@ -13,7 +13,7 @@ License URI: http://opensource.org/licenses/MIT
 
 class WPUBasePlugin {
 
-    public $version = '2.22.1';
+    public $version = '2.22.2';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -29,7 +29,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseAdminPage'
         ),
         'settings' => array(
-            'namespace' => 'wpubasesettings_0_12_4',
+            'namespace' => 'wpubasesettings_0_12_5',
             'name' => 'WPUBaseSettings'
         ),
         'cron' => array(
@@ -83,7 +83,6 @@ class WPUBasePlugin {
         $this->options['name'] = __('Base Plugin', 'wpubaseplugin');
         $this->options['menu_name'] = __('Base', 'wpubaseplugin');
 
-        $this->data_table = $wpdb->prefix . $this->options['id'] . "_table";
     }
 
     /* ----------------------------------------------------------
@@ -124,8 +123,8 @@ class WPUBasePlugin {
 
         $admin_pages = array(
             'main' => array(
-                'menu_name' => 'Base plugin',
-                'name' => 'Main page',
+                'menu_name' => $this->options['name'],
+                'name' => $this->options['menu_name'],
                 'settings_link' => true,
                 'settings_name' => 'Settings',
                 'function_content' => array(&$this,
@@ -255,15 +254,7 @@ class WPUBasePlugin {
     ---------------------------------------------------------- */
 
     public function activate() {
-        global $wpdb;
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-        // Create or update table search
-        dbDelta("CREATE TABLE " . $this->data_table . " (
-            id int(11) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            value varchar(100) DEFAULT NULL
-        ) DEFAULT CHARSET=utf8;");
     }
 
     public function deactivate() {
@@ -271,9 +262,6 @@ class WPUBasePlugin {
     }
 
     public function uninstall() {
-        global $wpdb;
-        // Drop table
-        $wpdb->query('DROP TABLE IF EXISTS ' . $this->data_table);
 
         // Delete options
 
