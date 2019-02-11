@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseupdate_0_4_1;
+namespace wpubaseupdate_0_4_2;
 
 /*
 Class Name: WPU Base Update
 Description: A class to handle plugin update from github
-Version: 0.4.1
+Version: 0.4.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -24,10 +24,10 @@ class WPUBaseUpdate {
     private $details;
 
     public function __construct($github_username = false, $github_project = false, $current_version = false, $details = array()) {
-        $this->init();
+        $this->init($github_username, $github_project, $current_version, $details);
     }
 
-    public function init($github_username = false, $github_project = false, $current_version = false, $details = array()){
+    public function init($github_username = false, $github_project = false, $current_version = false, $details = array()) {
         if (!$github_username || !$github_project || !$current_version) {
             return;
         }
@@ -123,7 +123,7 @@ class WPUBaseUpdate {
 
             /* Fetch plugin data */
             $plugin_data = array();
-            if(file_exists($this->plugin_dir)){
+            if (file_exists($this->plugin_dir)) {
                 $plugin_data = get_plugin_data($this->plugin_dir);
             }
 
