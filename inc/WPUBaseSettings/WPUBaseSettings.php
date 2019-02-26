@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_12_6;
+namespace wpubasesettings_0_12_7;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.12.6
+Version: 0.12.7
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -16,19 +16,23 @@ class WPUBaseSettings {
     private $hook_page = false;
     private $has_media_setting = false;
     private $admin_url = false;
+    private $is_admin_page = false;
+    private $has_create_page = false;
 
     public function __construct($settings_details = array(), $settings = array()) {
         if (empty($settings_details) || empty($settings)) {
             return;
         }
         $this->set_datas($settings_details, $settings);
-
         $this->has_media_setting = false;
         foreach ($this->settings as $setting) {
             if ($setting['type'] == 'media') {
                 $this->has_media_setting = true;
             }
         }
+
+        $this->is_admin_page = isset($_GET['page']) && $_GET['page'] == $this->settings_details['plugin_id'];
+        $this->has_create_page = isset($settings_details['create_page']) && $settings_details['create_page'];
 
         $opt = $this->get_settings();
         add_action('admin_init', array(&$this,
@@ -40,7 +44,7 @@ class WPUBaseSettings {
         add_action('admin_notices', array(&$this,
             'admin_notices'
         ));
-        if (isset($settings_details['create_page']) && $settings_details['create_page']) {
+        if ($this->has_create_page) {
             add_action('admin_menu', array(&$this,
                 'admin_menu'
             ));
@@ -54,6 +58,9 @@ class WPUBaseSettings {
     }
 
     public function admin_notices() {
+        if (!$this->is_admin_page) {
+            return;
+        }
         settings_errors();
     }
 
