@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_12_7;
+namespace wpubasesettings_0_12_8;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.12.7
+Version: 0.12.8
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -59,6 +59,9 @@ class WPUBaseSettings {
 
     public function admin_notices() {
         if (!$this->is_admin_page) {
+            return;
+        }
+        if ($this->settings_details['parent_page'] == 'options-general.php') {
             return;
         }
         settings_errors();
