@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_12_8;
+namespace wpubasesettings_0_12_9;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.12.8
+Version: 0.12.9
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -23,6 +23,7 @@ class WPUBaseSettings {
         if (empty($settings_details) || empty($settings)) {
             return;
         }
+
         $this->set_datas($settings_details, $settings);
         $this->has_media_setting = false;
         foreach ($this->settings as $setting) {
@@ -118,6 +119,9 @@ class WPUBaseSettings {
         }
         if (!isset($settings_details['parent_page'])) {
             $settings_details['parent_page'] = 'options-general.php';
+        }
+        if (!isset($settings_details['plugin_name'])) {
+            $settings_details['plugin_name'] = $settings_details['plugin_id'];
         }
         if (!isset($settings_details['show_in_rest'])) {
             $settings_details['show_in_rest'] = false;
@@ -325,10 +329,14 @@ class WPUBaseSettings {
             echo '</select>';
             break;
         case 'editor':
-            wp_editor($value, $option_id . '_' . $args['id'], array(
-                'textarea_rows' => 3,
+            $editor_args = array(
+                'textarea_rows' => isset($args['textarea_rows']) && is_numeric($args['textarea_rows']) ? $args['textarea_rows'] : 3,
                 'textarea_name' => $name_val
-            ));
+            );
+            if (isset($args['editor_args']) && is_array($args['editor_args'])) {
+                $editor_args = $args['editor_args'];
+            }
+            wp_editor($value, $option_id . '_' . $args['id'], $editor_args);
             break;
         case 'url':
         case 'number':
@@ -454,10 +462,12 @@ EOT;
     }
 
     public function admin_settings() {
-        echo '<div class="wrap"><h1>' . get_admin_page_title() . '</h1>';
+        echo '<div class="wrap">';
+        do_action('wpubasesettings_after_wrap_start' . $this->hook_page);
+        echo apply_filters('wpubasesettings_page_title_' . $this->hook_page, '<h1>' . get_admin_page_title() . '</h1>');
         do_action('wpubasesettings_before_content_' . $this->hook_page);
         if (current_user_can($this->settings_details['user_cap'])) {
-            echo '<hr />';
+            echo apply_filters('wpubasesettings_before_form_' . $this->hook_page, '<hr />');
             echo '<form action="' . admin_url('options.php') . '" method="post">';
             settings_fields($this->settings_details['option_id']);
             do_settings_sections($this->settings_details['plugin_id']);
@@ -465,6 +475,7 @@ EOT;
             echo '</form>';
         }
         do_action('wpubasesettings_after_content_' . $this->hook_page);
+        do_action('wpubasesettings_before_wrap_end' . $this->hook_page);
         echo '</div>';
     }
 

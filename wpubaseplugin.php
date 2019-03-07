@@ -4,7 +4,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: http://github.com/Darklg/WPUtilities
 Description: A framework for a WordPress plugin
-Version: 2.22.6
+Version: 2.22.7
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -29,7 +29,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseAdminPage'
         ),
         'settings' => array(
-            'namespace' => 'wpubasesettings_0_12_8',
+            'namespace' => 'wpubasesettings_0_12_9',
             'name' => 'WPUBaseSettings'
         ),
         'cron' => array(
