@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_3_3_1;
+namespace admindatas_3_4_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.3.1
+Version: 3.4.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -86,7 +86,7 @@ class WPUBaseAdminDatas {
                 $settings['table_fields'][$id]['public_name'] = $id;
             }
             if (!isset($field['type'])) {
-                $settings['table_fields'][$id]['type'] = isset($field['sql']) ? $field['type'] : 'varchar';
+                $settings['table_fields'][$id]['type'] = isset($field['type']) ? $field['type'] : 'varchar';
             }
             if (!isset($field['field_type']) || !in_array($field['field_type'], $this->field_types)) {
                 $settings['table_fields'][$id]['field_type'] = 'text';
@@ -238,8 +238,12 @@ class WPUBaseAdminDatas {
     ---------------------------------------------------------- */
 
     public function get_line($line_id) {
+        return $this->get_line_by('id', $line_id, '%d');
+    }
+
+    public function get_line_by($field, $value = '', $value_type = '%s') {
         global $wpdb;
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM " . $this->tablename . " WHERE id=%d", $line_id), ARRAY_A);
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM " . $this->tablename . " WHERE " . $field . "=" . $value_type, $value), ARRAY_A);
     }
 
     /* ----------------------------------------------------------
