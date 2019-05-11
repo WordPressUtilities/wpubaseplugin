@@ -7,6 +7,10 @@ Add settings in your plugin.
 
 ```php
 $this->settings_details = array(
+    # Admin page
+    'create_page' => true,
+    'plugin_basename' => plugin_basename(__FILE__),
+    # Default
     'plugin_id' => 'wpuimporttwitter',
     'option_id' => 'wpuimporttwitter_options',
     'sections' => array(
