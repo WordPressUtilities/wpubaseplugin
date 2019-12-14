@@ -1,10 +1,10 @@
 <?php
-namespace messages_1_3;
+namespace messages_1_3_1;
 
 /*
 Class Name: WPU Base Messages
 Description: A class to handle messages in WordPress
-Version: 1.3
+Version: 1.3.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -14,6 +14,7 @@ License URI: http://opensource.org/licenses/MIT
 class WPUBaseMessages {
 
     private $notices_categories = array(
+        'notice',
         'updated',
         'update-nag',
         'error'
@@ -23,7 +24,9 @@ class WPUBaseMessages {
         if (defined('DOING_CRON')) {
             return;
         }
-
+        if (!is_user_logged_in()) {
+            return;
+        }
         $current_user = wp_get_current_user();
         if (is_object($current_user)) {
             $prefix .= $current_user->ID;
@@ -54,6 +57,9 @@ class WPUBaseMessages {
 
     /* Display notices */
     public function admin_notices() {
+        if (defined('DOING_CRON')) {
+            return;
+        }
         $messages = (array) get_transient($this->transient_msg);
         if (!empty($messages)) {
             foreach ($messages as $group_id => $group) {
@@ -69,4 +75,3 @@ class WPUBaseMessages {
         delete_transient($this->transient_msg);
     }
 }
-

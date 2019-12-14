@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_13_0;
+namespace wpubasesettings_0_13_1;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.13.0
+Version: 0.13.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -455,7 +455,7 @@ EOT;
     public function admin_menu() {
         $this->hook_page = add_submenu_page($this->settings_details['parent_page'], $this->settings_details['plugin_name'] . ' - ' . __('Settings'), $this->settings_details['plugin_name'], $this->settings_details['user_cap'], $this->settings_details['plugin_id'], array(&$this,
             'admin_settings'
-        ), '', 110);
+        ), 110);
         add_action('load-' . $this->hook_page, array(&$this, 'load_assets'));
     }
 
