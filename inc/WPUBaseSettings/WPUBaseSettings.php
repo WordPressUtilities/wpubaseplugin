@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_13_1;
+namespace wpubasesettings_0_14_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.13.1
+Version: 0.14.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -257,6 +257,8 @@ class WPUBaseSettings {
                     $option_id = '';
                 }
                 break;
+            case 'post':
+            case 'page':
             case 'media':
             case 'number':
                 if (!is_numeric($input[$id])) {
@@ -324,6 +326,15 @@ class WPUBaseSettings {
                 echo '<label class="wpubasesettings-radio-label" for="' . $args['id'] . $_id . '">' . $_data . '</label>';
                 echo '</p>';
             }
+            break;
+        case 'post':
+        case 'page':
+            wp_dropdown_pages(array(
+                'name' => $name_val,
+                'id' => $args['id'],
+                'selected' => $value,
+                'post_type' => isset($args['post_type']) ? $args['post_type'] : $args['type']
+            ));
             break;
         case 'select':
             echo '<select ' . $name . ' ' . $id . '>';
