@@ -6,7 +6,6 @@ Add an admin page in your plugin.
 ## Insert in the plugins_loaded hook
 
 ```php
-include 'inc/WPUBaseAdminPage.php';
 $admin_pages = array(
     'main' => array(
         'menu_name' => 'Base plugin',
@@ -39,6 +38,7 @@ $pages_options = array(
 );
 
 // Init admin page
+include dirname( __FILE__ ) . '/inc/WPUBaseAdminPage/WPUBaseAdminPage.php';
 $this->adminpages = new \wpubaseplugin\WPUBaseAdminPage();
 $this->adminpages->init($pages_options, $admin_pages);
 

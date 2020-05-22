@@ -1,11 +1,11 @@
 <?php
 
-namespace admindatas_3_4_0;
+namespace admindatas_3_5_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.4.0
+Version: 3.5.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -223,7 +223,8 @@ class WPUBaseAdminDatas {
         $pagenum = min($pagenum, $max_pages);
 
         // Set SQL limit
-        $limit = 'LIMIT ' . ($pagenum * $perpage - $perpage) . ', ' . $perpage;
+        $limit_min = max(0, ($pagenum * $perpage - $perpage));
+        $limit = 'LIMIT ' . $limit_min . ', ' . $perpage;
 
         return array(
             'pagenum' => $pagenum,
@@ -534,6 +535,7 @@ class WPUBaseAdminDatas {
             'id' => 'ID'
         );
         $base_columns = array();
+        $args['primary_column'] = 'id';
         if (isset($args['columns']) && is_array($args['columns'])) {
             foreach ($args['columns'] as $id => $field) {
                 if (!isset($args['primary_column'])) {
@@ -633,7 +635,7 @@ class WPUBaseAdminDatas {
             'current' => $args['pagenum']
         ));
 
-        $start_element = ($args['pagenum'] - 1) * $args['perpage'] + 1;
+        $start_element = max(0, ($args['pagenum'] - 1) * $args['perpage'] + 1);
         $end_element = min($args['pagenum'] * $args['perpage'], $args['max_elements']);
         $pagination = '<div style="margin:1em 0" class="tablenav">';
         $pagination .= '<div class="alignleft">';
@@ -658,7 +660,7 @@ class WPUBaseAdminDatas {
         }
         $search_form .= '</p><br class="clear" /></form><div class="clear"></div>';
 
-        $has_id = is_object($values[0]) && isset($values[0]->id);
+        $has_id = isset($values[0]) && is_object($values[0]) && isset($values[0]->id);
 
         $content = '<form action="' . admin_url('admin-post.php') . '" method="post">';
         $content .= '<input type="hidden" name="action" value="admindatas_' . $this->settings['plugin_id'] . '">';

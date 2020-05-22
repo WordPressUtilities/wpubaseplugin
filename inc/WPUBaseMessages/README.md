@@ -7,7 +7,7 @@ Add notices in your plugin.
 
 ```php
 if (is_admin()) {
-    include dirname( __FILE__ ) . '/inc/WPUBaseMessages.php';
+    include dirname( __FILE__ ) . '/inc/WPUBaseMessages/WPUBaseMessages.php';
     $this->messages = new \wpubaseplugin\WPUBaseMessages($this->options['plugin_id']);
 }
 ```

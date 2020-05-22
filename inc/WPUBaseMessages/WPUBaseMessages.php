@@ -1,10 +1,10 @@
 <?php
-namespace messages_1_3_1;
+namespace messages_1_3_2;
 
 /*
 Class Name: WPU Base Messages
 Description: A class to handle messages in WordPress
-Version: 1.3.1
+Version: 1.3.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -21,7 +21,7 @@ class WPUBaseMessages {
     );
 
     public function __construct($prefix = '') {
-        if (defined('DOING_CRON')) {
+        if (wp_doing_cron()) {
             return;
         }
         if (!is_user_logged_in()) {
@@ -44,7 +44,7 @@ class WPUBaseMessages {
 
     /* Set notices messages */
     public function set_message($id, $message, $group = '') {
-        if (defined('DOING_CRON')) {
+        if (wp_doing_cron()) {
             return;
         }
         $messages = (array) get_transient($this->transient_msg);
@@ -57,7 +57,7 @@ class WPUBaseMessages {
 
     /* Display notices */
     public function admin_notices() {
-        if (defined('DOING_CRON')) {
+        if (wp_doing_cron()) {
             return;
         }
         $messages = (array) get_transient($this->transient_msg);
