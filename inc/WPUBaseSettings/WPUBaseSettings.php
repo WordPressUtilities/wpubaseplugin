@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_14_0;
+namespace wpubasesettings_0_15_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.14.0
+Version: 0.15.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -199,11 +199,16 @@ class WPUBaseSettings {
             if (!current_user_can($input['user_cap'])) {
                 continue;
             }
+            $lang_id = '';
+            if (isset($input['lang_id'])) {
+                $lang_id = $input['lang_id'];
+            }
             add_settings_field($id, $this->settings[$id]['label'], array(&$this,
                 'render__field'
             ), $this->settings_details['plugin_id'], $this->settings[$id]['section'], array(
                 'name' => $this->settings_details['option_id'] . '[' . $id . ']',
                 'id' => $id,
+                'lang_id' => $lang_id,
                 'label_for' => $id,
                 'datas' => $this->settings[$id]['datas'],
                 'type' => $this->settings[$id]['type'],
@@ -291,6 +296,11 @@ class WPUBaseSettings {
         $name_val = $option_id . '[' . $args['id'] . ']';
         $name = ' name="' . $name_val . '" ';
         $id = ' id="' . $args['id'] . '" ';
+        $attr = '';
+        if (isset($args['lang_id']) && $args['lang_id']) {
+            $attr .= ' data-wpulang="' . esc_attr($args['lang_id']) . '" ';
+        }
+        $id .= $attr;
         $value = isset($options[$args['id']]) ? $options[$args['id']] : '';
 
         switch ($args['type']) {
@@ -352,6 +362,7 @@ class WPUBaseSettings {
                 $editor_args = $args['editor_args'];
             }
             wp_editor($value, $option_id . '_' . $args['id'], $editor_args);
+            echo '<span ' . $attr . '></span>';
             break;
         case 'url':
         case 'number':
@@ -372,6 +383,8 @@ class WPUBaseSettings {
 
     /* Media */
     public function load_assets() {
+        add_action('admin_footer', array(&$this, 'admin_footer'));
+
         if (!$this->has_media_setting) {
             return;
         }
@@ -379,7 +392,7 @@ class WPUBaseSettings {
         add_action('admin_print_scripts', array(&$this, 'admin_scripts'));
         add_action('admin_print_styles', array(&$this, 'admin_styles'));
         add_action('admin_head', array(&$this, 'admin_head'));
-        add_action('admin_footer', array(&$this, 'admin_footer'));
+        add_action('admin_footer', array(&$this, 'admin_footer_medias'));
     }
 
     public function admin_scripts() {
@@ -419,7 +432,7 @@ class WPUBaseSettings {
 EOT;
     }
 
-    public function admin_footer() {
+    public function admin_footer_medias() {
         echo <<<EOT
 <script>
 /* Delete image */
@@ -457,6 +470,60 @@ jQuery('.wpubasesettings-mediabox .button').click(function(e) {
     e.preventDefault();
 });
 
+</script>
+EOT;
+    }
+
+    public function admin_footer() {
+        $option_id = $this->settings_details['option_id'];
+        $languages = json_encode($this->get_languages());
+        $label_txt = __( 'Language' );
+        echo <<<EOT
+<script>
+(function(){
+/* Check langs */
+var _langs = ${languages};
+if(!_langs){
+    return;
+}
+
+/* Get items */
+var jQinput = jQuery('input[type="hidden"][name="option_page"][value="${option_id}"]');
+if(!jQinput.length){
+    return;
+}
+var jQform = jQinput.closest('form');
+
+/* Add lang on TR */
+jQform.find('[data-wpulang]').each(function(i,el){
+    var jQel = jQuery(el);
+    jQel.closest('tr').attr('data-wpulangtr', jQel.attr('data-wpulang'));
+});
+var jQTr = jQform.find('[data-wpulangtr]'),
+    _firstLang = Object.keys(_langs)[0];
+if(!jQTr.length){
+    return;
+}
+
+/* Build switch */
+var select_html='';
+for(var _l in _langs){
+    select_html+='<option value="'+_l+'">'+_langs[_l]+'</option>';
+}
+var jQSelect = jQuery('<label><strong>${label_txt}</strong> : <select>'+select_html+'</select></label>');
+jQSelect.prependTo(jQform);
+
+/* Switch */
+function show_lang(_lang_id){
+    jQTr.hide();
+    jQTr.filter('[data-wpulangtr="'+_lang_id+'"]').show();
+}
+show_lang(_firstLang);
+jQSelect.on('change', 'select',function(){
+    show_lang(jQuery(this).val());
+});
+
+}());
 </script>
 EOT;
     }
