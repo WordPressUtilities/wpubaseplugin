@@ -4,7 +4,7 @@ namespace wpubasesettings_0_15_0;
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.15.0
+Version: 0.15.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -49,7 +49,7 @@ class WPUBaseSettings {
             add_action('admin_menu', array(&$this,
                 'admin_menu'
             ));
-            $this->admin_url = admin_url($this->settings_details['parent_page'] . '?page=' . $this->settings_details['plugin_id']);
+            $this->admin_url = admin_url($this->settings_details['parent_page_url'] . '?page=' . $this->settings_details['plugin_id']);
             if (isset($settings_details['plugin_basename'])) {
                 add_filter("plugin_action_links_" . $settings_details['plugin_basename'], array(&$this, 'plugin_add_settings_link'));
             }
@@ -114,6 +114,9 @@ class WPUBaseSettings {
         }
         if (!isset($settings_details['parent_page'])) {
             $settings_details['parent_page'] = 'options-general.php';
+        }
+        if (!isset($settings_details['parent_page_url'])) {
+            $settings_details['parent_page_url'] = $settings_details['parent_page'];
         }
         if (!isset($settings_details['plugin_name'])) {
             $settings_details['plugin_name'] = $settings_details['plugin_id'];

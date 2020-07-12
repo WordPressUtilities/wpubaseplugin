@@ -1,5 +1,4 @@
 <?php
-
 namespace adminpage_1_5;
 
 /*
