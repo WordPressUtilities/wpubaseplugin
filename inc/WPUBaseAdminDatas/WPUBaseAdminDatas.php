@@ -1,11 +1,10 @@
 <?php
-
-namespace admindatas_3_5_0;
+namespace admindatas_3_5_1;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.5.0
+Version: 3.5.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -288,6 +287,9 @@ class WPUBaseAdminDatas {
                 $this->tablename,
                 $_datas_create
             );
+            if ($wpdb->last_error !== '') {
+                $wpdb->print_error();
+            }
         }
         if ($_return_value) {
             $_return_value = $wpdb->insert_id;
