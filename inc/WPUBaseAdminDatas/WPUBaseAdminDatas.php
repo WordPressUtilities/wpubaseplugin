@@ -1,10 +1,10 @@
 <?php
-namespace admindatas_3_5_1;
+namespace admindatas_3_6_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.5.1
+Version: 3.6.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -32,6 +32,7 @@ class WPUBaseAdminDatas {
     public function init($settings = array()) {
         $this->apply_settings($settings);
         $this->check_database();
+        $this->admin_export();
         add_action('admin_post_admindatas_' . $this->settings['plugin_id'], array(&$this,
             'delete_lines_postAction'
         ));
@@ -412,7 +413,7 @@ class WPUBaseAdminDatas {
     public function export_array_to_csv($array, $name) {
         if (isset($array[0])) {
             header('Content-Type: application/csv');
-            header('Content-Disposition: attachment; filename=export-list-' . $name . '-' . date('y-m-d') . '.csv');
+            header('Content-Disposition: attachment; filename=export-list-' . $name . '-' . date_i18n('y-m-d') . '.csv');
             header('Pragma: no-cache');
             echo implode(';', array_keys($array[0])) . "\n";
             foreach ($array as $line) {
@@ -420,6 +421,53 @@ class WPUBaseAdminDatas {
             }
             die;
         }
+    }
+
+    /* ----------------------------------------------------------
+      Export all
+    ---------------------------------------------------------- */
+
+    public function admin_export() {
+        if (!is_admin()) {
+            return;
+        }
+        if (!current_user_can($this->settings['user_level'])) {
+            return;
+        }
+        if (!$this->tablename) {
+            return;
+        }
+        if (!isset($_GET['wpubaseadmindatas_export']) || ($_GET['wpubaseadmindatas_export'] != $this->tablename)) {
+            return;
+        }
+        $this->export_datas();
+    }
+
+    /* Thanks to https://stackoverflow.com/a/55482704 */
+    public function export_datas() {
+        global $wpdb;
+
+        $columns = $wpdb->get_results("SHOW COLUMNS FROM " . $this->tablename, ARRAY_A);
+        $rows = $wpdb->get_results("SELECT * FROM " . $this->tablename, ARRAY_A);
+
+        $fp = fopen('php://output', 'w');
+
+        header('Content-Type: application/csv');
+        header("Content-Disposition: attachment; filename=export-" . $this->tablename . "-" . date_i18n('Ymd-His') . ".csv");
+        header('Pragma: no-cache');
+
+        if (is_array($columns) && !empty($columns)) {
+            fputcsv($fp, array_column($columns, 'Field'));
+        }
+
+        if (!empty($rows)) {
+            foreach ($rows as $row) {
+                fputcsv($fp, $row);
+            }
+        }
+
+        fclose($fp);
+        exit;
     }
 
     /* ----------------------------------------------------------
@@ -722,6 +770,7 @@ class WPUBaseAdminDatas {
         $content .= '</form>';
         $content .= $search_form;
         $content .= $pagination;
+        $content .= '<a href="' . admin_url('index.php?wpubaseadmindatas_export=' . $this->tablename) . '">' . __('Export all') . '</a>';
         $content .= <<<HTML
 <style>
 .admindatas-search-form {margin:1em 0;}
@@ -736,7 +785,7 @@ HTML;
         return $content;
     }
 
-/* ----------------------------------------------------------
+    /* ----------------------------------------------------------
       Helpers
     ---------------------------------------------------------- */
 
