@@ -2,18 +2,18 @@
 
 /*
 Plugin Name: WPU Base Plugin
-Plugin URI: http://github.com/Darklg/WPUtilities
+Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 2.28.0
+Version: 2.29.0
 Author: Darklg
-Author URI: http://darklg.me/
+Author URI: https://darklg.me/
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
 
 class WPUBasePlugin {
 
-    public $version = '2.28.0';
+    public $version = '2.29.0';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -29,7 +29,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseAdminPage'
         ),
         'settings' => array(
-            'namespace' => 'wpubasesettings_0_15_1',
+            'namespace' => 'wpubasesettings_0_16_0',
             'name' => 'WPUBaseSettings'
         ),
         'cron' => array(
@@ -93,7 +93,7 @@ class WPUBasePlugin {
         $this->tools = array();
         // Check for utilities class
         foreach ($this->utilities_classes as $id => $item) {
-            if(isset($this->tools[$id])){
+            if (isset($this->tools[$id])) {
                 continue;
             }
             require_once dirname(__FILE__) . '/inc/' . $item['name'] . '/' . $item['name'] . '.php';
@@ -158,6 +158,29 @@ class WPUBasePlugin {
         } else {
             $this->set_public_hooks();
         }
+
+        $settings_details = array(
+            'create_page' => true,
+            'parent_page' => 'tools.php',
+            'plugin_name' => 'WPUBasePlugin',
+            'plugin_id' => 'wpubaseplugin',
+            'user_cap' => 'manage_options',
+            'option_id' => 'wpubaseplugin_options',
+            'sections' => array(
+                'settings' => array(
+                    'name' => __('Base Settings', 'wpubaseplugin')
+                )
+            )
+        );
+        $settings = array(
+            'test_field' => array(
+                'label' => __('Test field', 'wpubaseplugin'),
+                'lang' => 1
+            )
+        );
+
+        // Init settings
+        $this->tools['settings']->init($settings_details, $settings);
 
         // Init admin page
         $this->tools['adminpage']->init($this->options, $admin_pages);

@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_15_0;
+namespace wpubasesettings_0_16_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.15.1
+Version: 0.16.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -20,10 +20,13 @@ class WPUBaseSettings {
     private $has_create_page = false;
 
     public function __construct($settings_details = array(), $settings = array()) {
+        $this->init($settings_details, $settings);
+    }
+
+    public function init($settings_details = array(), $settings = array()) {
         if (empty($settings_details) || empty($settings)) {
             return;
         }
-
         $this->set_datas($settings_details, $settings);
         $this->has_media_setting = false;
         foreach ($this->settings as $setting) {
@@ -167,7 +170,7 @@ class WPUBaseSettings {
                 $new_settings[$id] = $input;
                 continue;
             }
-            foreach ($languages as $lang) {
+            foreach ($languages as $lang => $lang_name) {
                 $input_lang = $input;
                 unset($input_lang['lang']);
                 $input_lang['translated_from'] = $id;
@@ -480,7 +483,7 @@ EOT;
     public function admin_footer() {
         $option_id = $this->settings_details['option_id'];
         $languages = json_encode($this->get_languages());
-        $label_txt = __( 'Language' );
+        $label_txt = __('Language');
         echo <<<EOT
 <script>
 (function(){
@@ -615,11 +618,20 @@ EOT;
             return $languages;
         }
 
+        // Obtaining from WPML
+        if (function_exists('icl_get_languages')) {
+            $wpml_lang = icl_get_languages();
+            foreach ($wpml_lang as $lang) {
+                $languages[$lang['code']] = $lang['native_name'];
+            }
+            return $languages;
+        }
         return array();
 
     }
 
     public function get_current_language() {
+
         // Obtaining from Qtranslate
         if (function_exists('qtrans_getLanguage')) {
             return qtrans_getLanguage();
@@ -633,6 +645,11 @@ EOT;
         // Obtaining from Polylang
         if (function_exists('pll_current_language')) {
             return pll_current_language();
+        }
+
+        // Obtaining from WPML
+        if (defined('ICL_LANGUAGE_CODE')) {
+            return ICL_LANGUAGE_CODE;
         }
 
         return '';
