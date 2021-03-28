@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_16_0;
+namespace wpubasesettings_0_17_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.16.0
+Version: 0.17.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -152,12 +152,14 @@ class WPUBaseSettings {
 
         $default_section = key($this->settings_details['sections']);
         foreach ($settings as $id => $input) {
+            $settings[$id]['default_value'] = isset($input['default_value']) ? $input['default_value'] : '';
             $settings[$id]['label'] = isset($input['label']) ? $input['label'] : '';
             $settings[$id]['label_check'] = isset($input['label_check']) ? $input['label_check'] : $settings[$id]['label'];
             $settings[$id]['help'] = isset($input['help']) ? $input['help'] : '';
             $settings[$id]['type'] = isset($input['type']) ? $input['type'] : 'text';
             $settings[$id]['section'] = isset($input['section']) ? $input['section'] : $default_section;
             $settings[$id]['datas'] = isset($input['datas']) && is_array($input['datas']) ? $input['datas'] : array(__('No'), __('Yes'));
+            $settings[$id]['editor_args'] = isset($input['editor_args']) && is_array($input['editor_args']) ? $input['editor_args'] : array();
             $settings[$id]['user_cap'] = $this->settings_details['sections'][$settings[$id]['section']]['user_cap'];
         }
 
@@ -219,6 +221,8 @@ class WPUBaseSettings {
                 'datas' => $this->settings[$id]['datas'],
                 'type' => $this->settings[$id]['type'],
                 'help' => $this->settings[$id]['help'],
+                'default_value' => $this->settings[$id]['default_value'],
+                'editor_args' => $this->settings[$id]['editor_args'],
                 'label_check' => $this->settings[$id]['label_check']
             ));
         }
@@ -307,7 +311,7 @@ class WPUBaseSettings {
             $attr .= ' data-wpulang="' . esc_attr($args['lang_id']) . '" ';
         }
         $id .= $attr;
-        $value = isset($options[$args['id']]) ? $options[$args['id']] : '';
+        $value = isset($options[$args['id']]) ? $options[$args['id']] : $args['default_value'] ;
 
         switch ($args['type']) {
         case 'checkbox':
@@ -362,11 +366,11 @@ class WPUBaseSettings {
         case 'editor':
             $editor_args = array(
                 'textarea_rows' => isset($args['textarea_rows']) && is_numeric($args['textarea_rows']) ? $args['textarea_rows'] : 3,
-                'textarea_name' => $name_val
             );
             if (isset($args['editor_args']) && is_array($args['editor_args'])) {
                 $editor_args = $args['editor_args'];
             }
+            $editor_args['textarea_name'] = $name_val;
             wp_editor($value, $option_id . '_' . $args['id'], $editor_args);
             echo '<span ' . $attr . '></span>';
             break;
