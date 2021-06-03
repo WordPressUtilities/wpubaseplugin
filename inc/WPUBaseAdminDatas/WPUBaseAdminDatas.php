@@ -1,10 +1,10 @@
 <?php
-namespace admindatas_3_6_0;
+namespace admindatas_3_6_1;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.6.0
+Version: 3.6.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -660,6 +660,9 @@ class WPUBaseAdminDatas {
         }
 
         $page_id = $this->get_page_id();
+        if (isset($args['page_id'])) {
+            $page_id = $args['page_id'];
+        }
 
         $url_items_clear = array(
             'order' => $args['order'],
