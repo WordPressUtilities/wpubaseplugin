@@ -1,12 +1,12 @@
 <?php
-namespace admindatas_3_6_1;
+namespace admindatas_3_7_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.6.1
+Version: 3.7.0
 Author: Darklg
-Author URI: http://darklg.me/
+Author URI: https://darklg.me/
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
@@ -581,18 +581,40 @@ class WPUBaseAdminDatas {
 
         // Add ID
         $default_columns = array(
-            'creation' => 'Creation date',
-            'id' => 'ID'
+            'creation' => array(
+                'has_filter' => false,
+                'label' => 'Creation date'
+            ),
+            'id' => array(
+                'has_filter' => false,
+                'label' => 'ID'
+            )
         );
         $base_columns = array();
         $args['primary_column'] = 'id';
         if (isset($args['columns']) && is_array($args['columns'])) {
+            $new_args_column = array();
             foreach ($args['columns'] as $id => $field) {
                 if (!isset($args['primary_column'])) {
                     $args['primary_column'] = $id;
                 }
-                $base_columns[$id] = $field;
+                $has_filter = false;
+                $field_label = $field;
+                if (is_array($field)) {
+                    $field_label = $id;
+                    if (isset($field['label'])) {
+                        $field_label = $field['label'];
+                    }
+                    if (isset($field['has_filter'])) {
+                        $has_filter = $field['has_filter'];
+                    }
+                }
+                $new_args_column[$id] = array(
+                    'has_filter' => $has_filter,
+                    'label' => $field_label
+                );
             }
+            $args['columns'] = $new_args_column;
         }
         $base_columns = array_merge($base_columns, $default_columns);
 
@@ -614,13 +636,20 @@ class WPUBaseAdminDatas {
             }
         }
 
+        // Filter
+        $has_filter_key = false;
+        if (isset($_GET['filter_key'], $_GET['filter_value'])) {
+            $has_filter_key = true;
+            $where[] = esc_sql($_GET['filter_key']) . " = '" . esc_sql($_GET['filter_value']) . "'";
+        }
+
         // Order results
         if (!isset($args['order'])) {
             $args['order'] = isset($_GET['order']) && in_array($_GET['order'], array('asc', 'desc')) ? $_GET['order'] : 'desc';
         }
 
         if (!isset($args['orderby'])) {
-            $args['orderby'] = isset($_GET['orderby']) && array_key_exists($_GET['orderby'], $base_columns) ? $_GET['orderby'] : 'id';
+            $args['orderby'] = isset($_GET['orderby']) && array_key_exists($_GET['orderby'], $args['columns']) ? $_GET['orderby'] : 'id';
         }
 
         // Build filter query
@@ -708,7 +737,7 @@ class WPUBaseAdminDatas {
         $search_form .= '<input type="hidden" name="orderby" value="' . esc_attr($args['orderby']) . '" />';
         $search_form .= '<input type="search" name="where_text" value="' . esc_attr($where_text) . '" />';
         $search_form .= get_submit_button(__('Search'), '', 'submit', false);
-        if ($where_text) {
+        if ($where_text || $has_filter_key) {
             $search_form .= '<br /><small><a href="' . add_query_arg($url_items_clear, $this->pagename) . '">' . __('Clear') . '</a></small>';
         }
         $search_form .= '</p><br class="clear" /></form><div class="clear"></div>';
@@ -729,13 +758,13 @@ class WPUBaseAdminDatas {
             if ($has_id) {
                 $labels .= '<td class="manage-column column-cb check-column"><input type="checkbox" name="cb-select-all-%s" id="admindatas_sort_lines" value="" /></td>';
             }
-            foreach ($args['columns'] as $id_col => $name_col) {
+            foreach ($args['columns'] as $id_col => $col_info) {
                 $url_items_tmp = $url_items;
                 $url_items_tmp['pagenum'] = 1;
                 $url_items_tmp['orderby'] = $id_col;
                 $url_items_tmp['order'] = $args['order'] == 'asc' ? 'desc' : 'asc';
                 $sort_link = add_query_arg($url_items_tmp);
-                $labels .= '<th class="sortable ' . ($id_col == $args['primary_column'] ? 'column-primary' : '') . ' ' . $args['order'] . ' ' . ($id_col == $args['orderby'] ? 'sorted' : '') . '"><a href="' . $sort_link . '"><span>' . $name_col . '</span><span class="sorting-indicator"></span></a></th>';
+                $labels .= '<th class="sortable ' . ($id_col == $args['primary_column'] ? 'column-primary' : '') . ' ' . $args['order'] . ' ' . ($id_col == $args['orderby'] ? 'sorted' : '') . '"><a href="' . $sort_link . '"><span>' . $col_info['label'] . '</span><span class="sorting-indicator"></span></a></th>';
             }
             if ($has_id && $is_admin_view) {
                 $labels .= '<th></th>';
@@ -752,8 +781,19 @@ class WPUBaseAdminDatas {
             }
             foreach ($vals as $cell_id => $val) {
                 $val = (empty($val) ? '&nbsp;' : $val);
-                $content .= '<td data-colname="' . esc_attr($args['columns'][$cell_id]) . '" class="' . ($cell_id == $args['primary_column'] ? 'column-primary' : '') . '">';
-                $content .= apply_filters('wpubaseadmindatas_cellcontent', $val, $cell_id, $this->settings);
+                $content .= '<td data-colname="' . esc_attr($args['columns'][$cell_id]['label']) . '" class="' . ($cell_id == $args['primary_column'] ? 'column-primary' : '') . '">';
+                $cell_content = apply_filters('wpubaseadmindatas_cellcontent', $val, $cell_id, $this->settings);
+
+                // Allow filter
+                if (isset($args['columns'][$cell_id]['has_filter']) && $args['columns'][$cell_id]['has_filter']) {
+                    $filtered_url = add_query_arg(array(
+                        'filter_key' => $cell_id,
+                        'filter_value' => $cell_content
+                    ), $this->pagename);
+                    $cell_content = '<a href="' . $filtered_url . '">' . $cell_content . '</a>';
+                }
+
+                $content .= $cell_content;
                 if ($cell_id == $args['primary_column']) {
                     $content .= '<button type="button" class="toggle-row"><span class="screen-reader-text">' . __('Show more details') . '</span></button>';
                 }
