@@ -1,12 +1,12 @@
 <?php
-namespace admindatas_3_7_0;
+namespace admindatas_3_8_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.7.0
+Version: 3.8.0
 Author: Darklg
-Author URI: https://darklg.me/
+Author URI: http://darklg.me/
 License: MIT License
 License URI: http://opensource.org/licenses/MIT
 */
@@ -731,13 +731,21 @@ class WPUBaseAdminDatas {
         }
         $pagination .= '<br class="clear" /></div>';
 
+        $clear_form = '';
+        if ($has_filter_key) {
+            $clear_form .= '<p class="admindatas-search-filter">';
+            $clear_form .= sprintf(__('<strong>Filter :</strong> %s • <strong>Value :</strong> %s', $this->settings['plugin_id']), esc_html($_GET['filter_key']), esc_html($_GET['filter_value']));
+            $clear_form .= '<br /><small><a href="' . add_query_arg($url_items_clear, $this->pagename) . '">' . __('Reset') . '</a></small>';
+            $clear_form .= '</p>';
+        }
+
         $search_form = '<form class="admindatas-search-form" action="' . $this->pagename . '" method="get"><p class="search-box">';
         $search_form .= '<input type="hidden" name="page" value="' . esc_attr($page_id) . '" />';
         $search_form .= '<input type="hidden" name="order" value="' . esc_attr($args['order']) . '" />';
         $search_form .= '<input type="hidden" name="orderby" value="' . esc_attr($args['orderby']) . '" />';
         $search_form .= '<input type="search" name="where_text" value="' . esc_attr($where_text) . '" />';
         $search_form .= get_submit_button(__('Search'), '', 'submit', false);
-        if ($where_text || $has_filter_key) {
+        if ($where_text) {
             $search_form .= '<br /><small><a href="' . add_query_arg($url_items_clear, $this->pagename) . '">' . __('Clear') . '</a></small>';
         }
         $search_form .= '</p><br class="clear" /></form><div class="clear"></div>';
@@ -811,11 +819,15 @@ class WPUBaseAdminDatas {
             $content .= '<p class="admindatas-delete-button">' . get_submit_button(__('Delete'), 'delete', 'delete_lines', false) . '</p>';
         }
         $content .= '</form>';
+        $content .= $clear_form;
         $content .= $search_form;
         $content .= $pagination;
         $content .= '<a href="' . admin_url('index.php?wpubaseadmindatas_export=' . $this->tablename) . '">' . __('Export all') . '</a>';
         $content .= <<<HTML
 <style>
+.admindatas-search-filter{
+    text-align: right;
+}
 .admindatas-search-form {margin:1em 0;}
 @media (min-width:768px) {
     .admindatas-delete-button {float: left;}
