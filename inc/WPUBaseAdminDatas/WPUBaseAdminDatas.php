@@ -1,10 +1,10 @@
 <?php
-namespace admindatas_3_8_0;
+namespace admindatas_3_9_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.8.0
+Version: 3.9.0
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -447,8 +447,29 @@ class WPUBaseAdminDatas {
     public function export_datas() {
         global $wpdb;
 
+        $query = "SELECT * FROM " . $this->tablename . " WHERE 1=1";
         $columns = $wpdb->get_results("SHOW COLUMNS FROM " . $this->tablename, ARRAY_A);
-        $rows = $wpdb->get_results("SELECT * FROM " . $this->tablename, ARRAY_A);
+
+        /* Filters */
+        if (isset($_GET['filter_key'], $_GET['filter_value'])) {
+            $has_filter_key = true;
+            $query .= " AND " . esc_sql($_GET['filter_key']) . " = '" . esc_sql($_GET['filter_value']) . "'";
+        }
+
+        /* Search */
+        if (isset($_GET['where_text']) && $_GET['where_text']) {
+            $where = array();
+            $where_text = trim($_GET['where_text']);
+            foreach ($columns as $field) {
+                $id = $field['Field'];
+                if ($id != 'id' && $id != 'creation') {
+                    $where[] = "$id LIKE '%" . esc_sql($_GET['where_text']) . "%'";
+                }
+            }
+            $query .= " AND (" . implode(' OR ', $where) . ")";
+        }
+
+        $rows = $wpdb->get_results($query, ARRAY_A);
 
         $fp = fopen('php://output', 'w');
 
@@ -569,6 +590,8 @@ class WPUBaseAdminDatas {
         $pagination = '';
 
         $is_admin_view = isset($args['is_admin_view']) && $args['is_admin_view'];
+        $export_url = 'index.php?wpubaseadmindatas_export=' . $this->tablename;
+        $export_url_base = $export_url;
 
         if (!is_array($args)) {
             $args = array();
@@ -629,6 +652,7 @@ class WPUBaseAdminDatas {
         $where_text = isset($_GET['where_text']) ? trim($_GET['where_text']) : '';
         if (!empty($where_text)) {
             $where_glue = 'OR';
+            $export_url .= '&where_text=' . esc_html($_GET['where_text']);
             foreach ($args['columns'] as $id => $name) {
                 if ($id != 'id' && $id != 'creation') {
                     $where[] = "$id LIKE '%" . esc_sql($where_text) . "%'";
@@ -640,6 +664,7 @@ class WPUBaseAdminDatas {
         $has_filter_key = false;
         if (isset($_GET['filter_key'], $_GET['filter_value'])) {
             $has_filter_key = true;
+            $export_url .= '&filter_key=' . esc_html($_GET['filter_key']) . '&filter_value=' . esc_html($_GET['filter_value']);
             $where[] = esc_sql($_GET['filter_key']) . " = '" . esc_sql($_GET['filter_value']) . "'";
         }
 
@@ -822,7 +847,10 @@ class WPUBaseAdminDatas {
         $content .= $clear_form;
         $content .= $search_form;
         $content .= $pagination;
-        $content .= '<a href="' . admin_url('index.php?wpubaseadmindatas_export=' . $this->tablename) . '">' . __('Export all') . '</a>';
+        $content .= '<a href="' . admin_url($export_url_base) . '">' . __('Export all') . '</a>';
+        if ($where_text || $az) {
+            $content .= ' <a href="' . admin_url($export_url) . '">' . __('Export filtered view') . '</a>';
+        }
         $content .= <<<HTML
 <style>
 .admindatas-search-filter{
