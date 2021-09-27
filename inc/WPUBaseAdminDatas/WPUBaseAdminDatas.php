@@ -1,10 +1,10 @@
 <?php
-namespace admindatas_3_9_0;
+namespace admindatas_3_9_1;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.9.0
+Version: 3.9.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -848,7 +848,7 @@ class WPUBaseAdminDatas {
         $content .= $search_form;
         $content .= $pagination;
         $content .= '<a href="' . admin_url($export_url_base) . '">' . __('Export all') . '</a>';
-        if ($where_text || $az) {
+        if ($where_text || $has_filter_key) {
             $content .= ' <a href="' . admin_url($export_url) . '">' . __('Export filtered view') . '</a>';
         }
         $content .= <<<HTML
