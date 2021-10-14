@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_17_0;
+namespace wpubasesettings_0_17_1;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.17.0
+Version: 0.17.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -152,6 +152,7 @@ class WPUBaseSettings {
 
         $default_section = key($this->settings_details['sections']);
         foreach ($settings as $id => $input) {
+            $settings[$id]['required'] = isset($input['required']) ? $input['required'] : false;
             $settings[$id]['default_value'] = isset($input['default_value']) ? $input['default_value'] : '';
             $settings[$id]['label'] = isset($input['label']) ? $input['label'] : '';
             $settings[$id]['label_check'] = isset($input['label_check']) ? $input['label_check'] : $settings[$id]['label'];
@@ -218,6 +219,7 @@ class WPUBaseSettings {
                 'id' => $id,
                 'lang_id' => $lang_id,
                 'label_for' => $id,
+                'required' => $this->settings[$id]['required'],
                 'datas' => $this->settings[$id]['datas'],
                 'type' => $this->settings[$id]['type'],
                 'help' => $this->settings[$id]['help'],
@@ -309,6 +311,9 @@ class WPUBaseSettings {
         $attr = '';
         if (isset($args['lang_id']) && $args['lang_id']) {
             $attr .= ' data-wpulang="' . esc_attr($args['lang_id']) . '" ';
+        }
+        if (isset($args['required']) && $args['required']) {
+            $attr .= ' required="required" ';
         }
         $id .= $attr;
         $value = isset($options[$args['id']]) ? $options[$args['id']] : $args['default_value'] ;
