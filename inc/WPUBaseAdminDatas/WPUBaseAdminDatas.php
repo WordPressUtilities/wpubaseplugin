@@ -1,10 +1,10 @@
 <?php
-namespace admindatas_3_9_1;
+namespace admindatas_3_9_2;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.9.1
+Version: 3.9.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -15,6 +15,8 @@ class WPUBaseAdminDatas {
 
     public $default_perpage = 20;
     public $sql_option_name = false;
+    public $pageid;
+    public $settings;
     public $pagename;
     public $tablename;
     public $user_level = 'edit_posts';

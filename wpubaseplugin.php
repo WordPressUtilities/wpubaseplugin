@@ -13,31 +13,31 @@ License URI: http://opensource.org/licenses/MIT
 
 class WPUBasePlugin {
 
-    public $version = '2.33.3';
+    public $version = '2.34.0';
 
     private $utilities_classes = array(
         'messages' => array(
-            'namespace' => 'messages_1_3_2',
+            'namespace' => 'messages_1_3_3',
             'name' => 'WPUBaseMessages'
         ),
         'admindatas' => array(
-            'namespace' => 'admindatas_3_9_1',
+            'namespace' => 'admindatas_3_9_2',
             'name' => 'WPUBaseAdminDatas'
         ),
         'adminpage' => array(
-            'namespace' => 'adminpage_1_5',
+            'namespace' => 'adminpage_1_5_1',
             'name' => 'WPUBaseAdminPage'
         ),
         'settings' => array(
-            'namespace' => 'wpubasesettings_0_17_1',
+            'namespace' => 'wpubasesettings_0_17_2',
             'name' => 'WPUBaseSettings'
         ),
         'cron' => array(
-            'namespace' => 'wpubasecron_0_2_6',
+            'namespace' => 'wpubasecron_0_2_7',
             'name' => 'WPUBaseCron'
         ),
         'update' => array(
-            'namespace' => 'wpubaseupdate_0_4_2',
+            'namespace' => 'wpubaseupdate_0_4_3',
             'name' => 'WPUBaseUpdate'
         )
     );
@@ -50,6 +50,7 @@ class WPUBasePlugin {
     );
 
     public $tools = array();
+    public $options = array();
 
     /* ----------------------------------------------------------
       Construct

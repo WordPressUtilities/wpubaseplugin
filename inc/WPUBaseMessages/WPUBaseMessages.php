@@ -1,10 +1,10 @@
 <?php
-namespace messages_1_3_2;
+namespace messages_1_3_3;
 
 /*
 Class Name: WPU Base Messages
 Description: A class to handle messages in WordPress
-Version: 1.3.2
+Version: 1.3.3
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -13,6 +13,8 @@ License URI: http://opensource.org/licenses/MIT
 
 class WPUBaseMessages {
 
+    private $transient_msg;
+    private $transient_prefix;
     private $notices_categories = array(
         'notice',
         'updated',

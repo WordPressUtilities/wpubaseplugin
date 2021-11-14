@@ -1,10 +1,10 @@
 <?php
-namespace wpubasecron_0_2_6;
+namespace wpubasecron_0_2_7;
 
 /*
 Class Name: WPU Base Cron
 Description: A class to handle crons
-Version: 0.2.6
+Version: 0.2.7
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -15,6 +15,10 @@ class WPUBaseCron {
     public $ns = '';
     public $pluginname = '';
     public $cronhook = '';
+    public $croninterval = false;
+    public $cronlastexec = false;
+    public $cronoption = false;
+    public $cronschedule = false;
 
     public function __construct($settings = array()) {
         $this->ns = preg_replace('/\W+/', '', __NAMESPACE__);
@@ -38,7 +42,7 @@ class WPUBaseCron {
         ), 99);
 
         /* Check cron */
-        add_action('init',array(&$this,
+        add_action('init', array(&$this,
             'check_cron'
         ));
     }
@@ -54,7 +58,7 @@ class WPUBaseCron {
 
     /* Schedule cron if possible */
     public function check_cron() {
-        $croninterval = intval(get_option($this->cronoption),10);
+        $croninterval = intval(get_option($this->cronoption), 10);
         $schedule = wp_next_scheduled($this->cronhook);
 
         // If no schedule cron or new interval or incorrect interval
@@ -135,7 +139,6 @@ class WPUBaseCron {
         flush_rewrite_rules();
     }
 }
-
 
 /*
  ## plugins_loaded ##
