@@ -1,14 +1,14 @@
 <?php
-namespace wpubasecron_0_2_7;
+namespace wpubasecron_0_2_8;
 
 /*
 Class Name: WPU Base Cron
 Description: A class to handle crons
-Version: 0.2.7
+Version: 0.2.8
 Author: Darklg
-Author URI: http://darklg.me/
+Author URI: https://darklg.me/
 License: MIT License
-License URI: http://opensource.org/licenses/MIT
+License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUBaseCron {
