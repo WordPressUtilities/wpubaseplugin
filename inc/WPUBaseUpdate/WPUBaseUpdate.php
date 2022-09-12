@@ -5,10 +5,11 @@ namespace wpubaseupdate_0_4_3;
 Class Name: WPU Base Update
 Description: A class to handle plugin update from github
 Version: 0.4.3
+Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
-Author URI: http://darklg.me/
+Author URI: https://darklg.me/
 License: MIT License
-License URI: http://opensource.org/licenses/MIT
+License URI: https://opensource.org/licenses/MIT
 Thanks: https://gist.github.com/danielbachhuber/7684646
 */
 

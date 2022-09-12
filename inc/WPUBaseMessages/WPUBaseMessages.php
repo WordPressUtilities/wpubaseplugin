@@ -5,10 +5,11 @@ namespace messages_1_3_3;
 Class Name: WPU Base Messages
 Description: A class to handle messages in WordPress
 Version: 1.3.3
+Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
-Author URI: http://darklg.me/
+Author URI: https://darklg.me/
 License: MIT License
-License URI: http://opensource.org/licenses/MIT
+License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUBaseMessages {

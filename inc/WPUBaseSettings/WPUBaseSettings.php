@@ -5,10 +5,11 @@ namespace wpubasesettings_0_17_2;
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
 Version: 0.17.2
+Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
-Author URI: http://darklg.me/
+Author URI: https://darklg.me/
 License: MIT License
-License URI: http://opensource.org/licenses/MIT
+License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUBaseSettings {
@@ -393,7 +394,7 @@ class WPUBaseSettings {
     }
 
     public static function isRegex($str0) {
-        /* Thx http://stackoverflow.com/a/16098097 */
+        /* Thx https://stackoverflow.com/a/16098097 */
         $regex = "/^\/[\s\S]+\/$/";
         return preg_match($regex, $str0);
     }

@@ -1,14 +1,15 @@
 <?php
-namespace admindatas_3_9_2;
+namespace admindatas_3_10_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.9.2
+Version: 3.10.0
+Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
-Author URI: http://darklg.me/
+Author URI: https://darklg.me/
 License: MIT License
-License URI: http://opensource.org/licenses/MIT
+License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUBaseAdminDatas {
@@ -26,6 +27,7 @@ class WPUBaseAdminDatas {
         'textarea',
         'date',
         'number',
+        'true_false',
         'email'
     );
 
@@ -563,12 +565,19 @@ class WPUBaseAdminDatas {
             $_html .= '<th scope="row"><label for="' . $_fieldId . '">' . $field['public_name'] . ' :</label></th>';
             $_html .= '<td>';
             if ($_has_form) {
+                if (!isset($field['field_attributes'])) {
+                    $field['field_attributes'] = '';
+                }
                 switch ($field['field_type']) {
                 case 'textarea':
-                    $_html .= '<textarea rows="5" cols="30" id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']">' . $value . '</textarea>';
+                    $_html .= '<textarea ' . $field['field_attributes'] . ' rows="5" cols="30" id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']">' . $value . '</textarea>';
+                    break;
+                case 'true_false':
+                    $_html .= '<label><input ' . $field['field_attributes'] . ' type="radio" id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']" ' . ($value != '1' ? 'checked' : '') . ' value="0" />' . __('No') . '</label>';
+                    $_html .= '<label style="margin-left:1em"><input ' . $field['field_attributes'] . ' type="radio" id="' . $_fieldId . '_1" name="admindatas_fields[' . $id . ']" ' . ($value == '1' ? 'checked' : '') . ' value="1" />' . __('Yes') . '</label>';
                     break;
                 default:
-                    $_html .= '<input type="' . $field['field_type'] . '" id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']" value="' . $value . '" />';
+                    $_html .= '<input ' . $field['field_attributes'] . ' type="' . $field['field_type'] . '" id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']" value="' . $value . '" />';
                 }
             } else {
                 $_html .= '<span>' . esc_html($value) . '</span>';
