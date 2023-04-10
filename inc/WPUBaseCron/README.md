@@ -1,7 +1,7 @@
 WPU Base Cron
 ---
 
-Add Cron in your plugin.
+Add Cron to your plugin.
 
 ## Insert in the plugins_loaded hook
 
