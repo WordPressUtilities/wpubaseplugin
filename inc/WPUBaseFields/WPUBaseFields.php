@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_2_0;
+namespace wpubasefields_0_3_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.2.0
+Version: 0.3.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -33,6 +33,9 @@ class WPUBaseFields {
 
         /* Display box */
         add_action('save_post', array(&$this, 'save_post'));
+
+        /* Basic CSS */
+        add_action('admin_head', array(&$this, 'admin_head'));
 
     }
 
@@ -79,6 +82,12 @@ class WPUBaseFields {
             if (!isset($field['type'])) {
                 $field['type'] = 'text';
             }
+            if (!isset($field['required'])) {
+                $field['required'] = false;
+            }
+            if (!isset($field['placeholder'])) {
+                $field['placeholder'] = $field['type'] == 'select' ? __('Select a value', 'wpubasefields') : '';
+            }
             if (!isset($field['data']) || !is_array($field['data'])) {
                 $field['data'] = array('No', 'Yes');
             }
@@ -108,18 +117,36 @@ class WPUBaseFields {
             /* Shared settings */
             $value = get_post_meta($post->ID, $field_id, 1);
             $id_name = ' name="wpubasefields_' . $field_id . '" id="wpubasefields_' . $field_id . '" ';
+            if ($field['required']) {
+                $id_name .= ' required';
+            }
+            if ($field['placeholder'] && $field['type'] != 'select') {
+                $id_name .= ' placeholder="' . esc_attr($field['placeholder']) . '"';
+            }
 
             /* Build field HTML */
             $field_html = '';
 
-            $field_html .= '<label for="wpubasefields_' . $field_id . '">' . esc_html($field['label']) . '</label><br />';
+            /* Label */
+            $field_html .= '<label class="wpubasefield-main-label" for="wpubasefields_' . $field_id . '">';
+            $field_html .= esc_html($field['label']);
+            if ($field['required']) {
+                $field_html .= '<em title="' . esc_attr(__('Required', 'wpubasefields')) . '">*</em>';
+            }
+            $field_html .= '</label>';
+
+            /* Field */
             switch ($field['type']) {
             case 'select':
                 $field_html .= '<select ' . $id_name . '>';
+                $field_html .= '<option hidden>' . esc_html($field['placeholder']) . '</option>';
                 foreach ($field['data'] as $key => $var) {
                     $field_html .= '<option ' . selected($value, $key, false) . ' value="' . $key . '">' . $var . '</option>';
                 }
                 $field_html .= '</select>';
+                break;
+            case 'textarea':
+                $field_html .= '<textarea ' . $id_name . '>' . esc_html($value) . '</textarea>';
                 break;
             case 'text':
             case 'email':
@@ -128,7 +155,7 @@ class WPUBaseFields {
             }
 
             if ($field_html) {
-                $html_content .= '<li class="box">' . $field_html . '</li>';
+                $html_content .= '<li class="wpubasefield-input" type="' . esc_attr($field['type']) . '">' . $field_html . '</li>';
             }
         }
 
@@ -138,7 +165,7 @@ class WPUBaseFields {
 
         /* Display box content */
         wp_nonce_field($args['id'] . '_nonce', $args['id'] . '_meta_box_nonce');
-        echo '<ul>' . $html_content . '</ul>';
+        echo '<ul class="wpubasefield-list">' . $html_content . '</ul>';
 
     }
 
@@ -203,6 +230,22 @@ class WPUBaseFields {
         return $value;
 
     }
+
+    /* ----------------------------------------------------------
+      Admin
+    ---------------------------------------------------------- */
+
+    function admin_head() {
+        echo '<style>';
+        echo '.wpubasefield-main-label{display:block;margin-bottom:0.3em;}';
+        echo '.wpubasefield-input{max-width:500px}';
+        echo '.wpubasefield-input[type="textarea"]{max-width:100%}';
+        echo '.wpubasefield-input + .wpubasefield-input {margin-top:1em;}';
+        echo '.wpubasefield-input input,.wpubasefield-input select,.wpubasefield-input textarea{width:100%}';
+        echo '.wpubasefield-input textarea{min-height:5em}';
+        echo '</style>';
+    }
+
 }
 
 $WPUBaseFields = new WPUBaseFields();

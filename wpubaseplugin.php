@@ -4,7 +4,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 2.37.0
+Version: 2.38.0
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
@@ -13,7 +13,7 @@ License URI: https://opensource.org/licenses/MIT
 
 class WPUBasePlugin {
 
-    public $version = '2.37.0';
+    public $version = '2.38.0';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -37,7 +37,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseCron'
         ),
         'fields' => array(
-            'namespace' => 'wpubasefields_0_2_0',
+            'namespace' => 'wpubasefields_0_3_0',
             'name' => 'WPUBaseFields'
         ),
         'update' => array(
@@ -193,18 +193,25 @@ class WPUBasePlugin {
         // Init fields
         $fields = array(
             'demo' => array(
+                'required' => true,
                 'group' => 'group_1',
                 'label' => 'Demo'
             ),
             'demo_email' => array(
                 'group' => 'group_1',
                 'label' => 'Demo Email',
-                'type' => 'email'
+                'type' => 'email',
+                'placeholder' => 'Email'
             ),
             'demo_url' => array(
                 'group' => 'group_1',
                 'label' => 'Demo URL',
                 'type' => 'url'
+            ),
+            'demo_textarea' => array(
+                'group' => 'group_1',
+                'label' => 'Demo textarea',
+                'type' => 'textarea'
             ),
             'demo2' => array(
                 'group' => 'group_2',

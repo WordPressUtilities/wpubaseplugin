@@ -10,7 +10,9 @@ include 'inc/WPUBaseFields.php';
 $fields = array(
     'demo' => array(
         'group' => 'group_1',
-        'label' => 'Demo'
+        'label' => 'Demo',
+        'placeholder' => 'My Placeholder',
+        'required' => true
     ),
     'select' => array(
         'type' => 'select',
