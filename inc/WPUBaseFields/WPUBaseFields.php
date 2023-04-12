@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_3_0;
+namespace wpubasefields_0_4_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.3.0
+Version: 0.4.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -116,7 +116,8 @@ class WPUBaseFields {
 
             /* Shared settings */
             $value = get_post_meta($post->ID, $field_id, 1);
-            $id_name = ' name="wpubasefields_' . $field_id . '" id="wpubasefields_' . $field_id . '" ';
+            $field_name = 'wpubasefields_' . $field_id;
+            $id_name = ' name="' . $field_name . '" id="' . $field_name . '" ';
             if ($field['required']) {
                 $id_name .= ' required';
             }
@@ -137,11 +138,20 @@ class WPUBaseFields {
 
             /* Field */
             switch ($field['type']) {
+            case 'radio':
+                foreach ($field['data'] as $key => $var) {
+                    $radio_item_id = $field_name . '__' . $key;
+                    $field_html .= '<span class="wpubasefield-checkbox-wrapper">';
+                    $field_html .= '<input ' . checked($value, $key, false) . ' value="' . esc_attr($key) . '" name="' . $field_name . '" id="' . $radio_item_id . '" type="radio" />';
+                    $field_html .= '<label for="' . $radio_item_id . '">' . esc_html($var) . '</label>';
+                    $field_html .= '</span>';
+                }
+                break;
             case 'select':
                 $field_html .= '<select ' . $id_name . '>';
                 $field_html .= '<option hidden>' . esc_html($field['placeholder']) . '</option>';
                 foreach ($field['data'] as $key => $var) {
-                    $field_html .= '<option ' . selected($value, $key, false) . ' value="' . $key . '">' . $var . '</option>';
+                    $field_html .= '<option ' . selected($value, $key, false) . ' value="' . $key . '">' . esc_html($var) . '</option>';
                 }
                 $field_html .= '</select>';
                 break;
@@ -208,6 +218,7 @@ class WPUBaseFields {
 
     private function check_field_value($value, $field) {
         switch ($field['type']) {
+        case 'radio':
         case 'select':
             if (!array_key_exists($value, $field['data'])) {
                 return false;
@@ -241,8 +252,11 @@ class WPUBaseFields {
         echo '.wpubasefield-input{max-width:500px}';
         echo '.wpubasefield-input[type="textarea"]{max-width:100%}';
         echo '.wpubasefield-input + .wpubasefield-input {margin-top:1em;}';
-        echo '.wpubasefield-input input,.wpubasefield-input select,.wpubasefield-input textarea{width:100%}';
+        echo '.wpubasefield-input input:not([type="radio"]):not([type="checkbox"]),.wpubasefield-input select,.wpubasefield-input textarea{width:100%}';
         echo '.wpubasefield-input textarea{min-height:5em}';
+        echo '.wpubasefield-checkbox-wrapper{margin-right:0.5em;line-height:1.5}';
+        echo '.wpubasefield-checkbox-wrapper input{translateY(0.1em)}';
+        echo '.wpubasefield-checkbox-wrapper label{vertical-align:0;display:inline-block}';
         echo '</style>';
     }
 
