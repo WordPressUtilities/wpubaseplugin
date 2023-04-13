@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_4_0;
+namespace wpubasefields_0_5_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.4.0
+Version: 0.5.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -81,6 +81,12 @@ class WPUBaseFields {
             }
             if (!isset($field['type'])) {
                 $field['type'] = 'text';
+            }
+            if (!isset($field['column_start'])) {
+                $field['column_start'] = false;
+            }
+            if (!isset($field['column_end'])) {
+                $field['column_end'] = false;
             }
             if (!isset($field['required'])) {
                 $field['required'] = false;
@@ -165,7 +171,13 @@ class WPUBaseFields {
             }
 
             if ($field_html) {
-                $html_content .= '<li class="wpubasefield-input" type="' . esc_attr($field['type']) . '">' . $field_html . '</li>';
+                if ($field['column_start']) {
+                    $html_content .= '<li class="wpubasefield-input wpubasefield-input--columns"><ul>';
+                }
+                $html_content .= '<li class="wpubasefield-input" data-type="' . esc_attr($field['type']) . '">' . $field_html . '</li>';
+                if ($field['column_end']) {
+                    $html_content .= '</ul></li>';
+                }
             }
         }
 
@@ -247,17 +259,11 @@ class WPUBaseFields {
     ---------------------------------------------------------- */
 
     function admin_head() {
-        echo '<style>';
-        echo '.wpubasefield-main-label{display:block;margin-bottom:0.3em;}';
-        echo '.wpubasefield-input{max-width:500px}';
-        echo '.wpubasefield-input[type="textarea"]{max-width:100%}';
-        echo '.wpubasefield-input + .wpubasefield-input {margin-top:1em;}';
-        echo '.wpubasefield-input input:not([type="radio"]):not([type="checkbox"]),.wpubasefield-input select,.wpubasefield-input textarea{width:100%}';
-        echo '.wpubasefield-input textarea{min-height:5em}';
-        echo '.wpubasefield-checkbox-wrapper{margin-right:0.5em;line-height:1.5}';
-        echo '.wpubasefield-checkbox-wrapper input{translateY(0.1em)}';
-        echo '.wpubasefield-checkbox-wrapper label{vertical-align:0;display:inline-block}';
-        echo '</style>';
+        /* Include & compress CSS */
+        $css = file_get_contents(dirname(__FILE__) . '/assets/admin.css');
+        $css = preg_replace('/\/\*.*?\*\//s', '', $css);
+        $css = preg_replace('/\s+/', ' ', $css);
+        echo '<style>' . $css . '</style>';
     }
 
 }

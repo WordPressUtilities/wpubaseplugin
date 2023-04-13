@@ -1,0 +1,65 @@
+@charset "UTF-8";
+
+/* ----------------------------------------------------------
+  Label
+---------------------------------------------------------- */
+
+.wpubasefield-main-label {
+    display: block;
+    margin-bottom: 0.3em;
+}
+
+/* ----------------------------------------------------------
+  Layout
+---------------------------------------------------------- */
+
+.wpubasefield-input + .wpubasefield-input {
+    margin-top: 1em;
+}
+
+/* ----------------------------------------------------------
+  Columns
+---------------------------------------------------------- */
+
+@media (min-width:769px) {
+    .wpubasefield-input--columns > ul {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        max-width: 100%;
+        gap: 2em;
+    }
+
+    .wpubasefield-input--columns > ul > * {
+        flex: 1;
+        margin-top: 0!important;
+    }
+}
+
+/* ----------------------------------------------------------
+  Fields
+---------------------------------------------------------- */
+
+.wpubasefield-input input:not([type="radio"]):not([type="checkbox"]) ,
+.wpubasefield-input select,
+.wpubasefield-input textarea {
+    width: 100%;
+}
+
+.wpubasefield-input textarea {
+    min-height: 5em;
+}
+
+.wpubasefield-checkbox-wrapper {
+    margin-right: 0.5em;
+    line-height: 1.5;
+}
+
+.wpubasefield-checkbox-wrapper input {
+    transform: translateY(0.1em);
+}
+
+.wpubasefield-checkbox-wrapper label {
+    display: inline-block;
+    vertical-align: 0;
+}
