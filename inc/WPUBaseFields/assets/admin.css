@@ -5,6 +5,10 @@
 ---------------------------------------------------------- */
 
 .wpubasefield-main-label {
+    user-select: none;
+}
+
+.wpubasefield-input:not([data-type="checkbox"]) .wpubasefield-main-label {
     display: block;
     margin-bottom: 0.3em;
 }

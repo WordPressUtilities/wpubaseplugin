@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_5_0;
+namespace wpubasefields_0_6_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.5.0
+Version: 0.6.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -135,12 +135,17 @@ class WPUBaseFields {
             $field_html = '';
 
             /* Label */
-            $field_html .= '<label class="wpubasefield-main-label" for="wpubasefields_' . $field_id . '">';
-            $field_html .= esc_html($field['label']);
+            $label_html = '';
+            $label_html .= '<label class="wpubasefield-main-label" for="wpubasefields_' . $field_id . '">';
+            $label_html .= esc_html($field['label']);
             if ($field['required']) {
-                $field_html .= '<em title="' . esc_attr(__('Required', 'wpubasefields')) . '">*</em>';
+                $label_html .= '<em title="' . esc_attr(__('Required', 'wpubasefields')) . '">*</em>';
             }
-            $field_html .= '</label>';
+            $label_html .= '</label>';
+
+            if ($field['type'] != 'checkbox') {
+                $field_html .= $label_html;
+            }
 
             /* Field */
             switch ($field['type']) {
@@ -164,11 +169,19 @@ class WPUBaseFields {
             case 'textarea':
                 $field_html .= '<textarea ' . $id_name . '>' . esc_html($value) . '</textarea>';
                 break;
+            case 'checkbox':
+                $field_html .= '<span class="wpubasefield-checkbox-wrapper">';
+                $field_html .= '<input ' . $id_name . ' class="field-checkbox" type="checkbox" value="1" ' . checked($value, '1', false) . ' />';
+                $field_html .= $label_html;
+                $field_html .= '</span>';
+                break;
             case 'text':
             case 'email':
             case 'url':
                 $field_html .= '<input ' . $id_name . ' type="' . esc_attr($field['type']) . '" value="' . esc_attr($value) . '" />';
             }
+
+            $field_html .= '<input type="hidden" name="' . $field_name . '__control"  value="1" />';
 
             if ($field_html) {
                 if ($field['column_start']) {
@@ -215,11 +228,16 @@ class WPUBaseFields {
                     continue;
                 }
 
-                if (!isset($_POST['wpubasefields_' . $field_id])) {
+                if (!isset($_POST['wpubasefields_' . $field_id . '__control'])) {
                     continue;
                 }
 
-                $posted_value = $this->check_field_value($_POST['wpubasefields_' . $field_id], $field);
+                $value = ($field['type'] == 'checkbox') ? '0' : '';
+                if (isset($_POST['wpubasefields_' . $field_id])) {
+                    $value = ($field['type'] == 'checkbox') ? '1' : $_POST['wpubasefields_' . $field_id];
+                }
+
+                $posted_value = $this->check_field_value($value, $field);
 
                 if ($posted_value !== false) {
                     update_post_meta($post_id, $field_id, $posted_value);
@@ -243,6 +261,11 @@ class WPUBaseFields {
             break;
         case 'url':
             if (filter_var($value, FILTER_VALIDATE_URL) === false) {
+                return false;
+            }
+            break;
+        case 'checkbox':
+            if ($value != '0' && $value != '1') {
                 return false;
             }
             break;
