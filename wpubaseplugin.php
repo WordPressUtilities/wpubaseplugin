@@ -4,7 +4,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 2.41.0
+Version: 2.42.0
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
@@ -13,7 +13,7 @@ License URI: https://opensource.org/licenses/MIT
 
 class WPUBasePlugin {
 
-    public $version = '2.41.0';
+    public $version = '2.42.0';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -37,7 +37,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseCron'
         ),
         'fields' => array(
-            'namespace' => 'wpubasefields_0_6_0',
+            'namespace' => 'wpubasefields_0_7_0',
             'name' => 'WPUBaseFields'
         ),
         'update' => array(
@@ -113,9 +113,15 @@ class WPUBasePlugin {
         // Check for Plugins activation
         foreach ($this->plugins as $id => $plugin) {
             $this->plugins[$id]['installed'] = true;
-            if (!is_plugin_active($plugin['path'])) {
+            $this->plugins[$id]['activated'] = true;
+            if (!file_exists(WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . $plugin['path'])) {
                 $this->plugins[$id]['installed'] = false;
                 $this->tools['messages']->set_message($id . '__not_installed', sprintf(__('The plugin %s should be installed.', 'wpubaseplugin'), $plugin['message_url']), 'error');
+                continue;
+            }
+            if (!is_plugin_active($plugin['path'])) {
+                $this->plugins[$id]['activated'] = false;
+                $this->tools['messages']->set_message($id . '__not_activated', sprintf(__('The plugin %s should be activated.', 'wpubaseplugin'), $plugin['message_url']), 'error');
             }
         }
     }

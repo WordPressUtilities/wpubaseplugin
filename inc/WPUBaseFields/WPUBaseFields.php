@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_6_0;
+namespace wpubasefields_0_7_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.6.0
+Version: 0.7.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,6 +15,15 @@ License URI: https://opensource.org/licenses/MIT
 class WPUBaseFields {
     private $fields = array();
     private $field_groups = array();
+    private $supported_types = array(
+        'radio',
+        'select',
+        'textarea',
+        'checkbox',
+        'text',
+        'email',
+        'url'
+    );
 
     function __construct($fields = array(), $field_groups = array()) {
         $this->init($fields, $field_groups);
@@ -79,7 +88,7 @@ class WPUBaseFields {
             if (!isset($field['label'])) {
                 $field['label'] = $field_id;
             }
-            if (!isset($field['type'])) {
+            if (!isset($field['type']) || !in_array($field['type'], $this->supported_types)) {
                 $field['type'] = 'text';
             }
             if (!isset($field['column_start'])) {
@@ -287,6 +296,9 @@ class WPUBaseFields {
         $css = preg_replace('/\/\*.*?\*\//s', '', $css);
         $css = preg_replace('/\s+/', ' ', $css);
         echo '<style>' . $css . '</style>';
+        /* Include JS */
+        $js = file_get_contents(dirname(__FILE__) . '/assets/admin.js');
+        echo '<script>' . $js . '</script>';
     }
 
 }
