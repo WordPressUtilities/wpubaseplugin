@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_7_0;
+namespace wpubasefields_0_8_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.7.0
+Version: 0.8.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -19,9 +19,11 @@ class WPUBaseFields {
         'radio',
         'select',
         'textarea',
+        'checkboxes',
         'checkbox',
         'text',
         'email',
+        'number',
         'url'
     );
 
@@ -167,6 +169,18 @@ class WPUBaseFields {
                     $field_html .= '</span>';
                 }
                 break;
+            case 'checkboxes':
+                if (!is_array($value)) {
+                    $value = array();
+                }
+                foreach ($field['data'] as $key => $var) {
+                    $check_item_id = $field_name . '__' . $key;
+                    $field_html .= '<span class="wpubasefield-checkbox-wrapper">';
+                    $field_html .= '<input ' . checked(in_array($key, $value), true, false) . ' value="' . esc_attr($key) . '" name="' . $field_name . '[]" id="' . $check_item_id . '" type="checkbox" />';
+                    $field_html .= '<label for="' . $check_item_id . '">' . esc_html($var) . '</label>';
+                    $field_html .= '</span>';
+                }
+                break;
             case 'select':
                 $field_html .= '<select ' . $id_name . '>';
                 $field_html .= '<option hidden>' . esc_html($field['placeholder']) . '</option>';
@@ -185,6 +199,7 @@ class WPUBaseFields {
                 $field_html .= '</span>';
                 break;
             case 'text':
+            case 'number':
             case 'email':
             case 'url':
                 $field_html .= '<input ' . $id_name . ' type="' . esc_attr($field['type']) . '" value="' . esc_attr($value) . '" />';
@@ -263,8 +278,23 @@ class WPUBaseFields {
                 return false;
             }
             break;
+        case 'checkboxes':
+            if (!is_array($value)) {
+                return false;
+            }
+            foreach($value as $value_item){
+                if (!array_key_exists($value_item, $field['data'])) {
+                    return false;
+                }
+            }
+            break;
         case 'email':
             if (filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
+                return false;
+            }
+            break;
+        case 'number':
+            if (!is_numeric($value)) {
                 return false;
             }
             break;
