@@ -4,7 +4,7 @@
 Plugin Name: WPU Base Plugin
 Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 2.43.0
+Version: 2.44.0
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
@@ -13,7 +13,7 @@ License URI: https://opensource.org/licenses/MIT
 
 class WPUBasePlugin {
 
-    public $version = '2.43.0';
+    public $version = '2.44.0';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -37,7 +37,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseCron'
         ),
         'fields' => array(
-            'namespace' => 'wpubasefields_0_8_0',
+            'namespace' => 'wpubasefields_0_9_0',
             'name' => 'WPUBaseFields'
         ),
         'update' => array(
@@ -203,6 +203,10 @@ class WPUBasePlugin {
                 'group' => 'group_1',
                 'label' => 'Demo'
             ),
+            'demo_page' => array(
+                'group' => 'group_page',
+                'label' => 'Demo field for pages'
+            ),
             'demo_email' => array(
                 'column_start' => true,
                 'group' => 'group_1',
@@ -220,6 +224,11 @@ class WPUBasePlugin {
                 'group' => 'group_1',
                 'label' => 'Demo number',
                 'type' => 'number'
+            ),
+            'demo_color' => array(
+                'group' => 'group_1',
+                'label' => 'Demo color',
+                'type' => 'color'
             ),
             'demo_textarea' => array(
                 'group' => 'group_1',
@@ -270,6 +279,10 @@ class WPUBasePlugin {
             ),
             'group_2'  => array(
                 'label' => 'Group 2'
+            ),
+            'group_page'  => array(
+                'label' => 'Group Pages',
+                'post_type' => 'page'
             )
         );
         $this->tools['fields']->init($fields, $field_groups);

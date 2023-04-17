@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_8_0;
+namespace wpubasefields_0_9_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.8.0
+Version: 0.9.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -19,6 +19,7 @@ class WPUBaseFields {
         'radio',
         'select',
         'textarea',
+        'color',
         'checkboxes',
         'checkbox',
         'text',
@@ -199,6 +200,7 @@ class WPUBaseFields {
                 $field_html .= '</span>';
                 break;
             case 'text':
+            case 'color':
             case 'number':
             case 'email':
             case 'url':
@@ -252,6 +254,7 @@ class WPUBaseFields {
                     continue;
                 }
 
+                /* No control value : field will not be touched */
                 if (!isset($_POST['wpubasefields_' . $field_id . '__control'])) {
                     continue;
                 }
@@ -282,7 +285,7 @@ class WPUBaseFields {
             if (!is_array($value)) {
                 return false;
             }
-            foreach($value as $value_item){
+            foreach ($value as $value_item) {
                 if (!array_key_exists($value_item, $field['data'])) {
                     return false;
                 }
@@ -290,6 +293,11 @@ class WPUBaseFields {
             break;
         case 'email':
             if (filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
+                return false;
+            }
+            break;
+        case 'color':
+            if (!preg_match('/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $value)) {
                 return false;
             }
             break;
