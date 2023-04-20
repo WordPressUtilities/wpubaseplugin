@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_9_0;
+namespace wpubasefields_0_10_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.9.0
+Version: 0.10.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -69,6 +69,9 @@ class WPUBaseFields {
             if (!isset($group['label'])) {
                 $group['label'] = $group_id;
             }
+            if (!isset($group['capability'])) {
+                $group['capability'] = 'edit_posts';
+            }
             $this->field_groups[$group_id] = $group;
         }
 
@@ -121,6 +124,9 @@ class WPUBaseFields {
 
     function display_boxes() {
         foreach ($this->field_groups as $group_id => $group) {
+            if (!current_user_can($group['capability'])) {
+                continue;
+            }
             add_meta_box('wpubasefields_group_' . $group_id, $group['label'], array(&$this, 'display_box_content'), $group['post_type'], 'advanced', 'default', array('group_id' => $group_id));
         }
     }
@@ -249,6 +255,10 @@ class WPUBaseFields {
                 return;
             }
 
+            if (!current_user_can($group['capability'])) {
+                continue;
+            }
+
             foreach ($this->fields as $field_id => $field) {
                 if ($field['group'] != $group_id) {
                     continue;
@@ -329,11 +339,33 @@ class WPUBaseFields {
     ---------------------------------------------------------- */
 
     function admin_head() {
+        $screen = get_current_screen();
+        if (!$screen) {
+            return;
+        }
+        if ($screen->base != 'post') {
+            return;
+        }
+        $need_display_assets = false;
+        foreach ($this->field_groups as $group) {
+            if (!current_user_can($group['capability'])) {
+                continue;
+            }
+            if ($group['post_type'] == $screen->post_type || is_array($group['post_type']) && in_array($screen->post_type, $group['post_type'])) {
+                $need_display_assets = true;
+            }
+        }
+
+        if (!$need_display_assets) {
+            return;
+        }
+
         /* Include & compress CSS */
         $css = file_get_contents(dirname(__FILE__) . '/assets/admin.css');
         $css = preg_replace('/\/\*.*?\*\//s', '', $css);
         $css = preg_replace('/\s+/', ' ', $css);
         echo '<style>' . $css . '</style>';
+
         /* Include JS */
         $js = file_get_contents(dirname(__FILE__) . '/assets/admin.js');
         echo '<script>' . $js . '</script>';
