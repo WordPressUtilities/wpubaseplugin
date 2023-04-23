@@ -67,3 +67,12 @@
     display: inline-block;
     vertical-align: 0;
 }
+
+/* File
+-------------------------- */
+
+.wpubasefields-file-wrap {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5em;
+}

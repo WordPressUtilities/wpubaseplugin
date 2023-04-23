@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_10_0;
+namespace wpubasefields_0_10_1;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.10.0
+Version: 0.10.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -22,6 +22,8 @@ class WPUBaseFields {
         'color',
         'checkboxes',
         'checkbox',
+        'tel',
+        'file',
         'text',
         'email',
         'number',
@@ -205,6 +207,13 @@ class WPUBaseFields {
                 $field_html .= $label_html;
                 $field_html .= '</span>';
                 break;
+            case 'file':
+                $label_file = __('Select a file', 'wpubasefields');
+                $field_html .= '<span class="wpubasefields-file-wrap">';
+                $field_html .= '<input ' . $id_name . ' type="text" value="' . $value . '" readonly />';
+                $field_html .= '<button class="wpubasefields_select_file button"  class="button" title="' . esc_attr($label_file) . '">' . esc_html($label_file) . '</button>';
+                $field_html .= '</span>';
+                break;
             case 'text':
             case 'color':
             case 'number':
@@ -312,6 +321,7 @@ class WPUBaseFields {
             }
             break;
         case 'number':
+        case 'file':
             if (!is_numeric($value)) {
                 return false;
             }
@@ -367,6 +377,7 @@ class WPUBaseFields {
         echo '<style>' . $css . '</style>';
 
         /* Include JS */
+        wp_enqueue_media();
         $js = file_get_contents(dirname(__FILE__) . '/assets/admin.js');
         echo '<script>' . $js . '</script>';
     }
