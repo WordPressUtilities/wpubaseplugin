@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_10_1;
+namespace wpubasefields_0_10_2;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.10.1
+Version: 0.10.2
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -209,10 +209,26 @@ class WPUBaseFields {
                 break;
             case 'file':
                 $label_file = __('Select a file', 'wpubasefields');
+                $label_remove = __('Remove file', 'wpubasefields');
+                $preview = '';
+                $icon = 'dashicons-media-default';
+                if ($value && is_numeric($value)) {
+                    $preview = basename(get_attached_file($value));
+                }
+                $has_preview = $preview ? '1' : '0';
+
+                /* Display field */
+                $field_html .= '<div class="wpubasefields-file-wrap__main" data-haspreview="' . $has_preview . '">';
                 $field_html .= '<span class="wpubasefields-file-wrap">';
-                $field_html .= '<input ' . $id_name . ' type="text" value="' . $value . '" readonly />';
+                $field_html .= '<span class="wpubasefields-file-wrap__preview"><span>';
+                $field_html .= '<span class="dashicons ' . $icon . '"></span>';
+                $field_html .= '<span class="value">' . $preview . '</span>';
+                $field_html .= '</span></span>';
+                $field_html .= '<input ' . $id_name . ' type="hidden" value="' . $value . '" readonly />';
                 $field_html .= '<button class="wpubasefields_select_file button"  class="button" title="' . esc_attr($label_file) . '">' . esc_html($label_file) . '</button>';
                 $field_html .= '</span>';
+                $field_html .= '<small><a class="wpubasefields-file-wrap__remove" href="#" role="button">' . esc_html($label_remove) . '</a></small>';
+                $field_html .= '</div>';
                 break;
             case 'text':
             case 'color':

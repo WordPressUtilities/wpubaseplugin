@@ -38,12 +38,30 @@ document.addEventListener("DOMContentLoaded", function() {
       File upload
     ---------------------------------------------------------- */
 
+    /* Remove
+    -------------------------- */
+
+    jQuery('.wpubasefields-file-wrap__remove').on('click', function(e) {
+        e.preventDefault();
+        var $link = jQuery(this),
+            $wrapper = $link.closest('.wpubasefield-input'),
+            $preview = $wrapper.find('.wpubasefields-file-wrap__main'),
+            $input = $wrapper.find('input[type="hidden"]');
+        $preview.find('.value').text('');
+        $preview.attr('data-haspreview', '0');
+        $input.val(0);
+    });
+
+    /* Select
+    -------------------------- */
+
     jQuery('.wpubasefields_select_file').click(function(e) {
         e.preventDefault();
 
         var $button = jQuery(this),
             $wrapper = $button.closest('.wpubasefield-input'),
-            $input = $wrapper.find('input[type="text"]');
+            $preview = $wrapper.find('.wpubasefields-file-wrap__main'),
+            $input = $wrapper.find('input[type="hidden"]');
         var custom_uploader = wp.media.frames.file_frame = wp.media({
             title: $button.attr('title'),
             button: {
@@ -53,6 +71,8 @@ document.addEventListener("DOMContentLoaded", function() {
         });
         custom_uploader.on('select', function() {
             var attachment = custom_uploader.state().get('selection').first().toJSON();
+            $preview.attr('data-haspreview', '1');
+            $preview.find('.value').text(attachment.filename);
             $input.val(attachment.id);
         });
         custom_uploader.open();
