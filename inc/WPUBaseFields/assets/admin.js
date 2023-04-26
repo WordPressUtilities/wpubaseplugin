@@ -46,10 +46,12 @@ document.addEventListener("DOMContentLoaded", function() {
         var $link = jQuery(this),
             $wrapper = $link.closest('.wpubasefield-input'),
             $preview = $wrapper.find('.wpubasefields-file-wrap__main'),
+            $imageTarget = $wrapper.find('.wpubasefields-file-image'),
             $input = $wrapper.find('input[type="hidden"]');
         $preview.find('.value').text('');
         $preview.attr('data-haspreview', '0');
         $input.val(0);
+        $imageTarget.html('');
     });
 
     /* Select
@@ -61,19 +63,38 @@ document.addEventListener("DOMContentLoaded", function() {
         var $button = jQuery(this),
             $wrapper = $button.closest('.wpubasefield-input'),
             $preview = $wrapper.find('.wpubasefields-file-wrap__main'),
-            $input = $wrapper.find('input[type="hidden"]');
-        var custom_uploader = wp.media.frames.file_frame = wp.media({
+            $imageTarget = $wrapper.find('.wpubasefields-file-image'),
+            $input = $wrapper.find('input[type="hidden"]'),
+            _isImage = ($wrapper.attr('data-type') == 'image');
+
+        var wp_media_args = {
             title: $button.attr('title'),
             button: {
                 text: $button.attr('title')
             },
             multiple: false
-        });
+        };
+
+        if (_isImage) {
+            wp_media_args.library = {
+                type: ['image']
+            };
+        }
+
+        var custom_uploader = wp.media.frames.file_frame = wp.media(wp_media_args);
         custom_uploader.on('select', function() {
             var attachment = custom_uploader.state().get('selection').first().toJSON();
             $preview.attr('data-haspreview', '1');
             $preview.find('.value').text(attachment.filename);
             $input.val(attachment.id);
+            if (_isImage) {
+                var img_src = attachment.url;
+                if (attachment.sizes.thumbnail.url) {
+                    img_src = attachment.sizes.thumbnail.url;
+                }
+                $imageTarget.html('<img src="' + img_src + '" alt="" />');
+
+            }
         });
         custom_uploader.open();
     });

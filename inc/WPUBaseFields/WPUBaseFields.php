@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_10_2;
+namespace wpubasefields_0_11_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.10.2
+Version: 0.11.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -23,6 +23,7 @@ class WPUBaseFields {
         'checkboxes',
         'checkbox',
         'tel',
+        'image',
         'file',
         'text',
         'email',
@@ -207,9 +208,14 @@ class WPUBaseFields {
                 $field_html .= $label_html;
                 $field_html .= '</span>';
                 break;
+            case 'image':
             case 'file':
                 $label_file = __('Select a file', 'wpubasefields');
                 $label_remove = __('Remove file', 'wpubasefields');
+                if ($field['type'] == 'image') {
+                    $label_file = __('Select an image', 'wpubasefields');
+                    $label_remove = __('Remove image', 'wpubasefields');
+                }
                 $preview = '';
                 $icon = 'dashicons-media-default';
                 if ($value && is_numeric($value)) {
@@ -219,6 +225,11 @@ class WPUBaseFields {
 
                 /* Display field */
                 $field_html .= '<div class="wpubasefields-file-wrap__main" data-haspreview="' . $has_preview . '">';
+                $field_html .= '<span class="wpubasefields-file-image">';
+                if($has_preview){
+                    $field_html .= wp_get_attachment_image($value,'thumbnail');
+                }
+                $field_html .= '</span>';
                 $field_html .= '<span class="wpubasefields-file-wrap">';
                 $field_html .= '<span class="wpubasefields-file-wrap__preview"><span>';
                 $field_html .= '<span class="dashicons ' . $icon . '"></span>';
@@ -337,6 +348,7 @@ class WPUBaseFields {
             }
             break;
         case 'number':
+        case 'image':
         case 'file':
             if (!is_numeric($value)) {
                 return false;
