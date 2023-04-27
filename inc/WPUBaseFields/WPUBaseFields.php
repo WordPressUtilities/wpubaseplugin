@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_11_0;
+namespace wpubasefields_0_11_1;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.11.0
+Version: 0.11.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -108,6 +108,9 @@ class WPUBaseFields {
             }
             if (!isset($field['required'])) {
                 $field['required'] = false;
+            }
+            if (!isset($field['preview_format'])) {
+                $field['preview_format'] = 'thumbnail';
             }
             if (!isset($field['placeholder'])) {
                 $field['placeholder'] = $field['type'] == 'select' ? __('Select a value', 'wpubasefields') : '';
@@ -226,8 +229,8 @@ class WPUBaseFields {
                 /* Display field */
                 $field_html .= '<div class="wpubasefields-file-wrap__main" data-haspreview="' . $has_preview . '">';
                 $field_html .= '<span class="wpubasefields-file-image">';
-                if($has_preview){
-                    $field_html .= wp_get_attachment_image($value,'thumbnail');
+                if ($has_preview) {
+                    $field_html .= wp_get_attachment_image($value, $field['preview_format']);
                 }
                 $field_html .= '</span>';
                 $field_html .= '<span class="wpubasefields-file-wrap">';
@@ -255,7 +258,19 @@ class WPUBaseFields {
                 if ($field['column_start']) {
                     $html_content .= '<li class="wpubasefield-input wpubasefield-input--columns"><ul>';
                 }
-                $html_content .= '<li class="wpubasefield-input" data-type="' . esc_attr($field['type']) . '">' . $field_html . '</li>';
+
+                $field_attributes = array(
+                    'class' => 'wpubasefield-input wpubasefield-input--' . $field['type'],
+                    'data-type' => $field['type']
+                );
+                if ($field['type'] == 'image') {
+                    $field_attributes['data-image-preview'] = $field['preview_format'];
+                }
+                $html_content .= '<li';
+                foreach ($field_attributes as $key => $var) {
+                    $html_content .= ' ' . $key . '="' . esc_attr($var) . '"';
+                }
+                $html_content .= '>' . $field_html . '</li>';
                 if ($field['column_end']) {
                     $html_content .= '</ul></li>';
                 }

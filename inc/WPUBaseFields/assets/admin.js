@@ -88,9 +88,10 @@ document.addEventListener("DOMContentLoaded", function() {
             $preview.find('.value').text(attachment.filename);
             $input.val(attachment.id);
             if (_isImage) {
-                var img_src = attachment.url;
-                if (attachment.sizes.thumbnail.url) {
-                    img_src = attachment.sizes.thumbnail.url;
+                var img_src = attachment.url,
+                    _format = $wrapper.attr('data-image-preview');
+                if (attachment.sizes[_format].url) {
+                    img_src = attachment.sizes[_format].url;
                 }
                 $imageTarget.html('<img src="' + img_src + '" alt="" />');
 
