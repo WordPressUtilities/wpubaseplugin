@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_11_1;
+namespace wpubasefields_0_12_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.11.1
+Version: 0.12.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -16,6 +16,8 @@ class WPUBaseFields {
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
+        'post',
+        'page',
         'radio',
         'select',
         'textarea',
@@ -103,6 +105,12 @@ class WPUBaseFields {
             if (!isset($field['column_start'])) {
                 $field['column_start'] = false;
             }
+            if (!isset($field['post_type'])) {
+                $field['post_type'] = $field['type'] == 'page' ? array('page') : array('post');
+            }
+            if (!is_array($field['post_type'])) {
+                $field['post_type'] = array($field['post_type']);
+            }
             if (!isset($field['column_end'])) {
                 $field['column_end'] = false;
             }
@@ -142,6 +150,18 @@ class WPUBaseFields {
         foreach ($this->fields as $field_id => $field) {
             if ($field['group'] != $args['args']['group_id']) {
                 continue;
+            }
+
+            if ($field['type'] == 'post' || $field['type'] == 'page') {
+                $p = get_posts(array(
+                    'post_type' => $field['post_type'],
+                    'posts_per_page' => 500
+                ));
+                $field['data'] = array();
+                foreach($p as $post_item){
+                    $field['data'][$post_item->ID] = $post_item->post_title;
+                }
+                asort($field['data']);
             }
 
             /* Shared settings */
@@ -195,6 +215,8 @@ class WPUBaseFields {
                 }
                 break;
             case 'select':
+            case 'post':
+            case 'page':
                 $field_html .= '<select ' . $id_name . '>';
                 $field_html .= '<option hidden>' . esc_html($field['placeholder']) . '</option>';
                 foreach ($field['data'] as $key => $var) {
