@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_12_0;
+namespace wpubasefields_0_13_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.12.0
+Version: 0.13.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -261,7 +261,7 @@ class WPUBaseFields {
                 $field_html .= '<span class="value">' . $preview . '</span>';
                 $field_html .= '</span></span>';
                 $field_html .= '<input ' . $id_name . ' type="hidden" value="' . $value . '" readonly />';
-                $field_html .= '<button class="wpubasefields_select_file button"  class="button" title="' . esc_attr($label_file) . '">' . esc_html($label_file) . '</button>';
+                $field_html .= '<button type="button" class="wpubasefields_select_file button"  class="button" title="' . esc_attr($label_file) . '">' . esc_html($label_file) . '</button>';
                 $field_html .= '</span>';
                 $field_html .= '<small><a class="wpubasefields-file-wrap__remove" href="#" role="button">' . esc_html($label_remove) . '</a></small>';
                 $field_html .= '</div>';
@@ -274,7 +274,8 @@ class WPUBaseFields {
                 $field_html .= '<input ' . $id_name . ' type="' . esc_attr($field['type']) . '" value="' . esc_attr($value) . '" />';
             }
 
-            $field_html .= '<input type="hidden" name="' . $field_name . '__control"  value="1" />';
+            $field_html .= '<input class="wpubasefield-input-control" type="hidden" name="' . $field_name . '__control"  value="1" />';
+            $field_html .= '<small class="wpubasefield-msg-invalid">' . __('This field is invalid', 'wpubasefields') . '</small>';
 
             if ($field_html) {
                 if ($field['column_start']) {
@@ -283,6 +284,7 @@ class WPUBaseFields {
 
                 $field_attributes = array(
                     'class' => 'wpubasefield-input wpubasefield-input--' . $field['type'],
+                    'data-valid' => '1',
                     'data-type' => $field['type']
                 );
                 if ($field['type'] == 'image') {

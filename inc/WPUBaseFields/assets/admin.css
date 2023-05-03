@@ -21,6 +21,21 @@
     margin-top: 1em;
 }
 
+.wpubasefield-input[data-valid="1"] .wpubasefield-msg-invalid {
+    display: none;
+}
+
+.wpubasefield-msg-invalid,
+.wpubasefield-input[data-valid="0"] label {
+    color: red;
+}
+
+.wpubasefield-input[data-valid="0"] textarea,
+.wpubasefield-input[data-valid="0"] select,
+.wpubasefield-input[data-valid="0"] input {
+    border-color: red;
+}
+
 /* ----------------------------------------------------------
   Columns
 ---------------------------------------------------------- */
