@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_13_0;
+namespace wpubasefields_0_14_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.13.0
+Version: 0.14.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -13,6 +13,8 @@ License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUBaseFields {
+    private $script_id;
+    private $version = '0.14.0';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -42,6 +44,8 @@ class WPUBaseFields {
             return;
         }
 
+        $this->script_id = str_replace('.', '_', 'wpubasefields_' . $this->version);
+
         /* Build fields */
         $this->build_fields($fields, $field_groups);
 
@@ -52,7 +56,7 @@ class WPUBaseFields {
         add_action('save_post', array(&$this, 'save_post'));
 
         /* Basic CSS */
-        add_action('admin_head', array(&$this, 'admin_head'));
+        add_action('admin_enqueue_scripts', array(&$this, 'admin_enqueue_scripts'));
 
     }
 
@@ -158,7 +162,7 @@ class WPUBaseFields {
                     'posts_per_page' => 500
                 ));
                 $field['data'] = array();
-                foreach($p as $post_item){
+                foreach ($p as $post_item) {
                     $field['data'][$post_item->ID] = $post_item->post_title;
                 }
                 asort($field['data']);
@@ -415,7 +419,7 @@ class WPUBaseFields {
       Admin
     ---------------------------------------------------------- */
 
-    function admin_head() {
+    function admin_enqueue_scripts() {
         $screen = get_current_screen();
         if (!$screen) {
             return;
@@ -437,16 +441,12 @@ class WPUBaseFields {
             return;
         }
 
-        /* Include & compress CSS */
-        $css = file_get_contents(dirname(__FILE__) . '/assets/admin.css');
-        $css = preg_replace('/\/\*.*?\*\//s', '', $css);
-        $css = preg_replace('/\s+/', ' ', $css);
-        echo '<style>' . $css . '</style>';
-
-        /* Include JS */
+        /* JS */
         wp_enqueue_media();
-        $js = file_get_contents(dirname(__FILE__) . '/assets/admin.js');
-        echo '<script>' . $js . '</script>';
+        wp_enqueue_script($this->script_id, plugins_url('assets/admin.js', __FILE__), array('jquery'), $this->version);
+
+        /* CSS */
+        wp_enqueue_style($this->script_id, plugins_url('assets/admin.css', __FILE__), array(), $this->version, false);
     }
 
 }
