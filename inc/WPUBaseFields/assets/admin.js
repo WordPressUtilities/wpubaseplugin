@@ -19,9 +19,13 @@ document.addEventListener("DOMContentLoaded", function() {
             if (el.classList.contains('wpubasefield-input-control')) {
                 return;
             }
+            var $parent = jQuery(el).closest('.wpubasefield-input');
             var el_valid = !!el.checkValidity();
-            jQuery(el).closest('.wpubasefield-input').attr('data-valid', el_valid ? '1' : '0');
+            $parent.attr('data-valid', el_valid ? '1' : '0');
             if (!el_valid) {
+                if (el.validationMessage) {
+                    $parent.find('.wpubasefield-msg-invalid').text(el.validationMessage);
+                }
                 formValid = false;
             }
         });
@@ -62,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function() {
     /* Select
     -------------------------- */
 
-    jQuery('.wpubasefields_select_file').click(function(e) {
+    jQuery('.wpubasefields_select_file').on('click', function(e) {
         e.preventDefault();
 
         var $button = jQuery(this),
