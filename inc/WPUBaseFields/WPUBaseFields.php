@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_14_1;
+namespace wpubasefields_0_15_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.14.1
+Version: 0.15.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -14,7 +14,7 @@ License URI: https://opensource.org/licenses/MIT
 
 class WPUBaseFields {
     private $script_id;
-    private $version = '0.14.1';
+    private $version = '0.15.0';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -22,6 +22,7 @@ class WPUBaseFields {
         'page',
         'radio',
         'select',
+        'editor',
         'textarea',
         'color',
         'checkboxes',
@@ -227,6 +228,15 @@ class WPUBaseFields {
                     $field_html .= '<option ' . selected($value, $key, false) . ' value="' . $key . '">' . esc_html($var) . '</option>';
                 }
                 $field_html .= '</select>';
+                break;
+            case 'editor':
+                $editor_args = array(
+                    'media_buttons' => false,
+                    'textarea_rows' => 5
+                );
+                ob_start();
+                wp_editor($value, $field_name, $editor_args);
+                $field_html = ob_get_clean();
                 break;
             case 'textarea':
                 $field_html .= '<textarea ' . $id_name . '>' . esc_html($value) . '</textarea>';
