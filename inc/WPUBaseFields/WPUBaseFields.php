@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_15_0;
+namespace wpubasefields_0_15_1;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.15.0
+Version: 0.15.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -14,7 +14,7 @@ License URI: https://opensource.org/licenses/MIT
 
 class WPUBaseFields {
     private $script_id;
-    private $version = '0.15.0';
+    private $version = '0.15.1';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -234,6 +234,9 @@ class WPUBaseFields {
                     'media_buttons' => false,
                     'textarea_rows' => 5
                 );
+                if (isset($field['editor_args']) && is_array($field['editor_args'])) {
+                    $editor_args = array_merge($editor_args, $field['editor_args']);
+                }
                 ob_start();
                 wp_editor($value, $field_name, $editor_args);
                 $field_html = ob_get_clean();
