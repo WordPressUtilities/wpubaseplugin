@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_17_2;
+namespace wpubasesettings_0_17_3;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.17.2
+Version: 0.17.3
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -500,13 +500,13 @@ EOT;
 <script>
 (function(){
 /* Check langs */
-var _langs = ${languages};
+var _langs = {$languages};
 if(!_langs){
     return;
 }
 
 /* Get items */
-var jQinput = jQuery('input[type="hidden"][name="option_page"][value="${option_id}"]');
+var jQinput = jQuery('input[type="hidden"][name="option_page"][value="{$option_id}"]');
 if(!jQinput.length){
     return;
 }
@@ -528,7 +528,7 @@ var select_html='';
 for(var _l in _langs){
     select_html+='<option value="'+_l+'">'+_langs[_l]+'</option>';
 }
-var jQSelect = jQuery('<label><strong>${label_txt}</strong> : <select>'+select_html+'</select></label>');
+var jQSelect = jQuery('<label><strong>{$label_txt}</strong> : <select>'+select_html+'</select></label>');
 jQSelect.prependTo(jQform);
 
 /* Switch */
