@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_17_3;
+namespace wpubasesettings_0_17_4;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.17.3
+Version: 0.17.4
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -318,8 +318,14 @@ class WPUBaseSettings {
         if (isset($args['required']) && $args['required']) {
             $attr .= ' required="required" ';
         }
+        if (isset($args['placeholder']) && $args['placeholder']) {
+            $attr .= ' placeholder="' . esc_attr($args['placeholder']) . '" ';
+        }
+        if (isset($args['attributes_html']) && $args['attributes_html']) {
+            $attr .= ' ' . $args['attributes_html'];
+        }
         $id .= $attr;
-        $value = isset($options[$args['id']]) ? $options[$args['id']] : $args['default_value'] ;
+        $value = isset($options[$args['id']]) ? $options[$args['id']] : $args['default_value'];
 
         switch ($args['type']) {
         case 'checkbox':
@@ -373,7 +379,7 @@ class WPUBaseSettings {
             break;
         case 'editor':
             $editor_args = array(
-                'textarea_rows' => isset($args['textarea_rows']) && is_numeric($args['textarea_rows']) ? $args['textarea_rows'] : 3,
+                'textarea_rows' => isset($args['textarea_rows']) && is_numeric($args['textarea_rows']) ? $args['textarea_rows'] : 3
             );
             if (isset($args['editor_args']) && is_array($args['editor_args'])) {
                 $editor_args = $args['editor_args'];
