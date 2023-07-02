@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_15_1;
+namespace wpubasefields_0_15_2;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.15.1
+Version: 0.15.2
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -14,7 +14,7 @@ License URI: https://opensource.org/licenses/MIT
 
 class WPUBaseFields {
     private $script_id;
-    private $version = '0.15.1';
+    private $version = '0.15.2';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -171,6 +171,7 @@ class WPUBaseFields {
 
             /* Shared settings */
             $value = get_post_meta($post->ID, $field_id, 1);
+            $displayed_value = is_array($value) ? serialize($value) : $value;
             $field_name = 'wpubasefields_' . $field_id;
             $id_name = ' name="' . $field_name . '" id="' . $field_name . '" ';
             if ($field['required']) {
@@ -238,7 +239,7 @@ class WPUBaseFields {
                     $editor_args = array_merge($editor_args, $field['editor_args']);
                 }
                 ob_start();
-                wp_editor($value, $field_name, $editor_args);
+                wp_editor($displayed_value, $field_name, $editor_args);
                 $field_html = ob_get_clean();
                 break;
             case 'textarea':
@@ -277,7 +278,7 @@ class WPUBaseFields {
                 $field_html .= '<span class="dashicons ' . $icon . '"></span>';
                 $field_html .= '<span class="value">' . $preview . '</span>';
                 $field_html .= '</span></span>';
-                $field_html .= '<input ' . $id_name . ' type="hidden" value="' . $value . '" readonly />';
+                $field_html .= '<input ' . $id_name . ' type="hidden" value="' . $displayed_value . '" readonly />';
                 $field_html .= '<button type="button" class="wpubasefields_select_file button"  class="button" title="' . esc_attr($label_file) . '">' . esc_html($label_file) . '</button>';
                 $field_html .= '</span>';
                 $field_html .= '<small><a class="wpubasefields-file-wrap__remove" href="#" role="button">' . esc_html($label_remove) . '</a></small>';
@@ -288,7 +289,7 @@ class WPUBaseFields {
             case 'number':
             case 'email':
             case 'url':
-                $field_html .= '<input ' . $id_name . ' type="' . esc_attr($field['type']) . '" value="' . esc_attr($value) . '" />';
+                $field_html .= '<input ' . $id_name . ' type="' . esc_attr($field['type']) . '" value="' . esc_attr($displayed_value) . '" />';
             }
 
             $field_html .= '<input class="wpubasefield-input-control" type="hidden" name="' . $field_name . '__control"  value="1" />';

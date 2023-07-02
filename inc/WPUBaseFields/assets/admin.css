@@ -59,9 +59,9 @@
   Fields
 ---------------------------------------------------------- */
 
-.wpubasefield-input input:not([type="radio"]):not([type="checkbox"]) ,
-.wpubasefield-input select,
-.wpubasefield-input textarea {
+.wpubasefield-input:not([data-type="editor"]) input:not([type="radio"]):not([type="checkbox"]) ,
+.wpubasefield-input:not([data-type="editor"]) select,
+.wpubasefield-input:not([data-type="editor"]) textarea {
     width: 100%;
 }
 
