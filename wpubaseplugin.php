@@ -3,17 +3,22 @@
 /*
 Plugin Name: WPU Base Plugin
 Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
+Update URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 2.50.4
+Version: 2.50.5
 Author: Darklg
 Author URI: https://darklg.me/
+Text Domain: wpubaseplugin
+Domain Path: /lang
+Requires at least: 6.2
+Requires PHP: 8.0
 License: MIT License
 License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUBasePlugin {
 
-    public $version = '2.50.4';
+    public $version = '2.50.5';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -33,7 +38,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseSettings'
         ),
         'cron' => array(
-            'namespace' => 'wpubasecron_0_2_8',
+            'namespace' => 'wpubasecron_0_2_9',
             'name' => 'WPUBaseCron'
         ),
         'fields' => array(

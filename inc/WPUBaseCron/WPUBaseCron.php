@@ -1,10 +1,10 @@
 <?php
-namespace wpubasecron_0_2_8;
+namespace wpubasecron_0_2_9;
 
 /*
 Class Name: WPU Base Cron
 Description: A class to handle crons
-Version: 0.2.8
+Version: 0.2.9
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
@@ -42,7 +42,10 @@ class WPUBaseCron {
         ), 99);
 
         /* Check cron */
-        add_action('init', array(&$this,
+        add_action('wp', array(&$this,
+            'check_cron'
+        ));
+        add_action('admin_init', array(&$this,
             'check_cron'
         ));
     }
