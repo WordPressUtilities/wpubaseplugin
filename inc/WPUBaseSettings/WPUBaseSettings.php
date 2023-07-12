@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_17_4;
+namespace wpubasesettings_0_17_5;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.17.4
+Version: 0.17.5
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -161,6 +161,7 @@ class WPUBaseSettings {
             $settings[$id]['label_check'] = isset($input['label_check']) ? $input['label_check'] : $settings[$id]['label'];
             $settings[$id]['help'] = isset($input['help']) ? $input['help'] : '';
             $settings[$id]['type'] = isset($input['type']) ? $input['type'] : 'text';
+            $settings[$id]['post_type'] = isset($input['post_type']) ? $input['post_type'] : 'post';
             $settings[$id]['section'] = isset($input['section']) ? $input['section'] : $default_section;
             $settings[$id]['datas'] = isset($input['datas']) && is_array($input['datas']) ? $input['datas'] : array(__('No'), __('Yes'));
             $settings[$id]['editor_args'] = isset($input['editor_args']) && is_array($input['editor_args']) ? $input['editor_args'] : array();
@@ -223,6 +224,7 @@ class WPUBaseSettings {
                 'lang_id' => $lang_id,
                 'label_for' => $id,
                 'required' => $this->settings[$id]['required'],
+                'post_type' => $this->settings[$id]['post_type'],
                 'datas' => $this->settings[$id]['datas'],
                 'type' => $this->settings[$id]['type'],
                 'help' => $this->settings[$id]['help'],
