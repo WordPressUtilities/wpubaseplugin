@@ -1,0 +1,23 @@
+<mjml>
+  <mj-head>
+    <mj-style inline="inline">
+      .link-nostyle { color: inherit; }
+    </mj-style>
+    <mj-attributes>
+      <mj-text color="#000000" font-size="16px" font-family="arial, helvetica, sans-serif" />
+      <mj-button background-color="red" color="white" />
+      <mj-divider border-width="1px" border-color="#F0F0F0" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#F0F0F0">
+    <mj-section background-color="#FFFFFF">
+      <mj-column>
+        <mj-image width="100px" src="/assets/img/logo-small.png"></mj-image>
+        <mj-divider />
+        <mj-text>Hello World</mj-text>
+        <mj-divider />
+        <mj-text align="center" font-size="12px"><a class="link-nostyle" href="#">Hello World</a></mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
