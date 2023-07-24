@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseemail_0_1_0;
+namespace wpubaseemail_0_2_0;
 
 /*
 Class Name: WPU Base Email
 Description: A class to handle native Email in WordPress admin
-Version: 0.1.0
+Version: 0.2.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
