@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_15_2;
+namespace wpubasefields_0_15_3;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.15.2
+Version: 0.15.3
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -14,7 +14,7 @@ License URI: https://opensource.org/licenses/MIT
 
 class WPUBaseFields {
     private $script_id;
-    private $version = '0.15.2';
+    private $version = '0.15.3';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -122,6 +122,9 @@ class WPUBaseFields {
             if (!isset($field['required'])) {
                 $field['required'] = false;
             }
+            if (!isset($field['help'])) {
+                $field['help'] = false;
+            }
             if (!isset($field['preview_format'])) {
                 $field['preview_format'] = 'thumbnail';
             }
@@ -171,6 +174,15 @@ class WPUBaseFields {
 
             /* Shared settings */
             $value = get_post_meta($post->ID, $field_id, 1);
+            if (isset($field['default_value'])) {
+                if (is_null($value)) {
+                    $value = $field['default_value'];
+                }
+                if (isset($field['data']) && in_array($field['type'], array('radio', 'select', 'checkboxes')) && !isset($field['data'][$value])) {
+                    $value = $field['default_value'];
+                }
+            }
+
             $displayed_value = is_array($value) ? serialize($value) : $value;
             $field_name = 'wpubasefields_' . $field_id;
             $id_name = ' name="' . $field_name . '" id="' . $field_name . '" ';
@@ -293,6 +305,9 @@ class WPUBaseFields {
             }
 
             $field_html .= '<input class="wpubasefield-input-control" type="hidden" name="' . $field_name . '__control"  value="1" />';
+            if ($field['help']) {
+                $field_html .= '<small class="wpubasefield-msg-help">' . $field['help'] . '</small>';
+            }
             $field_html .= '<small class="wpubasefield-msg-invalid">' . __('This field is invalid', 'wpubasefields') . '</small>';
 
             if ($field_html) {

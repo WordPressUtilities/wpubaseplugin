@@ -21,6 +21,12 @@
     margin-top: 1em;
 }
 
+.wpubasefield-msg-invalid,
+.wpubasefield-msg-help {
+    display: block;
+    margin-top: 0.5em;
+}
+
 .wpubasefield-input[data-valid="1"] .wpubasefield-msg-invalid {
     display: none;
 }
