@@ -7,6 +7,40 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     /* ----------------------------------------------------------
+      Toggle
+    ---------------------------------------------------------- */
+
+    jQuery('.wpubasefield-input[data-toggle-display]').each(function(i, $wrapper) {
+        var _data = JSON.parse(jQuery(this).attr('data-toggle-display'));
+        if (!_data) {
+            return;
+        }
+
+        for (var _key in _data) {
+            (function(_key, _value, $wrapper) {
+                var $input = document.getElementById('wpubasefields_' + _key);
+
+                function check_value() {
+                    var _visible = true;
+                    if (_value == 'checked') {
+                        if (!$input.checked) {
+                            _visible = false;
+                        }
+                    }
+                    else {
+                        if (_value != $input.value) {
+                            _visible = false;
+                        }
+                    }
+                    $wrapper.setAttribute('data-visible', _visible ? '1' : '0');
+                }
+                check_value();
+                $input.addEventListener('change', check_value, 1);
+            }(_key, _data[_key], $wrapper));
+        }
+    });
+
+    /* ----------------------------------------------------------
       Validity check on Gutemberg
     ---------------------------------------------------------- */
 

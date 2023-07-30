@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_15_3;
+namespace wpubasefields_0_16_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.15.3
+Version: 0.16.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -14,7 +14,7 @@ License URI: https://opensource.org/licenses/MIT
 
 class WPUBaseFields {
     private $script_id;
-    private $version = '0.15.3';
+    private $version = '0.16.0';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -318,10 +318,14 @@ class WPUBaseFields {
                 $field_attributes = array(
                     'class' => 'wpubasefield-input wpubasefield-input--' . $field['type'],
                     'data-valid' => '1',
+                    'data-visible' => '1',
                     'data-type' => $field['type']
                 );
                 if ($field['type'] == 'image') {
                     $field_attributes['data-image-preview'] = $field['preview_format'];
+                }
+                if (isset($field['toggle-display'])) {
+                    $field_attributes['data-toggle-display'] = json_encode($field['toggle-display']);
                 }
                 $html_content .= '<li';
                 foreach ($field_attributes as $key => $var) {
