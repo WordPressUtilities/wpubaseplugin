@@ -16,28 +16,30 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
-        for (var _key in _data) {
-            (function(_key, _value, $wrapper) {
-                var $input = document.getElementById('wpubasefields_' + _key);
-
-                function check_value() {
-                    var _visible = true;
-                    if (_value == 'checked') {
-                        if (!$input.checked) {
-                            _visible = false;
-                        }
+        function check_values() {
+            var _visible = true,
+                $input;
+            for (var _key in _data) {
+                $input = document.getElementById('wpubasefields_' + _key);
+                if (_data[_key] == 'checked') {
+                    if (!$input.checked) {
+                        _visible = false;
                     }
-                    else {
-                        if (_value != $input.value) {
-                            _visible = false;
-                        }
-                    }
-                    $wrapper.setAttribute('data-visible', _visible ? '1' : '0');
                 }
-                check_value();
-                $input.addEventListener('change', check_value, 1);
-            }(_key, _data[_key], $wrapper));
+                else {
+                    if (_data[_key] != $input.value) {
+                        _visible = false;
+                    }
+                }
+            }
+            $wrapper.setAttribute('data-visible', _visible ? '1' : '0');
         }
+
+        for (var _key in _data) {
+            document.getElementById('wpubasefields_' + _key).addEventListener('change', check_values, 1);
+        }
+
+        check_values();
     });
 
     /* ----------------------------------------------------------

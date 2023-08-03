@@ -5,7 +5,7 @@ Plugin Name: WPU Base Plugin
 Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
 Update URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 2.53.0
+Version: 2.53.1
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpubaseplugin
@@ -18,7 +18,7 @@ License URI: https://opensource.org/licenses/MIT
 
 class WPUBasePlugin {
 
-    public $version = '2.53.0';
+    public $version = '2.53.1';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -42,7 +42,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseCron'
         ),
         'fields' => array(
-            'namespace' => 'wpubasefields_0_16_0',
+            'namespace' => 'wpubasefields_0_16_1',
             'name' => 'WPUBaseFields'
         ),
         'update' => array(
@@ -276,6 +276,20 @@ class WPUBasePlugin {
                 'group' => 'group_1',
                 'label' => 'Demo checkbox',
                 'type' => 'checkbox'
+            ),
+            'demo_checkbox2' => array(
+                'group' => 'group_1',
+                'label' => 'Demo checkbox',
+                'type' => 'checkbox'
+            ),
+            'demo_checkbox_text' => array(
+                'group' => 'group_1',
+                'toggle-display' => array(
+                    'demo_checkbox2' => 'checked',
+                    'demo_checkbox' => 'checked'
+                ),
+                'label' => 'Demo checkbox text',
+                'type' => 'text'
             ),
             'demo2' => array(
                 'group' => 'group_2',
