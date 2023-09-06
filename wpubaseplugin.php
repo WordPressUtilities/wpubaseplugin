@@ -5,7 +5,7 @@ Plugin Name: WPU Base Plugin
 Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
 Update URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 2.55.0
+Version: 2.55.1
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpubaseplugin
@@ -18,7 +18,7 @@ License URI: https://opensource.org/licenses/MIT
 
 class WPUBasePlugin {
 
-    public $version = '2.55.0';
+    public $version = '2.55.1';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -58,7 +58,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseToolbox'
         ),
         'filecache' => array(
-            'namespace' => 'wpubasefilecache_0_1_0',
+            'namespace' => 'wpubasefilecache_0_1_1',
             'name' => 'WPUBaseFileCache'
         )
     );
