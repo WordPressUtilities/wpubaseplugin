@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_2_0;
+namespace wpubasetoolbox_0_2_1;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.2.0
+Version: 0.2.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -33,12 +33,16 @@ class WPUBaseToolbox {
             'form_classname' => 'cssc-form',
             'field_box_classname' => 'box',
             'submit_box_classname' => 'box--submit',
+            'hidden_fields' => array(),
             'nonce_id' => $form_id,
             'nonce_name' => $form_id . '_nonce'
         );
         $args = array_merge($default_args, $args);
 
         $args = apply_filters('wpubasetoolbox_get_form_html_args_' . __NAMESPACE__, $args);
+        if (!is_array($args['hidden_fields']) || !isset($args['hidden_fields'])) {
+            $args['hidden_fields'] = array();
+        }
 
         /* Start form */
         $html .= '<form class="' . esc_attr($args['form_classname']) . '" id="' . esc_attr($form_id) . '" action="" method="post">';
@@ -50,10 +54,8 @@ class WPUBaseToolbox {
 
         /* Submit box */
         $html .= '<div class="' . esc_attr($args['submit_box_classname']) . '">';
-        if (isset($args['hidden_fields']) && is_array($args['hidden_fields'])) {
-            foreach ($args['hidden_fields'] as $field_id => $field_value) {
-                $html .= '<input type="hidden" name="' . $field_id . '" value="' . esc_attr($field_value) . '" />';
-            }
+        foreach ($args['hidden_fields'] as $field_id => $field_value) {
+            $html .= '<input type="hidden" name="' . esc_attr($field_id) . '" value="' . esc_attr($field_value) . '" />';
         }
         $html .= wp_nonce_field($args['nonce_id'], $args['nonce_name'], 0, 0);
         $html .= '<button class="' . esc_attr($args['button_classname']) . '" type="submit"><span>' . $args['button_label'] . '</span></button>';
@@ -88,13 +90,13 @@ class WPUBaseToolbox {
         /* Data */
         /* Values */
         $field_id = $form_id . '__' . $field_name;
-        $field_id_name = ' name="' . $field_name . '" id="' . $field_id . '"';
+        $field_id_name = ' name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '"';
         if ($field['required']) {
             $field_id_name .= ' required';
         }
 
         /* Label */
-        $default_label = '<label for="' . $field_id . '">';
+        $default_label = '<label for="' . esc_attr($field_id) . '">';
         $default_label .= $field['label'];
         if ($field['required']) {
             $default_label .= ' <em>*</em>';
@@ -117,15 +119,9 @@ class WPUBaseToolbox {
             $html .= '</select>';
             break;
 
-        case 'email':
-        case 'url':
-        case 'number':
-        case 'text':
-            $html .= $default_label;
-            $html .= '<input ' . $field_id_name . ' type="' . $field['type'] . '" value="' . esc_attr($field['value']) . '" />';
-            break;
         default:
-
+            $html .= $default_label;
+            $html .= '<input ' . $field_id_name . ' type="' . esc_attr($field['type']) . '" value="' . esc_attr($field['value']) . '" />';
         }
 
         if ($html) {
