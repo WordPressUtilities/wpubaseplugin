@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_2_1;
+namespace wpubasetoolbox_0_3_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.2.1
+Version: 0.3.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -44,8 +44,20 @@ class WPUBaseToolbox {
             $args['hidden_fields'] = array();
         }
 
+        $extra_post_attributes = '';
+
+        $has_file = false;
+        foreach ($fields as $field) {
+            if (isset($field['type']) && $field['type'] == 'file') {
+                $has_file = true;
+            }
+        }
+        if ($has_file) {
+            $extra_post_attributes .= ' enctype="multipart/form-data"';
+        }
+
         /* Start form */
-        $html .= '<form class="' . esc_attr($args['form_classname']) . '" id="' . esc_attr($form_id) . '" action="" method="post">';
+        $html .= '<form class="' . esc_attr($args['form_classname']) . '" id="' . esc_attr($form_id) . '" action="" method="post" ' . $extra_post_attributes . '>';
 
         /* Insert fields */
         foreach ($fields as $field_name => $field) {
@@ -79,6 +91,7 @@ class WPUBaseToolbox {
             'label' => $field_name,
             'type' => 'text',
             'value' => '',
+            'extra_attributes' => '',
             'data' => array(
                 '0' => __('No'),
                 '1' => __('Yes')
@@ -90,7 +103,7 @@ class WPUBaseToolbox {
         /* Data */
         /* Values */
         $field_id = $form_id . '__' . $field_name;
-        $field_id_name = ' name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '"';
+        $field_id_name = ' name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '" ' . $field['extra_attributes'];
         if ($field['required']) {
             $field_id_name .= ' required';
         }
@@ -110,6 +123,7 @@ class WPUBaseToolbox {
             $html .= $default_label;
             $html .= '<textarea ' . $field_id_name . '>' . htmlentities($field['value']) . '</textarea>';
             break;
+
         case 'select':
             $html .= $default_label;
             $html .= '<select ' . $field_id_name . '>';
@@ -117,6 +131,23 @@ class WPUBaseToolbox {
                 $html .= '<option ' . selected($key, $field['value'], false) . ' value="' . esc_attr($key) . '">' . esc_html($var) . '</option>';
             }
             $html .= '</select>';
+            break;
+
+        case 'radio':
+            $html .= $default_label;
+            foreach ($field['data'] as $key => $var) {
+                $id_field = $field_id . '___' . $key;
+                $html .= '<span>';
+                $html .= '<input type="radio" id="' . esc_attr($id_field) . '" name="' . esc_attr($field_name) . '" value="' . esc_attr($key) . '" ' . ($key === $field['value'] ? 'checked' : '') . ' '.($field['required'] ? 'required' : '').' />';
+                $html .= '<label for="' . esc_attr($id_field) . '">' . $var . '</label>';
+                $html .= '</span>';
+            }
+            break;
+
+        case 'checkbox':
+            $checked = $field['value'] ? ' checked="checked"' : '';
+            $html .= '<input ' . $field_id_name . ' type="' . esc_attr($field['type']) . '" value="1" ' . $checked . ' />';
+            $html .= $default_label;
             break;
 
         default:
