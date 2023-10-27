@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_3_0;
+namespace wpubasetoolbox_0_3_1;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.3.0
+Version: 0.3.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -121,7 +121,7 @@ class WPUBaseToolbox {
         switch ($field['type']) {
         case 'textarea':
             $html .= $default_label;
-            $html .= '<textarea ' . $field_id_name . '>' . htmlentities($field['value']) . '</textarea>';
+            $html .= '<textarea ' . $field_id_name . '>' . htmlentities($field['value'] ? $field['value'] : '') . '</textarea>';
             break;
 
         case 'select':
@@ -138,7 +138,7 @@ class WPUBaseToolbox {
             foreach ($field['data'] as $key => $var) {
                 $id_field = $field_id . '___' . $key;
                 $html .= '<span>';
-                $html .= '<input type="radio" id="' . esc_attr($id_field) . '" name="' . esc_attr($field_name) . '" value="' . esc_attr($key) . '" ' . ($key === $field['value'] ? 'checked' : '') . ' '.($field['required'] ? 'required' : '').' />';
+                $html .= '<input type="radio" id="' . esc_attr($id_field) . '" name="' . esc_attr($field_name) . '" value="' . esc_attr($key) . '" ' . ($key === $field['value'] ? 'checked' : '') . ' ' . ($field['required'] ? 'required' : '') . ' />';
                 $html .= '<label for="' . esc_attr($id_field) . '">' . $var . '</label>';
                 $html .= '</span>';
             }

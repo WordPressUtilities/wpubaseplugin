@@ -5,7 +5,7 @@ Plugin Name: WPU Base Plugin
 Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
 Update URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 2.57.0
+Version: 2.57.1
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpubaseplugin
@@ -18,7 +18,7 @@ License URI: https://opensource.org/licenses/MIT
 
 class WPUBasePlugin {
 
-    public $version = '2.57.0';
+    public $version = '2.57.1';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -54,7 +54,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseEmail'
         ),
         'toolbox' => array(
-            'namespace' => 'wpubasetoolbox_0_3_0',
+            'namespace' => 'wpubasetoolbox_0_3_1',
             'name' => 'WPUBaseToolbox'
         ),
         'filecache' => array(
@@ -222,12 +222,12 @@ class WPUBasePlugin {
             ),
             'demo_file' => array(
                 'group' => 'group_1',
-                'type'=> 'file',
+                'type' => 'file',
                 'label' => 'Demo file'
             ),
             'demo_image' => array(
                 'group' => 'group_1',
-                'type'=> 'image',
+                'type' => 'image',
                 'label' => 'Demo image'
             ),
             'demo_page' => array(
@@ -309,7 +309,7 @@ class WPUBasePlugin {
                 'label' => 'Select with Data',
                 'data' => array(
                     'value_1' => 'Value 1',
-                    'value_2' => 'Value 2',
+                    'value_2' => 'Value 2'
                 )
             ),
             'select_nodata' => array(
@@ -328,18 +328,18 @@ class WPUBasePlugin {
                 'label' => 'Checkbox with Data',
                 'data' => array(
                     'value_1' => 'Value 1',
-                    'value_2' => 'Value 2',
+                    'value_2' => 'Value 2'
                 )
-            ),
+            )
         );
         $field_groups = array(
-            'group_1'  => array(
+            'group_1' => array(
                 'label' => 'Group 1'
             ),
-            'group_2'  => array(
+            'group_2' => array(
                 'label' => 'Group 2'
             ),
-            'group_page'  => array(
+            'group_page' => array(
                 'label' => 'Group Pages',
                 'post_type' => 'page'
             )
