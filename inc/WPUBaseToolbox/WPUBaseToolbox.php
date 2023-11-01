@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_3_1;
+namespace wpubasetoolbox_0_3_2;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.3.1
+Version: 0.3.2
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -90,6 +90,8 @@ class WPUBaseToolbox {
         $default_field = array(
             'label' => $field_name,
             'type' => 'text',
+            'html_before_content' => '',
+            'html_after_content' => '',
             'value' => '',
             'extra_attributes' => '',
             'data' => array(
@@ -158,7 +160,9 @@ class WPUBaseToolbox {
         if ($html) {
             $field_html = $html;
             $html = '<p class="' . $args['field_box_classname'] . '" data-box-name="' . $field_name . '" data-box-type="' . esc_attr($field['type']) . '">';
+            $html .= $field['html_before_content'];
             $html .= $field_html;
+            $html .= $field['html_after_content'];
             $html .= '</p>';
         }
 
