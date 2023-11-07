@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_3_2;
+namespace wpubasetoolbox_0_3_3;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.3.2
+Version: 0.3.3
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -30,6 +30,7 @@ class WPUBaseToolbox {
         $default_args = array(
             'button_label' => __('Submit'),
             'button_classname' => 'cssc-button',
+            'form_attributes' => '',
             'form_classname' => 'cssc-form',
             'field_box_classname' => 'box',
             'submit_box_classname' => 'box--submit',
@@ -44,7 +45,7 @@ class WPUBaseToolbox {
             $args['hidden_fields'] = array();
         }
 
-        $extra_post_attributes = '';
+        $extra_post_attributes = $args['form_attributes'];
 
         $has_file = false;
         foreach ($fields as $field) {
