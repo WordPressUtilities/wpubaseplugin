@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_3_3;
+namespace wpubasetoolbox_0_4_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.3.3
+Version: 0.4.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -30,6 +30,11 @@ class WPUBaseToolbox {
         $default_args = array(
             'button_label' => __('Submit'),
             'button_classname' => 'cssc-button',
+            'fieldsets' => array(
+                'default' => array(
+                    'label' => ''
+                )
+            ),
             'form_attributes' => '',
             'form_classname' => 'cssc-form',
             'field_box_classname' => 'box',
@@ -44,15 +49,22 @@ class WPUBaseToolbox {
         if (!is_array($args['hidden_fields']) || !isset($args['hidden_fields'])) {
             $args['hidden_fields'] = array();
         }
+        if (!is_array($args['fieldsets']) || !isset($args['fieldsets'])) {
+            $args['fieldsets'] = array();
+        }
 
         $extra_post_attributes = $args['form_attributes'];
 
+        /* Clean & check fields */
         $has_file = false;
-        foreach ($fields as $field) {
-            if (isset($field['type']) && $field['type'] == 'file') {
+        foreach ($fields as $field_name => $field) {
+            $fields[$field_name] = $this->get_clean_field($field_name, $field, $form_id, $args);
+            if ($fields[$field_name]['type'] == 'file') {
                 $has_file = true;
             }
         }
+
+        /* Extra attributes */
         if ($has_file) {
             $extra_post_attributes .= ' enctype="multipart/form-data"';
         }
@@ -61,8 +73,18 @@ class WPUBaseToolbox {
         $html .= '<form class="' . esc_attr($args['form_classname']) . '" id="' . esc_attr($form_id) . '" action="" method="post" ' . $extra_post_attributes . '>';
 
         /* Insert fields */
-        foreach ($fields as $field_name => $field) {
-            $html .= $this->get_field_html($field_name, $field, $form_id, $args);
+        foreach ($args['fieldsets'] as $fieldset_id => $fieldset) {
+            $html .= '<fieldset data-fielset-id="' . $fieldset_id . '">';
+            if (isset($fieldset['label']) && $fieldset['label']) {
+                $html .= '<legend>' . esc_html($fieldset['label']) . '</legend>';
+            }
+            foreach ($fields as $field_name => $field) {
+                if ($field['fieldset'] != $fieldset_id) {
+                    continue;
+                }
+                $html .= $this->get_field_html($field_name, $field, $form_id, $args);
+            }
+            $html .= '</fieldset>';
         }
 
         /* Submit box */
@@ -83,9 +105,13 @@ class WPUBaseToolbox {
     /* Field
     -------------------------- */
 
-    public function get_field_html($field_name, $field, $form_id, $args = array()) {
+    public function get_clean_field($field_name, $field, $form_id, $args) {
         if (!is_array($field)) {
             $field = array();
+        }
+
+        if (!isset($field['fieldset']) || !array_key_exists($field['fieldset'], $args['fieldsets'])) {
+            $field['fieldset'] = array_key_first($args['fieldsets']);
         }
 
         $default_field = array(
@@ -102,6 +128,11 @@ class WPUBaseToolbox {
             'required' => false
         );
         $field = array_merge($default_field, $field);
+
+        return $field;
+    }
+
+    public function get_field_html($field_name, $field, $form_id, $args = array()) {
 
         /* Data */
         /* Values */
