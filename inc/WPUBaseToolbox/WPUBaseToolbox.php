@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_4_0;
+namespace wpubasetoolbox_0_4_1;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.4.0
+Version: 0.4.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -32,7 +32,9 @@ class WPUBaseToolbox {
             'button_classname' => 'cssc-button',
             'fieldsets' => array(
                 'default' => array(
-                    'label' => ''
+                    'label' => '',
+                    'content_before' => '',
+                    'content_after' => ''
                 )
             ),
             'form_attributes' => '',
@@ -51,6 +53,9 @@ class WPUBaseToolbox {
         }
         if (!is_array($args['fieldsets']) || !isset($args['fieldsets'])) {
             $args['fieldsets'] = array();
+        }
+        foreach ($args['fieldsets'] as $fieldset_id => $fieldset) {
+            $args['fieldsets'][$fieldset_id] = array_merge($default_args['fieldsets']['default'], $fieldset);
         }
 
         $extra_post_attributes = $args['form_attributes'];
@@ -75,6 +80,7 @@ class WPUBaseToolbox {
         /* Insert fields */
         foreach ($args['fieldsets'] as $fieldset_id => $fieldset) {
             $html .= '<fieldset data-fielset-id="' . $fieldset_id . '">';
+            $html .= $fieldset['content_before'];
             if (isset($fieldset['label']) && $fieldset['label']) {
                 $html .= '<legend>' . esc_html($fieldset['label']) . '</legend>';
             }
@@ -84,6 +90,7 @@ class WPUBaseToolbox {
                 }
                 $html .= $this->get_field_html($field_name, $field, $form_id, $args);
             }
+            $html .= $fieldset['content_after'];
             $html .= '</fieldset>';
         }
 
