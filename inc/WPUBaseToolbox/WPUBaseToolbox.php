@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_4_1;
+namespace wpubasetoolbox_0_5_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.4.1
+Version: 0.5.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -39,6 +39,7 @@ class WPUBaseToolbox {
             ),
             'form_attributes' => '',
             'form_classname' => 'cssc-form',
+            'field_group_classname' => 'twoboxes',
             'field_box_classname' => 'box',
             'submit_box_classname' => 'box--submit',
             'hidden_fields' => array(),
@@ -124,10 +125,17 @@ class WPUBaseToolbox {
         $default_field = array(
             'label' => $field_name,
             'type' => 'text',
+            'fieldgroup_start' => false,
+            'fieldgroup_end' => false,
+            'html_before_fieldgroup' => '',
+            'html_before_fieldgroup_inner' => '',
+            'html_after_fieldgroup' => '',
+            'html_after_fieldgroup_inner' => '',
             'html_before_content' => '',
             'html_after_content' => '',
             'value' => '',
             'extra_attributes' => '',
+            'data_html' => '',
             'data' => array(
                 '0' => __('No'),
                 '1' => __('Yes')
@@ -168,8 +176,12 @@ class WPUBaseToolbox {
         case 'select':
             $html .= $default_label;
             $html .= '<select ' . $field_id_name . '>';
-            foreach ($field['data'] as $key => $var) {
-                $html .= '<option ' . selected($key, $field['value'], false) . ' value="' . esc_attr($key) . '">' . esc_html($var) . '</option>';
+            if ($field['data_html']) {
+                $html .= $field['data_html'];
+            } else {
+                foreach ($field['data'] as $key => $var) {
+                    $html .= '<option ' . selected($key, $field['value'], false) . ' value="' . esc_attr($key) . '">' . esc_html($var) . '</option>';
+                }
             }
             $html .= '</select>';
             break;
@@ -198,11 +210,22 @@ class WPUBaseToolbox {
 
         if ($html) {
             $field_html = $html;
-            $html = '<p class="' . $args['field_box_classname'] . '" data-box-name="' . $field_name . '" data-box-type="' . esc_attr($field['type']) . '">';
+            $html = '';
+            $html .= $field['html_before_fieldgroup'];
+            if ($field['fieldgroup_start']) {
+                $html .= '<div class="' . $args['field_group_classname'] . '">';
+            }
+            $html .= $field['html_before_fieldgroup_inner'];
+            $html .= '<p class="' . $args['field_box_classname'] . '" data-box-name="' . $field_name . '" data-box-type="' . esc_attr($field['type']) . '">';
             $html .= $field['html_before_content'];
             $html .= $field_html;
             $html .= $field['html_after_content'];
             $html .= '</p>';
+            $html .= $field['html_after_fieldgroup_inner'];
+            if ($field['fieldgroup_end']) {
+                $html .= '</div>';
+            }
+            $html .= $field['html_after_fieldgroup'];
         }
 
         return $html;
