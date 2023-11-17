@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_5_0;
+namespace wpubasetoolbox_0_6_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.5.0
+Version: 0.6.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -136,6 +136,7 @@ class WPUBaseToolbox {
             'value' => '',
             'extra_attributes' => '',
             'data_html' => '',
+            'sub_fields' => array(),
             'data' => array(
                 '0' => __('No'),
                 '1' => __('Yes')
@@ -143,6 +144,19 @@ class WPUBaseToolbox {
             'required' => false
         );
         $field = array_merge($default_field, $field);
+
+        /* Ensure format */
+        if (!is_array($field['data'])) {
+            $field['data'] = array();
+        }
+
+        if (!is_array($field['sub_fields'])) {
+            $field['sub_fields'] = array();
+        }
+
+        foreach ($field['sub_fields'] as $subfield_name => $sub_field) {
+            $fields[$field_name] = $this->get_clean_field($subfield_name, $sub_field, $form_id, $args);
+        }
 
         return $field;
     }
@@ -203,6 +217,13 @@ class WPUBaseToolbox {
             $html .= $default_label;
             break;
 
+        case 'group':
+
+            foreach ($field['sub_fields'] as $subfield_name => $sub_field) {
+                $html .= $this->get_field_html($subfield_name, $sub_field, $form_id, $args);
+            }
+            break;
+
         default:
             $html .= $default_label;
             $html .= '<input ' . $field_id_name . ' type="' . esc_attr($field['type']) . '" value="' . esc_attr($field['value']) . '" />';
@@ -210,17 +231,18 @@ class WPUBaseToolbox {
 
         if ($html) {
             $field_html = $html;
+            $field_tag = ($field['type'] == 'group') ? 'div' : 'p';
             $html = '';
             $html .= $field['html_before_fieldgroup'];
             if ($field['fieldgroup_start']) {
                 $html .= '<div class="' . $args['field_group_classname'] . '">';
             }
             $html .= $field['html_before_fieldgroup_inner'];
-            $html .= '<p class="' . $args['field_box_classname'] . '" data-box-name="' . $field_name . '" data-box-type="' . esc_attr($field['type']) . '">';
+            $html .= '<' . $field_tag . ' class="' . $args['field_box_classname'] . '" data-box-name="' . $field_name . '" data-box-type="' . esc_attr($field['type']) . '">';
             $html .= $field['html_before_content'];
             $html .= $field_html;
             $html .= $field['html_after_content'];
-            $html .= '</p>';
+            $html .= '</' . $field_tag . '>';
             $html .= $field['html_after_fieldgroup_inner'];
             if ($field['fieldgroup_end']) {
                 $html .= '</div>';
