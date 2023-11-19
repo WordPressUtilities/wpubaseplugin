@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_6_0;
+namespace wpubasetoolbox_0_7_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.6.0
+Version: 0.7.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -27,37 +27,8 @@ class WPUBaseToolbox {
         if (!is_array($fields) || !is_array($args)) {
             return '';
         }
-        $default_args = array(
-            'button_label' => __('Submit'),
-            'button_classname' => 'cssc-button',
-            'fieldsets' => array(
-                'default' => array(
-                    'label' => '',
-                    'content_before' => '',
-                    'content_after' => ''
-                )
-            ),
-            'form_attributes' => '',
-            'form_classname' => 'cssc-form',
-            'field_group_classname' => 'twoboxes',
-            'field_box_classname' => 'box',
-            'submit_box_classname' => 'box--submit',
-            'hidden_fields' => array(),
-            'nonce_id' => $form_id,
-            'nonce_name' => $form_id . '_nonce'
-        );
-        $args = array_merge($default_args, $args);
 
-        $args = apply_filters('wpubasetoolbox_get_form_html_args_' . __NAMESPACE__, $args);
-        if (!is_array($args['hidden_fields']) || !isset($args['hidden_fields'])) {
-            $args['hidden_fields'] = array();
-        }
-        if (!is_array($args['fieldsets']) || !isset($args['fieldsets'])) {
-            $args['fieldsets'] = array();
-        }
-        foreach ($args['fieldsets'] as $fieldset_id => $fieldset) {
-            $args['fieldsets'][$fieldset_id] = array_merge($default_args['fieldsets']['default'], $fieldset);
-        }
+        $args = $this->get_clean_form_args($form_id, $fields, $args);
 
         $extra_post_attributes = $args['form_attributes'];
 
@@ -100,7 +71,9 @@ class WPUBaseToolbox {
         foreach ($args['hidden_fields'] as $field_id => $field_value) {
             $html .= '<input type="hidden" name="' . esc_attr($field_id) . '" value="' . esc_attr($field_value) . '" />';
         }
-        $html .= wp_nonce_field($args['nonce_id'], $args['nonce_name'], 0, 0);
+        if ($args['has_nonce']) {
+            $html .= wp_nonce_field($args['nonce_id'], $args['nonce_name'], 0, 0);
+        }
         $html .= '<button class="' . esc_attr($args['button_classname']) . '" type="submit"><span>' . $args['button_label'] . '</span></button>';
         $html .= '</div>';
 
@@ -110,7 +83,46 @@ class WPUBaseToolbox {
         return $html;
     }
 
-    /* Field
+    /* Clean form value
+    -------------------------- */
+
+    public function get_clean_form_args($form_id, $fields = array(), $args = array()) {
+        $default_args = array(
+            'button_label' => __('Submit'),
+            'button_classname' => 'cssc-button',
+            'fieldsets' => array(
+                'default' => array(
+                    'label' => '',
+                    'content_before' => '',
+                    'content_after' => ''
+                )
+            ),
+            'form_attributes' => '',
+            'form_classname' => 'cssc-form',
+            'field_group_classname' => 'twoboxes',
+            'field_box_classname' => 'box',
+            'submit_box_classname' => 'box--submit',
+            'hidden_fields' => array(),
+            'has_nonce' => true,
+            'nonce_id' => $form_id,
+            'nonce_name' => $form_id . '_nonce'
+        );
+        $args = array_merge($default_args, $args);
+
+        $args = apply_filters('wpubasetoolbox_get_form_html_args_' . __NAMESPACE__, $args);
+        if (!is_array($args['hidden_fields']) || !isset($args['hidden_fields'])) {
+            $args['hidden_fields'] = array();
+        }
+        if (!is_array($args['fieldsets']) || !isset($args['fieldsets'])) {
+            $args['fieldsets'] = array();
+        }
+        foreach ($args['fieldsets'] as $fieldset_id => $fieldset) {
+            $args['fieldsets'][$fieldset_id] = array_merge($default_args['fieldsets']['default'], $fieldset);
+        }
+        return $args;
+    }
+
+    /* Clean field values
     -------------------------- */
 
     public function get_clean_field($field_name, $field, $form_id, $args) {
@@ -155,7 +167,7 @@ class WPUBaseToolbox {
         }
 
         foreach ($field['sub_fields'] as $subfield_name => $sub_field) {
-            $fields[$field_name] = $this->get_clean_field($subfield_name, $sub_field, $form_id, $args);
+            $field['sub_fields'][$subfield_name] = $this->get_clean_field($subfield_name, $sub_field, $form_id, $args);
         }
 
         return $field;
@@ -163,7 +175,11 @@ class WPUBaseToolbox {
 
     public function get_field_html($field_name, $field, $form_id, $args = array()) {
 
-        /* Data */
+        if (!isset($field['extra_attributes'])) {
+           echo wp_debug_backtrace_summary();
+           die;
+        }
+
         /* Values */
         $field_id = $form_id . '__' . $field_name;
         $field_id_name = ' name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '" ' . $field['extra_attributes'];
@@ -218,7 +234,6 @@ class WPUBaseToolbox {
             break;
 
         case 'group':
-
             foreach ($field['sub_fields'] as $subfield_name => $sub_field) {
                 $html .= $this->get_field_html($subfield_name, $sub_field, $form_id, $args);
             }
@@ -251,6 +266,41 @@ class WPUBaseToolbox {
         }
 
         return $html;
+    }
+
+    /* Validate form
+    -------------------------- */
+
+    function validate_form($source, $form_id, $fields = array(), $args = array()) {
+        if (!is_array($source) || empty($source) || empty($fields)) {
+            return false;
+        }
+
+        $errors = array();
+
+        $args = $this->get_clean_form_args($form_id, $fields, $args);
+
+        /* Check nonce */
+        if (!isset($_POST[$args['nonce_name']]) || !wp_verify_nonce($_POST[$args['nonce_name']], $args['nonce_id'])) {
+            wp_nonce_ays('');
+        }
+
+        /* Check required fields */
+        foreach ($fields as $field_name => $field) {
+            $field = $this->get_clean_field($field_name, $field, $form_id, $args);
+            $value = isset($source[$field_name]) ? $source[$field_name] : false;
+
+            if ($field['required'] && !isset($source[$field_name])) {
+                $errors[] = sprintf(__('The field “%s” is required', __NAMESPACE__), $field['label']);
+                continue;
+            }
+
+            if ($field['type'] == 'email' && $field['type'] && !is_email($value)) {
+                $errors[] = sprintf(__('The field “%s” should be an email', __NAMESPACE__), $field['label']);
+            }
+        }
+
+        return $errors;
     }
 
 }
