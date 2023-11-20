@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_7_0;
+namespace wpubasetoolbox_0_7_1;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.7.0
+Version: 0.7.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -176,8 +176,8 @@ class WPUBaseToolbox {
     public function get_field_html($field_name, $field, $form_id, $args = array()) {
 
         if (!isset($field['extra_attributes'])) {
-           echo wp_debug_backtrace_summary();
-           die;
+            echo wp_debug_backtrace_summary();
+            die;
         }
 
         /* Values */
@@ -281,8 +281,10 @@ class WPUBaseToolbox {
         $args = $this->get_clean_form_args($form_id, $fields, $args);
 
         /* Check nonce */
-        if (!isset($_POST[$args['nonce_name']]) || !wp_verify_nonce($_POST[$args['nonce_name']], $args['nonce_id'])) {
-            wp_nonce_ays('');
+        if ($args['has_nonce']) {
+            if (!isset($_POST[$args['nonce_name']]) || !wp_verify_nonce($_POST[$args['nonce_name']], $args['nonce_id'])) {
+                wp_nonce_ays('');
+            }
         }
 
         /* Check required fields */
