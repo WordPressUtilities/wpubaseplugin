@@ -6,7 +6,7 @@ Cool helpers for WordPress Plugins.
 ## Insert in the INIT hook
 
 ```php
-include dirname(__FILE__) . '/inc/WPUBaseToolbox/WPUBaseToolbox.php';
+require_once dirname(__FILE__) . '/inc/WPUBaseToolbox/WPUBaseToolbox.php';
 $this->basetoolbox = new \myplugin\WPUBaseToolbox();
 ```
 
