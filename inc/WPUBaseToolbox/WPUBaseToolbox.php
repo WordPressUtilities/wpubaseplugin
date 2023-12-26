@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_7_1;
+namespace wpubasetoolbox_0_8_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.7.1
+Version: 0.8.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -13,7 +13,16 @@ License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUBaseToolbox {
-    public function __construct() {}
+    private $plugin_version = '0.8.0';
+    public function __construct() {
+        add_action('wp_enqueue_scripts', array(&$this,
+            'form_scripts'
+        ));
+    }
+
+    function form_scripts() {
+        wp_enqueue_script(__NAMESPACE__ . '-wpubasetoolbox-form-validation', plugins_url('assets/form-validation.js', __FILE__), array(), $this->plugin_version);
+    }
 
     /* ----------------------------------------------------------
       Forms
@@ -47,7 +56,7 @@ class WPUBaseToolbox {
         }
 
         /* Start form */
-        $html .= '<form class="' . esc_attr($args['form_classname']) . '" id="' . esc_attr($form_id) . '" action="" method="post" ' . $extra_post_attributes . '>';
+        $html .= '<form class="' . esc_attr($args['form_classname']) . ' wpubasetoolbox-form" id="' . esc_attr($form_id) . '" action="" method="post" ' . $extra_post_attributes . '>';
 
         /* Insert fields */
         foreach ($args['fieldsets'] as $fieldset_id => $fieldset) {
@@ -181,7 +190,7 @@ class WPUBaseToolbox {
         }
 
         /* Values */
-        $field_id = $form_id . '__' . $field_name;
+        $field_id = strtolower($form_id . '__' . $field_name);
         $field_id_name = ' name="' . esc_attr($field_name) . '" id="' . esc_attr($field_id) . '" ' . $field['extra_attributes'];
         if ($field['required']) {
             $field_id_name .= ' required';
@@ -219,7 +228,7 @@ class WPUBaseToolbox {
         case 'radio':
             $html .= $default_label;
             foreach ($field['data'] as $key => $var) {
-                $id_field = $field_id . '___' . $key;
+                $id_field = strtolower($field_id . '___' . $key);
                 $html .= '<span>';
                 $html .= '<input type="radio" id="' . esc_attr($id_field) . '" name="' . esc_attr($field_name) . '" value="' . esc_attr($key) . '" ' . ($key === $field['value'] ? 'checked' : '') . ' ' . ($field['required'] ? 'required' : '') . ' />';
                 $html .= '<label for="' . esc_attr($id_field) . '">' . $var . '</label>';
@@ -256,6 +265,7 @@ class WPUBaseToolbox {
             $html .= '<' . $field_tag . ' class="' . $args['field_box_classname'] . '" data-box-name="' . $field_name . '" data-box-type="' . esc_attr($field['type']) . '">';
             $html .= $field['html_before_content'];
             $html .= $field_html;
+            $html .= '<span aria-hidden="true" class="wpubasetoolbox-form-validation-message"></span>';
             $html .= $field['html_after_content'];
             $html .= '</' . $field_tag . '>';
             $html .= $field['html_after_fieldgroup_inner'];
