@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_8_0;
+namespace wpubasetoolbox_0_9_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.8.0
+Version: 0.9.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -13,7 +13,7 @@ License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.8.0';
+    private $plugin_version = '0.9.0';
     public function __construct() {
         add_action('wp_enqueue_scripts', array(&$this,
             'form_scripts'
@@ -55,11 +55,16 @@ class WPUBaseToolbox {
             $extra_post_attributes .= ' enctype="multipart/form-data"';
         }
 
+        $button_submit = '<button class="' . esc_attr($args['button_classname']) . '" type="submit"><span>' . $args['button_label'] . '</span></button>';
+
         /* Start form */
-        $html .= '<form class="' . esc_attr($args['form_classname']) . ' wpubasetoolbox-form" id="' . esc_attr($form_id) . '" action="" method="post" ' . $extra_post_attributes . '>';
+        $html .= '<form class="' . esc_attr($args['form_classname']) . ' wpubasetoolbox-form" id="' . esc_attr($form_id) . '" ' . ($args['wizard_mode'] ? ' data-wizard="1"' : '') . ' action="" method="post" ' . $extra_post_attributes . '>';
 
         /* Insert fields */
+        $nb_fieldsets = count($args['fieldsets']);
+        $fieldset_num = 0;
         foreach ($args['fieldsets'] as $fieldset_id => $fieldset) {
+            $fieldset_num++;
             $html .= '<fieldset data-fielset-id="' . $fieldset_id . '">';
             $html .= $fieldset['content_before'];
             if (isset($fieldset['label']) && $fieldset['label']) {
@@ -72,6 +77,18 @@ class WPUBaseToolbox {
                 $html .= $this->get_field_html($field_name, $field, $form_id, $args);
             }
             $html .= $fieldset['content_after'];
+            if ($args['wizard_mode']) {
+                $html .= '<div class="form-navigation">';
+                if ($fieldset_num > 1) {
+                    $html .= '<button data-dir="prev" class="' . $args['wizard_prev_button_class'] . '" type="button"><span>' . $args['wizard_prev_button_label'] . '</span></button>';
+                }
+                if ($fieldset_num == $nb_fieldsets) {
+                    $html .= $button_submit;
+                } else {
+                    $html .= '<button data-dir="next" class="' . $args['wizard_next_button_class'] . '" type="button"><span>' . $args['wizard_next_button_label'] . '</span></button>';
+                }
+                $html .= '</div>';
+            }
             $html .= '</fieldset>';
         }
 
@@ -83,7 +100,9 @@ class WPUBaseToolbox {
         if ($args['has_nonce']) {
             $html .= wp_nonce_field($args['nonce_id'], $args['nonce_name'], 0, 0);
         }
-        $html .= '<button class="' . esc_attr($args['button_classname']) . '" type="submit"><span>' . $args['button_label'] . '</span></button>';
+        if (!$args['wizard_mode']) {
+            $html .= $button_submit;
+        }
         $html .= '</div>';
 
         /* End form */
@@ -114,7 +133,12 @@ class WPUBaseToolbox {
             'hidden_fields' => array(),
             'has_nonce' => true,
             'nonce_id' => $form_id,
-            'nonce_name' => $form_id . '_nonce'
+            'nonce_name' => $form_id . '_nonce',
+            'wizard_mode' => false,
+            'wizard_prev_button_class' => 'btn--prev',
+            'wizard_next_button_class' => 'btn--next',
+            'wizard_prev_button_label' => __('Previous'),
+            'wizard_next_button_label' => __('Next')
         );
         $args = array_merge($default_args, $args);
 
