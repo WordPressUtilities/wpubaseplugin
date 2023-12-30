@@ -1,9 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
     'use strict';
     /* Boxes */
-    Array.prototype.forEach.call(document.querySelectorAll('.wpubasetoolbox-form [data-box-name]'), function($box) {
-        wpubasetoolbox_box_validation($box);
-    });
+    Array.prototype.forEach.call(document.querySelectorAll('.wpubasetoolbox-form [data-box-name]'), wpubasetoolbox_box_validation);
 
     /* Wizard */
     Array.prototype.forEach.call(document.querySelectorAll('.wpubasetoolbox-form[data-wizard="1"]'), wpubasetoolbox_form_setup_wizard);
@@ -17,26 +15,30 @@ function wpubasetoolbox_form_setup_wizard($form) {
     'use strict';
     var $fieldsets = $form.querySelectorAll('fieldset');
     var _currentFieldset = 0;
+    var _nbFieldsets = $fieldsets.length;
+    var $wizardSteps = $form.querySelectorAll(' .form-wizard-steps [data-go]');
 
     /* Display first fieldset */
     wpubasetoolbox_fieldset_display($fieldsets, _currentFieldset);
 
     /* On button click : change visible fieldset */
     Array.prototype.forEach.call($form.querySelectorAll(' .form-navigation [data-dir]'), function($btn) {
+        $btn.querySelector('span').style['pointer-events'] = 'none';
         $btn.addEventListener('click', btn_click_event, 1);
+    });
+    Array.prototype.forEach.call($wizardSteps, function($btn) {
+        $btn.querySelector('span').style['pointer-events'] = 'none';
+        $btn.addEventListener('click', btn_click_event_go, 1);
     });
 
     function btn_click_event(e) {
         var _dir = e.target.getAttribute('data-dir');
         e.preventDefault();
-
-
         if (_dir == 'next') {
             /* Check if a field is invalid in this fieldset*/
             if (wpubasetoolbox_fieldset_fieldset_has_invalid_fields($fieldsets[_currentFieldset])) {
                 return;
             }
-
             /* Allow next fieldset */
             _currentFieldset++;
         }
@@ -44,13 +46,40 @@ function wpubasetoolbox_form_setup_wizard($form) {
             /* Always allow previous fieldset */
             _currentFieldset--;
         }
+        go_to_fieldset(_currentFieldset);
+    }
 
+    function btn_click_event_go(e) {
+        var _target_fieldset = parseInt(e.target.getAttribute('data-go'), 10);
+        e.preventDefault();
+        for (var i = 0; i <= _target_fieldset; i++) {
+            go_to_fieldset(i);
+            /* Do not check target fieldset */
+            if (i == _target_fieldset) {
+                break;
+            }
+            /* Check if a field is invalid in this fieldset */
+            if (wpubasetoolbox_fieldset_fieldset_has_invalid_fields($fieldsets[i])) {
+                break;
+            }
+        }
+    }
+
+    function go_to_fieldset(_fieldset) {
         /* Ensure everything is ok */
-        _currentFieldset = Math.max(0, _currentFieldset);
-        _currentFieldset = Math.min($fieldsets.length - 1, _currentFieldset);
+        _currentFieldset = Math.max(0, _fieldset);
+        _currentFieldset = Math.min(_nbFieldsets - 1, _currentFieldset);
+
+        $form.setAttribute('data-current-fieldset', _currentFieldset);
 
         /* Display fieldset */
         wpubasetoolbox_fieldset_display($fieldsets, _currentFieldset);
+
+        /* Current wizard step */
+        Array.prototype.forEach.call($wizardSteps, function(el) {
+            el.setAttribute('data-active', 0);
+        });
+        $wizardSteps[_currentFieldset].setAttribute('data-active', 1);
     }
 }
 

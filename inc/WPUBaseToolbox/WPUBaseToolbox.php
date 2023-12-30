@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_9_0;
+namespace wpubasetoolbox_0_10_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.9.0
+Version: 0.10.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -13,7 +13,7 @@ License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.9.0';
+    private $plugin_version = '0.10.0';
     public function __construct() {
         add_action('wp_enqueue_scripts', array(&$this,
             'form_scripts'
@@ -60,37 +60,56 @@ class WPUBaseToolbox {
         /* Start form */
         $html .= '<form class="' . esc_attr($args['form_classname']) . ' wpubasetoolbox-form" id="' . esc_attr($form_id) . '" ' . ($args['wizard_mode'] ? ' data-wizard="1"' : '') . ' action="" method="post" ' . $extra_post_attributes . '>';
 
+        $html_fieldset = '';
+        $html_wizard = '';
+
         /* Insert fields */
         $nb_fieldsets = count($args['fieldsets']);
         $fieldset_num = 0;
         foreach ($args['fieldsets'] as $fieldset_id => $fieldset) {
             $fieldset_num++;
-            $html .= '<fieldset data-fielset-id="' . $fieldset_id . '">';
-            $html .= $fieldset['content_before'];
+
+            if ($args['wizard_steps'] && (!isset($fieldset['label']) || !$fieldset['label'])) {
+                $fieldset['label'] = $fieldset_id;
+            }
+
+            $html_fieldset .= '<fieldset data-fielset-id="' . $fieldset_id . '">';
+            $html_fieldset .= $fieldset['content_before'];
             if (isset($fieldset['label']) && $fieldset['label']) {
-                $html .= '<legend>' . esc_html($fieldset['label']) . '</legend>';
+                $html_fieldset .= '<legend>' . esc_html($fieldset['label']) . '</legend>';
+
+                if ($args['wizard_steps']) {
+                    $html_wizard .= '<button type="button" data-active="'.($fieldset_num == 1 ? '1' : '0').'" data-go="' . ($fieldset_num - 1) . '"><span>' . esc_html($fieldset['label']) . '</span></button>';
+                }
             }
             foreach ($fields as $field_name => $field) {
                 if ($field['fieldset'] != $fieldset_id) {
                     continue;
                 }
-                $html .= $this->get_field_html($field_name, $field, $form_id, $args);
+                $html_fieldset .= $this->get_field_html($field_name, $field, $form_id, $args);
             }
-            $html .= $fieldset['content_after'];
+            $html_fieldset .= $fieldset['content_after'];
             if ($args['wizard_mode']) {
-                $html .= '<div class="form-navigation">';
+                $html_fieldset .= '<div class="form-navigation">';
                 if ($fieldset_num > 1) {
-                    $html .= '<button data-dir="prev" class="' . $args['wizard_prev_button_class'] . '" type="button"><span>' . $args['wizard_prev_button_label'] . '</span></button>';
+                    $html_fieldset .= '<button data-dir="prev" class="' . $args['wizard_prev_button_class'] . '" type="button"><span>' . $args['wizard_prev_button_label'] . '</span></button>';
                 }
                 if ($fieldset_num == $nb_fieldsets) {
-                    $html .= $button_submit;
+                    $html_fieldset .= $button_submit;
                 } else {
-                    $html .= '<button data-dir="next" class="' . $args['wizard_next_button_class'] . '" type="button"><span>' . $args['wizard_next_button_label'] . '</span></button>';
+                    $html_fieldset .= '<button data-dir="next" class="' . $args['wizard_next_button_class'] . '" type="button"><span>' . $args['wizard_next_button_label'] . '</span></button>';
                 }
-                $html .= '</div>';
+                $html_fieldset .= '</div>';
             }
-            $html .= '</fieldset>';
+            $html_fieldset .= '</fieldset>';
         }
+
+        if ($html_wizard) {
+            $html .= '<div class="form-wizard-steps">';
+            $html .= $html_wizard;
+            $html .= '</div>';
+        }
+        $html .= $html_fieldset;
 
         /* Submit box */
         $html .= '<div class="' . esc_attr($args['submit_box_classname']) . '">';
@@ -135,6 +154,7 @@ class WPUBaseToolbox {
             'nonce_id' => $form_id,
             'nonce_name' => $form_id . '_nonce',
             'wizard_mode' => false,
+            'wizard_steps' => false,
             'wizard_prev_button_class' => 'btn--prev',
             'wizard_next_button_class' => 'btn--next',
             'wizard_prev_button_label' => __('Previous'),
