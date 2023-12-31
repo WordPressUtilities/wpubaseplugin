@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_10_0;
+namespace wpubasetoolbox_0_11_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.10.0
+Version: 0.11.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -13,7 +13,7 @@ License URI: https://opensource.org/licenses/MIT
 */
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.10.0';
+    private $plugin_version = '0.11.0';
     public function __construct() {
         add_action('wp_enqueue_scripts', array(&$this,
             'form_scripts'
@@ -59,6 +59,7 @@ class WPUBaseToolbox {
 
         /* Start form */
         $html .= '<form class="' . esc_attr($args['form_classname']) . ' wpubasetoolbox-form" id="' . esc_attr($form_id) . '" ' . ($args['wizard_mode'] ? ' data-wizard="1"' : '') . ' action="" method="post" ' . $extra_post_attributes . '>';
+        $html .= $args['html_before_content'];
 
         $html_fieldset = '';
         $html_wizard = '';
@@ -73,13 +74,17 @@ class WPUBaseToolbox {
                 $fieldset['label'] = $fieldset_id;
             }
 
-            $html_fieldset .= '<fieldset data-fielset-id="' . $fieldset_id . '">';
+            $attributes = array_merge($fieldset['attributes'], array(
+                'data-fielset-id' => $fieldset_id
+            ));
+
+            $html_fieldset .= '<fieldset ' . $this->array_to_html_attributes($attributes) . '>';
             $html_fieldset .= $fieldset['content_before'];
             if (isset($fieldset['label']) && $fieldset['label']) {
                 $html_fieldset .= '<legend>' . esc_html($fieldset['label']) . '</legend>';
 
                 if ($args['wizard_steps']) {
-                    $html_wizard .= '<button type="button" data-active="'.($fieldset_num == 1 ? '1' : '0').'" data-go="' . ($fieldset_num - 1) . '"><span>' . esc_html($fieldset['label']) . '</span></button>';
+                    $html_wizard .= '<button type="button" data-active="' . ($fieldset_num == 1 ? '1' : '0') . '" data-go="' . ($fieldset_num - 1) . '"><span>' . esc_html($fieldset['label']) . '</span></button>';
                 }
             }
             foreach ($fields as $field_name => $field) {
@@ -90,14 +95,19 @@ class WPUBaseToolbox {
             }
             $html_fieldset .= $fieldset['content_after'];
             if ($args['wizard_mode']) {
+                $btn_prev_class = isset($fieldset['wizard_prev_button_class']) && $fieldset['wizard_prev_button_class'] ? $fieldset['wizard_prev_button_class'] : $args['wizard_prev_button_class'];
+                $btn_next_class = isset($fieldset['wizard_next_button_class']) && $fieldset['wizard_next_button_class'] ? $fieldset['wizard_next_button_class'] : $args['wizard_next_button_class'];
+                $btn_prev_label = isset($fieldset['wizard_prev_button_label']) && $fieldset['wizard_prev_button_label'] ? $fieldset['wizard_prev_button_label'] : $args['wizard_prev_button_label'];
+                $btn_next_label = isset($fieldset['wizard_next_button_label']) && $fieldset['wizard_next_button_label'] ? $fieldset['wizard_next_button_label'] : $args['wizard_next_button_label'];
+
                 $html_fieldset .= '<div class="form-navigation">';
                 if ($fieldset_num > 1) {
-                    $html_fieldset .= '<button data-dir="prev" class="' . $args['wizard_prev_button_class'] . '" type="button"><span>' . $args['wizard_prev_button_label'] . '</span></button>';
+                    $html_fieldset .= '<button data-dir="prev" class="' . $btn_prev_class . '" type="button"><span>' . $btn_prev_label . '</span></button>';
                 }
                 if ($fieldset_num == $nb_fieldsets) {
                     $html_fieldset .= $button_submit;
                 } else {
-                    $html_fieldset .= '<button data-dir="next" class="' . $args['wizard_next_button_class'] . '" type="button"><span>' . $args['wizard_next_button_label'] . '</span></button>';
+                    $html_fieldset .= '<button data-dir="next" class="' . $btn_next_class . '" type="button"><span>' . $btn_next_label . '</span></button>';
                 }
                 $html_fieldset .= '</div>';
             }
@@ -124,6 +134,7 @@ class WPUBaseToolbox {
         }
         $html .= '</div>';
 
+        $html .= $args['html_after_content'];
         /* End form */
         $html .= '</form>';
 
@@ -140,6 +151,7 @@ class WPUBaseToolbox {
             'fieldsets' => array(
                 'default' => array(
                     'label' => '',
+                    'attributes' => array(),
                     'content_before' => '',
                     'content_after' => ''
                 )
@@ -149,6 +161,8 @@ class WPUBaseToolbox {
             'field_group_classname' => 'twoboxes',
             'field_box_classname' => 'box',
             'submit_box_classname' => 'box--submit',
+            'html_before_content' => '',
+            'html_after_content' => '',
             'hidden_fields' => array(),
             'has_nonce' => true,
             'nonce_id' => $form_id,
@@ -171,6 +185,9 @@ class WPUBaseToolbox {
         }
         foreach ($args['fieldsets'] as $fieldset_id => $fieldset) {
             $args['fieldsets'][$fieldset_id] = array_merge($default_args['fieldsets']['default'], $fieldset);
+            if (!is_array($args['fieldsets'][$fieldset_id]['attributes'])) {
+                $args['fieldsets'][$fieldset_id]['attributes'] = array();
+            }
         }
         return $args;
     }
@@ -357,6 +374,23 @@ class WPUBaseToolbox {
         }
 
         return $errors;
+    }
+
+    /* ----------------------------------------------------------
+      HTML Helpers
+    ---------------------------------------------------------- */
+
+    function array_to_html_attributes($attributes = array()) {
+        if (!is_array($attributes)) {
+            return '';
+        }
+
+        $html = '';
+        foreach ($attributes as $key => $value) {
+            $html .= ' ' . $key . '="' . esc_attr($value) . '"';
+        }
+
+        return trim($html);
     }
 
 }

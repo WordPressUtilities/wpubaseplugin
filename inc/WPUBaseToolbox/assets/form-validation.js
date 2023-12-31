@@ -76,10 +76,20 @@ function wpubasetoolbox_form_setup_wizard($form) {
         wpubasetoolbox_fieldset_display($fieldsets, _currentFieldset);
 
         /* Current wizard step */
-        Array.prototype.forEach.call($wizardSteps, function(el) {
-            el.setAttribute('data-active', 0);
-        });
-        $wizardSteps[_currentFieldset].setAttribute('data-active', 1);
+        if ($wizardSteps.length) {
+            Array.prototype.forEach.call($wizardSteps, function(el) {
+                el.setAttribute('data-active', 0);
+            });
+            $wizardSteps[_currentFieldset].setAttribute('data-active', 1);
+        }
+
+        /* Event */
+        $form.dispatchEvent(new CustomEvent("wpubasetoolbox_form_set_fieldset", {
+            detail: {
+                id: _currentFieldset,
+                item: $fieldsets[_currentFieldset]
+            }
+        }));
     }
 }
 
