@@ -5,7 +5,7 @@ Plugin Name: WPU Base Plugin
 Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
 Update URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 2.66.0
+Version: 2.67.0
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpubaseplugin
@@ -16,9 +16,11 @@ License: MIT License
 License URI: https://opensource.org/licenses/MIT
 */
 
+defined('ABSPATH') || die;
+
 class WPUBasePlugin {
 
-    public $version = '2.66.0';
+    public $version = '2.67.0';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -50,7 +52,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseUpdate'
         ),
         'email' => array(
-            'namespace' => 'wpubaseemail_0_2_0',
+            'namespace' => 'wpubaseemail_0_3_0',
             'name' => 'WPUBaseEmail'
         ),
         'toolbox' => array(

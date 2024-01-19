@@ -1,4 +1,6 @@
 <?php
+defined('ABSPATH') || die;
+
 if (!isset($email_logo)) {
     $email_logo = get_header_image();
 }
@@ -12,8 +14,9 @@ if (!isset($email_text)) {
     $email_text = 'Hello World';
 }
 
-
 $email_logo = apply_filters('wpubaseemail__template__email_logo', $email_logo);
+$footer_link = apply_filters('wpubaseemail__template__footer_link', $footer_link);
+$footer_text = apply_filters('wpubaseemail__template__footer_text', $footer_text);
 $body_background_color = apply_filters('wpubaseemail__template__body_background_color', '#F0F0F0');
 $main_background_color = apply_filters('wpubaseemail__template__main_background_color', '#FFFFFF');
 $main_text_color = apply_filters('wpubaseemail__template__main_text_color', '#000000');

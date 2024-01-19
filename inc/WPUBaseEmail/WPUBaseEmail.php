@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseemail_0_2_0;
+namespace wpubaseemail_0_3_0;
 
 /*
 Class Name: WPU Base Email
 Description: A class to handle native Email in WordPress admin
-Version: 0.2.0
+Version: 0.3.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -21,7 +21,7 @@ class WPUBaseEmail {
 
         /* To */
         if (!$to) {
-            $to = get_option('admin_email');
+            $to = apply_filters('wpubaseemail__send_email__default_to', get_option('admin_email'));
         }
 
         /* Content */
