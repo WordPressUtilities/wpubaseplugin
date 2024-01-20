@@ -1,16 +1,18 @@
 <?php
-namespace wpubasefields_0_16_1;
+namespace wpubasefields_0_16_2;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.16.1
+Version: 0.16.2
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
 License URI: https://opensource.org/licenses/MIT
 */
+
+defined('ABSPATH') || die;
 
 class WPUBaseFields {
     private $script_id;

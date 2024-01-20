@@ -1,15 +1,17 @@
 <?php
-namespace wpubasefilecache_0_1_1;
+namespace wpubasefilecache_0_1_2;
 
 /*
 Class Name: WPU Base File Cache
 Description: A class to handle basic file cache
-Version: 0.1.1
+Version: 0.1.2
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
 License URI: https://opensource.org/licenses/MIT
 */
+
+defined('ABSPATH') || die;
 
 class WPUBaseFileCache {
     private $cache_dir;

@@ -1,16 +1,18 @@
 <?php
-namespace wpubasesettings_0_18_0;
+namespace wpubasesettings_0_18_1;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.18.0
+Version: 0.18.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
 License URI: https://opensource.org/licenses/MIT
 */
+
+defined('ABSPATH') || die;
 
 class WPUBaseSettings {
 

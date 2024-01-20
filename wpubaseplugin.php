@@ -5,7 +5,7 @@ Plugin Name: WPU Base Plugin
 Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
 Update URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 2.67.0
+Version: 2.68.0
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpubaseplugin
@@ -20,47 +20,47 @@ defined('ABSPATH') || die;
 
 class WPUBasePlugin {
 
-    public $version = '2.67.0';
+    public $version = '2.68.0';
 
     private $utilities_classes = array(
         'messages' => array(
-            'namespace' => 'messages_1_3_3',
+            'namespace' => 'messages_1_3_4',
             'name' => 'WPUBaseMessages'
         ),
         'admindatas' => array(
-            'namespace' => 'admindatas_3_10_0',
+            'namespace' => 'admindatas_3_10_1',
             'name' => 'WPUBaseAdminDatas'
         ),
         'adminpage' => array(
-            'namespace' => 'adminpage_1_5_1',
+            'namespace' => 'adminpage_1_5_2',
             'name' => 'WPUBaseAdminPage'
         ),
         'settings' => array(
-            'namespace' => 'wpubasesettings_0_18_0',
+            'namespace' => 'wpubasesettings_0_18_1',
             'name' => 'WPUBaseSettings'
         ),
         'cron' => array(
-            'namespace' => 'wpubasecron_0_2_9',
+            'namespace' => 'wpubasecron_0_2_10',
             'name' => 'WPUBaseCron'
         ),
         'fields' => array(
-            'namespace' => 'wpubasefields_0_16_1',
+            'namespace' => 'wpubasefields_0_16_2',
             'name' => 'WPUBaseFields'
         ),
         'update' => array(
-            'namespace' => 'wpubaseupdate_0_4_4',
+            'namespace' => 'wpubaseupdate_0_4_5',
             'name' => 'WPUBaseUpdate'
         ),
         'email' => array(
-            'namespace' => 'wpubaseemail_0_3_0',
+            'namespace' => 'wpubaseemail_0_3_1',
             'name' => 'WPUBaseEmail'
         ),
         'toolbox' => array(
-            'namespace' => 'wpubasetoolbox_0_11_0',
+            'namespace' => 'wpubasetoolbox_0_11_1',
             'name' => 'WPUBaseToolbox'
         ),
         'filecache' => array(
-            'namespace' => 'wpubasefilecache_0_1_1',
+            'namespace' => 'wpubasefilecache_0_1_2',
             'name' => 'WPUBaseFileCache'
         )
     );
@@ -120,7 +120,7 @@ class WPUBasePlugin {
             if (isset($this->tools[$id])) {
                 continue;
             }
-            require_once dirname(__FILE__) . '/inc/' . $item['name'] . '/' . $item['name'] . '.php';
+            require_once __DIR__ . '/inc/' . $item['name'] . '/' . $item['name'] . '.php';
             $className = $item['namespace'] . '\\' . $item['name'];
             $this->tools[$id] = new $className;
         }

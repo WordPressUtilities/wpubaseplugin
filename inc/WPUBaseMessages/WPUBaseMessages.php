@@ -1,16 +1,18 @@
 <?php
-namespace messages_1_3_3;
+namespace messages_1_3_4;
 
 /*
 Class Name: WPU Base Messages
 Description: A class to handle messages in WordPress
-Version: 1.3.3
+Version: 1.3.4
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
 License URI: https://opensource.org/licenses/MIT
 */
+
+defined('ABSPATH') || die;
 
 class WPUBaseMessages {
 
