@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_11_1;
+namespace wpubasetoolbox_0_12_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.11.1
+Version: 0.12.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.11.1';
+    private $plugin_version = '0.12.0';
     public function __construct() {
         add_action('wp_enqueue_scripts', array(&$this,
             'form_scripts'
@@ -393,6 +393,52 @@ class WPUBaseToolbox {
         }
 
         return trim($html);
+    }
+
+    function array_to_html_table($array, $args = array()) {
+
+        /* Ensure array is ok */
+        if (empty($array) || !is_array($array)) {
+            return '';
+        }
+
+        /* Fix args */
+        $default_args = array(
+            'table_classname' => 'widefat',
+            'colnames' => array()
+        );
+        if (!is_array($args)) {
+            $args = array();
+        }
+        $args = array_merge($default_args, $args);
+
+        $html = '';
+
+        /* HEAD */
+        $html .= '<thead><tr>';
+        foreach ($array[0] as $key => $value) {
+            $label = $key;
+            if (isset($args['colnames'][$key])) {
+                $label = $args['colnames'][$key];
+            }
+            $html .= '<th>' . htmlspecialchars($label) . '</th>';
+        }
+        $html .= '</tr></thead>';
+
+        /* CONTENT */
+        $html .= '<tbody>';
+        foreach ($array as $line) {
+            $html .= '<tr>';
+            foreach ($line as $value) {
+                $html .= '<td>' . htmlspecialchars($value) . '</td>';
+            }
+            $html .= '</tr>';
+        }
+        $html .= '</tbody>';
+
+        /* Return content */
+        $html = '<table class="' . esc_attr($args['table_classname']) . '">' . $html . '</table>';
+        return $html;
     }
 
 }
