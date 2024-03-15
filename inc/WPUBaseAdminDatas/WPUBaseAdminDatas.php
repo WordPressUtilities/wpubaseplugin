@@ -1,10 +1,10 @@
 <?php
-namespace admindatas_3_11_0;
+namespace admindatas_3_12_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.11.0
+Version: 3.12.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -419,7 +419,7 @@ class WPUBaseAdminDatas {
     public function export_array_to_csv($array, $name) {
         if (isset($array[0])) {
             header('Content-Type: application/csv');
-            header('Content-Disposition: attachment; filename=export-list-' . $name . '-' . date_i18n('y-m-d') . '.csv');
+            header('Content-Disposition: attachment; filename=export-list-' . sanitize_title($name) . '-' . date_i18n('y-m-d') . '.csv');
             header('Pragma: no-cache');
             echo implode(';', array_keys($array[0])) . "\n";
             foreach ($array as $line) {
@@ -615,6 +615,10 @@ class WPUBaseAdminDatas {
             $args['perpage'] = $this->default_perpage;
         }
 
+        if (!isset($args['has_export'])) {
+            $args['has_export'] = true;
+        }
+
         // Add ID
         $default_columns = array(
             'creation' => array(
@@ -782,9 +786,9 @@ class WPUBaseAdminDatas {
         $search_form .= '<input type="hidden" name="order" value="' . esc_attr($args['order']) . '" />';
         $search_form .= '<input type="hidden" name="orderby" value="' . esc_attr($args['orderby']) . '" />';
         $search_form .= '<input type="search" name="where_text" value="' . esc_attr($where_text) . '" />';
-        $search_form .= get_submit_button(__('Search',$this->settings['plugin_id']), '', 'submit', false);
+        $search_form .= get_submit_button(__('Search', $this->settings['plugin_id']), '', 'submit', false);
         if ($where_text) {
-            $search_form .= '<br /><small><a href="' . add_query_arg($url_items_clear, $this->pagename) . '">' . __('Clear',$this->settings['plugin_id']) . '</a></small>';
+            $search_form .= '<br /><small><a href="' . add_query_arg($url_items_clear, $this->pagename) . '">' . __('Clear', $this->settings['plugin_id']) . '</a></small>';
         }
         $search_form .= '</p><br class="clear" /></form><div class="clear"></div>';
 
@@ -796,7 +800,7 @@ class WPUBaseAdminDatas {
         $content .= wp_nonce_field('action-main-form-' . $page_id, 'action-main-form-admin-datas-' . $page_id, true, false);
         if ($has_id && $is_admin_view && $this->settings['can_create']) {
             $new_url = add_query_arg(array('backquery' => $_back_query), $this->pagename . '&create=1');
-            $content .= '<p><a class="page-title-action" href="' . $new_url . '">' . __('New Post',$this->settings['plugin_id']) . '</a></p>';
+            $content .= '<p><a class="page-title-action" href="' . $new_url . '">' . __('New Post', $this->settings['plugin_id']) . '</a></p>';
         }
         $content .= '<table class="wp-list-table widefat striped">';
         if (isset($args['columns']) && is_array($args['columns']) && !empty($args['columns'])) {
@@ -860,10 +864,14 @@ class WPUBaseAdminDatas {
         $content .= $clear_form;
         $content .= $search_form;
         $content .= $pagination;
-        $content .= '<a href="' . admin_url($export_url_base) . '">' . __('Export all', $this->settings['plugin_id']) . '</a>';
-        if ($where_text || $has_filter_key) {
-            $content .= ' <a href="' . admin_url($export_url) . '">' . __('Export filtered view', $this->settings['plugin_id']) . '</a>';
+
+        if ($args['has_export']) {
+            $content .= '<a href="' . admin_url($export_url_base) . '">' . __('Export all', $this->settings['plugin_id']) . '</a>';
+            if ($where_text || $has_filter_key) {
+                $content .= ' <a href="' . admin_url($export_url) . '">' . __('Export filtered view', $this->settings['plugin_id']) . '</a>';
+            }
         }
+
         $content .= <<<HTML
 <style>
 .admindatas-search-filter{
