@@ -1,5 +1,5 @@
 <?php
-namespace messages_1_3_4;
+namespace wpubasemessages_1_3_4;
 
 /*
 Class Name: WPU Base Messages

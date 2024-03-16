@@ -1,5 +1,5 @@
 <?php
-namespace admindatas_3_12_0;
+namespace wpubaseadmindatas_3_12_0;
 
 /*
 Class Name: WPU Base Admin Datas
