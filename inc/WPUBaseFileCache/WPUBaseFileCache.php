@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefilecache_0_1_2;
+namespace wpubasefilecache_0_1_3;
 
 /*
 Class Name: WPU Base File Cache
 Description: A class to handle basic file cache
-Version: 0.1.2
+Version: 0.1.3
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
@@ -51,7 +51,7 @@ class WPUBaseFileCache {
         if (!file_exists($cached_file)) {
             return false;
         }
-        if (filemtime($cached_file) + $expiration < time()) {
+        if ($expiration && filemtime($cached_file) + $expiration < time()) {
             return false;
         }
 
