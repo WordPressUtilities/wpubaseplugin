@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_12_1;
+namespace wpubasetoolbox_0_13_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.12.1
+Version: 0.13.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,15 +15,27 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.12.1';
-    public function __construct() {
+    private $plugin_version = '0.13.0';
+    private $args = array();
+    private $default_module_args = array(
+        'need_form_js' => true
+    );
+
+    public function __construct($args = array()) {
+        if (!is_array($args)) {
+            $args = array();
+        }
+        $this->args = array_merge($this->default_module_args, $args);
+
         add_action('wp_enqueue_scripts', array(&$this,
             'form_scripts'
         ));
     }
 
     function form_scripts() {
-        wp_enqueue_script(__NAMESPACE__ . '-wpubasetoolbox-form-validation', plugins_url('assets/form-validation.js', __FILE__), array(), $this->plugin_version);
+        if ($this->args['need_form_js']) {
+            wp_enqueue_script(__NAMESPACE__ . '-wpubasetoolbox-form-validation', plugins_url('assets/form-validation.js', __FILE__), array(), $this->plugin_version);
+        }
     }
 
     /* ----------------------------------------------------------

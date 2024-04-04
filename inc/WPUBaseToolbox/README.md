@@ -6,8 +6,10 @@ Cool helpers for WordPress Plugins.
 ## Insert in the INIT hook
 
 ```php
-require_once dirname(__FILE__) . '/inc/WPUBaseToolbox/WPUBaseToolbox.php';
-$this->basetoolbox = new \myplugin\WPUBaseToolbox();
+require_once __DIR__ . '/inc/WPUBaseToolbox/WPUBaseToolbox.php';
+$this->basetoolbox = new \myplugin\WPUBaseToolbox(array(
+    'need_form_js' => false
+));
 ```
 
 ## Use functions
