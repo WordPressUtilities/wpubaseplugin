@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_13_0;
+namespace wpubasetoolbox_0_14_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.13.0
+Version: 0.14.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.13.0';
+    private $plugin_version = '0.14.0';
     private $args = array();
     private $default_module_args = array(
         'need_form_js' => true
@@ -459,6 +459,113 @@ class WPUBaseToolbox {
         /* Return content */
         $html = '<table class="' . esc_attr($args['table_classname']) . '">' . $html . '</table>';
         return $html;
+    }
+
+    /* ----------------------------------------------------------
+      Export
+    ---------------------------------------------------------- */
+
+    /* Ensure all lines have the same keys
+    -------------------------- */
+
+    function export_array_clean_for_csv($data) {
+
+        /* Extract all available keys */
+        $all_keys = array();
+        foreach ($data as $item) {
+            $all_keys = array_merge($all_keys, array_keys($item));
+        }
+        $all_keys = array_unique($all_keys);
+
+        foreach ($data as $item_key => $item) {
+            /* Ensure all rows have the same keys */
+            foreach ($all_keys as $k) {
+                if (!isset($item[$k])) {
+                    $data[$item_key][$k] = '';
+                }
+            }
+            /* Ensure same sorting of all keys */
+            ksort($data[$item_key]);
+        }
+
+        return $data;
+    }
+
+    /* Array to JSON
+    -------------------------- */
+
+    public function export_array_to_json($data, $name) {
+        if (!isset($data[0])) {
+            return;
+        }
+        /* Correct headers */
+        header('Content-type: application/json');
+        header('Content-Disposition: attachment; filename=' . $name . '.json');
+        header('Pragma: no-cache');
+
+        echo json_encode($data);
+    }
+
+    /* Array to CSV
+    -------------------------- */
+
+    public function export_array_to_csv($data, $name) {
+        if (!isset($data[0])) {
+            return;
+        }
+
+        $data = $this->export_array_clean_for_csv($data);
+
+        /* Correct headers */
+        header('Content-Type: application/csv');
+        header('Content-Disposition: attachment; filename=' . $name . '.csv');
+        header('Pragma: no-cache');
+
+        $all_keys = array_keys($data[0]);
+
+        /* Build and send CSV */
+        $output = fopen("php://output", 'w');
+        fputcsv($output, $all_keys);
+        foreach ($data as $item) {
+            fputcsv($output, $item);
+        }
+        fclose($output);
+        die;
+    }
+
+    /* ----------------------------------------------------------
+      IPs
+    ---------------------------------------------------------- */
+
+    /* Thanks to https://stackoverflow.com/a/13646735/975337 */
+    function get_user_ip($anonymized = true) {
+        if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
+            $_SERVER['REMOTE_ADDR'] = $_SERVER["HTTP_CF_CONNECTING_IP"];
+            $_SERVER['HTTP_CLIENT_IP'] = $_SERVER["HTTP_CF_CONNECTING_IP"];
+        }
+        $client = isset($_SERVER['HTTP_CLIENT_IP']) ? $_SERVER['HTTP_CLIENT_IP'] : '';
+        $forward = isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : '';
+        $remote = $_SERVER['REMOTE_ADDR'];
+
+        if (filter_var($client, FILTER_VALIDATE_IP)) {
+            $ip = $client;
+        } elseif (filter_var($forward, FILTER_VALIDATE_IP)) {
+            $ip = $forward;
+        } else {
+            $ip = $remote;
+        }
+        if (!$anonymized) {
+            return $ip;
+        }
+        return $this->anonymize_ip($ip);
+    }
+
+    /* Thanks to https://gist.github.com/svrnm/3a124d2af18a6726f66e */
+    function anonymize_ip($ip) {
+        if ($ip = @inet_pton($ip)) {
+            return inet_ntop(substr($ip, 0, strlen($ip) / 2) . str_repeat(chr(0), strlen($ip) / 2));
+        }
+        return '0.0.0.0';
     }
 
 }
