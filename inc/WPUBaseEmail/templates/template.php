@@ -14,16 +14,16 @@ if (!isset($email_text)) {
     $email_text = 'Hello World';
 }
 
-$email_logo = apply_filters('wpubaseemail__template__email_logo', $email_logo);
-$footer_link = apply_filters('wpubaseemail__template__footer_link', $footer_link);
-$footer_text = apply_filters('wpubaseemail__template__footer_text', $footer_text);
-$body_background_color = apply_filters('wpubaseemail__template__body_background_color', '#F0F0F0');
-$main_background_color = apply_filters('wpubaseemail__template__main_background_color', '#FFFFFF');
-$main_text_color = apply_filters('wpubaseemail__template__main_text_color', '#000000');
-$main_font_size = apply_filters('wpubaseemail__template__main_font_size', 16);
-$logo_width = apply_filters('wpubaseemail__template__logo_width', 100);
-$divider_color = apply_filters('wpubaseemail__template__divider_color', '#F0F0F0');
-$font_family = apply_filters('wpubaseemail__template__font_family', 'arial, helvetica, sans-serif');
+$email_logo = apply_filters('wpubaseemail__template__email_logo', $email_logo, $mail_id);
+$footer_link = apply_filters('wpubaseemail__template__footer_link', $footer_link, $mail_id);
+$footer_text = apply_filters('wpubaseemail__template__footer_text', $footer_text, $mail_id);
+$body_background_color = apply_filters('wpubaseemail__template__body_background_color', '#F0F0F0', $mail_id);
+$main_background_color = apply_filters('wpubaseemail__template__main_background_color', '#FFFFFF', $mail_id);
+$main_text_color = apply_filters('wpubaseemail__template__main_text_color', '#000000', $mail_id);
+$main_font_size = apply_filters('wpubaseemail__template__main_font_size', 16, $mail_id);
+$logo_width = apply_filters('wpubaseemail__template__logo_width', 100, $mail_id);
+$divider_color = apply_filters('wpubaseemail__template__divider_color', '#F0F0F0', $mail_id);
+$font_family = apply_filters('wpubaseemail__template__font_family', 'arial, helvetica, sans-serif', $mail_id);
 
 ?><!doctype html><html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><head><title></title><!--[if !mso]><!--><meta http-equiv="X-UA-Compatible" content="IE=edge"><!--<![endif]--><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style type="text/css">#outlook a { padding:0; }
           body { margin:0;padding:0;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%; }

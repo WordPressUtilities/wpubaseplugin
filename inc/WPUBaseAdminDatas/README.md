@@ -6,7 +6,7 @@ Add admin datas and a database in your plugin.
 ## Insert in the INIT hook
 
 ```php
-include dirname( __FILE__ ) . '/inc/WPUBaseAdminDatas/WPUBaseAdminDatas.php';
+require_once __DIR__ . '/inc/WPUBaseAdminDatas/WPUBaseAdminDatas.php';
 $this->baseadmindatas = new \wpubaseplugin\WPUBaseAdminDatas();
 $this->baseadmindatas->init(array(
     'plugin_id' => 'my_plugin',

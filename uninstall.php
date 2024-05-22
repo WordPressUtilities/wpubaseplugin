@@ -3,6 +3,6 @@
 if ( !defined( 'WP_UNINSTALL_PLUGIN' ) )
     exit();
 
-include dirname( __FILE__ ).'/wpubaseplugin.php';
+require_once __DIR__ . '/wpubaseplugin.php';
 
 $wpuBasePlugin->uninstall();

@@ -6,7 +6,7 @@ Nicely formatted emails in your plugin.
 ## Insert in the INIT hook
 
 ```php
-require_once dirname(__FILE__) . '/inc/WPUBaseEmail/WPUBaseEmail.php';
+require_once __DIR__ . '/inc/WPUBaseEmail/WPUBaseEmail.php';
 $this->baseemail = new \wpu_polls\WPUBaseEmail();
 ```
 
