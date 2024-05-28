@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_19_0;
+namespace wpubasesettings_0_20_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.19.0
+Version: 0.20.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -193,14 +193,28 @@ class WPUBaseSettings {
             'show_in_rest' => $this->settings_details,
             'default' => array()
         ));
+        $has_check_all = false;
         foreach ($this->settings_details['sections'] as $id => $section) {
-            if (current_user_can($section['user_cap'])) {
-                add_settings_section($id,
-                    $section['name'],
-                    isset($section['description']) ? $section['description'] : '',
-                    $this->settings_details['plugin_id']
-                );
+            if (!current_user_can($section['user_cap'])) {
+                continue;
             }
+            if (!isset($section['after_section'])) {
+                $section['after_section'] = '';
+            }
+            if (isset($section['wpubasesettings_checkall']) && $section['wpubasesettings_checkall']) {
+                $section['after_section'] .= '<button class="wpubasesettings-check-all">' . __('Check all', __NAMESPACE__) . '</button>';
+                if (!$has_check_all) {
+                    $has_check_all = true;
+                    add_action('admin_footer', array(&$this, 'admin_footer_checkall'));
+                }
+            }
+            add_settings_section(
+                $id,
+                $section['name'],
+                isset($section['description']) ? $section['description'] : '',
+                $this->settings_details['plugin_id'],
+                $section
+            );
         }
 
         foreach ($this->settings as $id => $input) {
@@ -333,7 +347,7 @@ class WPUBaseSettings {
         }
         $id .= $attr;
         $value = isset($options[$args['id']]) ? $options[$args['id']] : $args['default_value'];
-        if(!isset($options[$args['id']]) && isset($args['translated_from']) && $args['translated_from'] && isset($options[$args['translated_from']]) && $options[$args['translated_from']]){
+        if (!isset($options[$args['id']]) && isset($args['translated_from']) && $args['translated_from'] && isset($options[$args['translated_from']]) && $options[$args['translated_from']]) {
             $value = $options[$args['translated_from']];
         }
 
@@ -560,6 +574,19 @@ jQSelect.on('change', 'select',function(){
 });
 
 }());
+</script>
+EOT;
+    }
+
+    function admin_footer_checkall() {
+        echo <<<EOT
+<script>
+jQuery(document).ready(function() {
+    jQuery(".wpubasesettings-check-all").on("click", function(e) {
+        e.preventDefault();
+        jQuery(this).prev(".form-table").find(":checkbox").prop("checked", true);
+    });
+});
 </script>
 EOT;
     }
