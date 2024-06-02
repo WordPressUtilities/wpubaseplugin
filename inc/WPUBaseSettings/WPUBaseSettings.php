@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_20_0;
+namespace wpubasesettings_0_21_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.20.0
+Version: 0.21.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -202,7 +202,8 @@ class WPUBaseSettings {
                 $section['after_section'] = '';
             }
             if (isset($section['wpubasesettings_checkall']) && $section['wpubasesettings_checkall']) {
-                $section['after_section'] .= '<button class="wpubasesettings-check-all">' . __('Check all', __NAMESPACE__) . '</button>';
+                $check_label = __('Check all', __NAMESPACE__);
+                $section['after_section'] .= '<button class="wpubasesettings-check-all" data-check-label="' . $check_label . '" data-uncheck-label="' . __('Uncheck all', __NAMESPACE__) . '">' . $check_label . '</button>';
                 if (!$has_check_all) {
                     $has_check_all = true;
                     add_action('admin_footer', array(&$this, 'admin_footer_checkall'));
@@ -582,9 +583,26 @@ EOT;
         echo <<<EOT
 <script>
 jQuery(document).ready(function() {
-    jQuery(".wpubasesettings-check-all").on("click", function(e) {
-        e.preventDefault();
-        jQuery(this).prev(".form-table").find(":checkbox").prop("checked", true);
+    jQuery(".wpubasesettings-check-all").each(function() {
+        var _btn = jQuery(this),
+            _table = _btn.prev(".form-table"),
+            _checkboxes = _table.find(":checkbox"),
+            _check_all = true;
+
+        _btn.on("click", function(e) {
+            e.preventDefault();
+            _checkboxes.prop("checked", _check_all);
+            _checkboxes.trigger("change");
+        });
+
+        function check_checkboxes_mode() {
+            var _checked = _checkboxes.filter(":checked").length;
+            _check_all = _checked < _checkboxes.length;
+            _btn.text(_check_all ? _btn.data("check-label") : _btn.data("uncheck-label"));
+        }
+        _checkboxes.on("change", check_checkboxes_mode);
+        check_checkboxes_mode();
+
     });
 });
 </script>
