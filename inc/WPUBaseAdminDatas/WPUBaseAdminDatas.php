@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_3_12_0;
+namespace wpubaseadmindatas_3_13_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.12.0
+Version: 3.13.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -390,7 +390,14 @@ class WPUBaseAdminDatas {
             }
         }
         if (isset($_POST['page'])) {
-            wp_redirect($this->pagename);
+            $_url = $this->pagename;
+            if (isset($_POST['filter_key'], $_POST['filter_value'])) {
+                $_url = add_query_arg(array(
+                    'filter_key' => $_POST['filter_key'],
+                    'filter_value' => $_POST['filter_value']
+                ), $_url);
+            }
+            wp_redirect($_url);
             die;
         }
     }
@@ -859,6 +866,10 @@ class WPUBaseAdminDatas {
         $content .= '</table>';
         if ($has_id) {
             $content .= '<p class="admindatas-delete-button">' . get_submit_button(__('Delete', $this->settings['plugin_id']), 'delete', 'delete_lines', false) . '</p>';
+            if ($has_filter_key) {
+                $content .= '<input type="hidden" name="filter_key" value="' . esc_attr($_GET['filter_key']) . '" />';
+                $content .= '<input type="hidden" name="filter_value" value="' . esc_attr($_GET['filter_value']) . '" />';
+            }
         }
         $content .= '</form>';
         $content .= $clear_form;
