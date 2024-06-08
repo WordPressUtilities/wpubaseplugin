@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_3_13_0;
+namespace wpubaseadmindatas_3_14_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.13.0
+Version: 3.14.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -383,15 +383,22 @@ class WPUBaseAdminDatas {
     ---------------------------------------------------------- */
 
     public function delete_lines_postAction() {
-        if (current_user_can($this->user_level) && !empty($_POST) && isset($_POST['select_line'], $_POST['page']) && is_array($_POST['select_line'])) {
+        $has_filtered_view = isset($_POST['filter_key'], $_POST['filter_value']);
+        if (current_user_can($this->user_level) && !empty($_POST) && isset($_POST['page'])) {
             $action_id = 'action-main-form-admin-datas-' . $_POST['page'];
             if (isset($_POST[$action_id]) && wp_verify_nonce($_POST[$action_id], 'action-main-form-' . $_POST['page'])) {
-                $this->delete_lines($_POST['select_line']);
+                if (isset($_POST['filter_key'], $_POST['filter_value'], $_POST['delete_filter_lines'])) {
+                    $this->delete_line_by_filter($_POST['filter_key'], $_POST['filter_value']);
+                    $has_filtered_view = false;
+                }
+                if (isset($_POST['select_line']) && is_array($_POST['select_line'])) {
+                    $this->delete_lines($_POST['select_line']);
+                }
             }
         }
         if (isset($_POST['page'])) {
             $_url = $this->pagename;
-            if (isset($_POST['filter_key'], $_POST['filter_value'])) {
+            if ($has_filtered_view) {
                 $_url = add_query_arg(array(
                     'filter_key' => $_POST['filter_key'],
                     'filter_value' => $_POST['filter_value']
@@ -400,6 +407,13 @@ class WPUBaseAdminDatas {
             wp_redirect($_url);
             die;
         }
+    }
+
+    function delete_line_by_filter($field, $value) {
+        global $wpdb;
+        $wpdb->query(
+            "DELETE FROM " . $this->tablename . " WHERE " . esc_sql($field) . " = '" . esc_sql($value) . "';"
+        );
     }
 
     public function delete_lines($lines = array()) {
@@ -865,11 +879,14 @@ class WPUBaseAdminDatas {
         $content .= '</tbody>';
         $content .= '</table>';
         if ($has_id) {
-            $content .= '<p class="admindatas-delete-button">' . get_submit_button(__('Delete', $this->settings['plugin_id']), 'delete', 'delete_lines', false) . '</p>';
+            $content .= '<p class="admindatas-delete-button">';
+            $content .= get_submit_button(__('Delete', $this->settings['plugin_id']), 'delete', 'delete_lines', false);
             if ($has_filter_key) {
+                $content .= ' ' . get_submit_button(__('Delete filtered lines', $this->settings['plugin_id']), 'delete_filter', 'delete_filter_lines', false);
                 $content .= '<input type="hidden" name="filter_key" value="' . esc_attr($_GET['filter_key']) . '" />';
                 $content .= '<input type="hidden" name="filter_value" value="' . esc_attr($_GET['filter_value']) . '" />';
             }
+            $content .= '</p>';
         }
         $content .= '</form>';
         $content .= $clear_form;
