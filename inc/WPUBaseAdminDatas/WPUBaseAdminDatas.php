@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_3_14_0;
+namespace wpubaseadmindatas_4_0_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 3.14.0
+Version: 4.0.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -31,6 +31,14 @@ class WPUBaseAdminDatas {
         'number',
         'true_false',
         'email'
+    );
+    public $authorized_query_args = array(
+        'filter_key',
+        'filter_value',
+        'where_text',
+        'order',
+        'orderby',
+        'pagenum'
     );
 
     public function __construct() {}
@@ -219,7 +227,7 @@ class WPUBaseAdminDatas {
         }
 
         // Get number of elements in table
-        $elements_count = $wpdb->get_var("SELECT COUNT(*) FROM " . $this->tablename . $req_details);
+        $elements_count = $wpdb->get_var("SELECT COUNT(*) FROM " . $this->tablename . ' ' . $req_details);
 
         // Get max page number
         $max_pages = ceil($elements_count / $perpage);
@@ -383,13 +391,16 @@ class WPUBaseAdminDatas {
     ---------------------------------------------------------- */
 
     public function delete_lines_postAction() {
+        global $wpdb;
         $has_filtered_view = isset($_POST['filter_key'], $_POST['filter_value']);
+        $has_where_text = isset($_POST['where_text']) && $_POST['where_text'];
         if (current_user_can($this->user_level) && !empty($_POST) && isset($_POST['page'])) {
             $action_id = 'action-main-form-admin-datas-' . $_POST['page'];
             if (isset($_POST[$action_id]) && wp_verify_nonce($_POST[$action_id], 'action-main-form-' . $_POST['page'])) {
-                if (isset($_POST['filter_key'], $_POST['filter_value'], $_POST['delete_filter_lines'])) {
-                    $this->delete_line_by_filter($_POST['filter_key'], $_POST['filter_value']);
+                if (isset($_POST['delete_filter_lines']) && (isset($_POST['filter_key']) || isset($_POST['filter_value']) || isset($_POST['where_text']))) {
+                    $wpdb->query("DELETE FROM " . $this->tablename . " " . $this->build_query($_POST));
                     $has_filtered_view = false;
+                    $has_where_text = false;
                 }
                 if (isset($_POST['select_line']) && is_array($_POST['select_line'])) {
                     $this->delete_lines($_POST['select_line']);
@@ -404,16 +415,14 @@ class WPUBaseAdminDatas {
                     'filter_value' => $_POST['filter_value']
                 ), $_url);
             }
+            if ($has_where_text) {
+                $_url = add_query_arg(array(
+                    'where_text' => $_POST['where_text']
+                ), $_url);
+            }
             wp_redirect($_url);
             die;
         }
-    }
-
-    function delete_line_by_filter($field, $value) {
-        global $wpdb;
-        $wpdb->query(
-            "DELETE FROM " . $this->tablename . " WHERE " . esc_sql($field) . " = '" . esc_sql($value) . "';"
-        );
     }
 
     public function delete_lines($lines = array()) {
@@ -474,29 +483,24 @@ class WPUBaseAdminDatas {
     public function export_datas() {
         global $wpdb;
 
-        $query = "SELECT * FROM " . $this->tablename . " WHERE 1=1";
         $columns = $wpdb->get_results("SHOW COLUMNS FROM " . $this->tablename, ARRAY_A);
+
+        $query_args = array(
+            'select' => true
+        );
 
         /* Filters */
         if (isset($_GET['filter_key'], $_GET['filter_value'])) {
-            $has_filter_key = true;
-            $query .= " AND " . esc_sql($_GET['filter_key']) . " = '" . esc_sql($_GET['filter_value']) . "'";
+            $query_args['filter_key'] = $_GET['filter_key'];
+            $query_args['filter_value'] = $_GET['filter_value'];
         }
 
         /* Search */
         if (isset($_GET['where_text']) && $_GET['where_text']) {
-            $where = array();
-            $where_text = trim($_GET['where_text']);
-            foreach ($columns as $field) {
-                $id = $field['Field'];
-                if ($id != 'id' && $id != 'creation') {
-                    $where[] = "$id LIKE '%" . esc_sql($_GET['where_text']) . "%'";
-                }
-            }
-            $query .= " AND (" . implode(' OR ', $where) . ")";
+            $query_args['where_text'] = trim($_GET['where_text']);
         }
 
-        $rows = $wpdb->get_results($query, ARRAY_A);
+        $rows = $wpdb->get_results($this->build_query($query_args), ARRAY_A);
 
         $fp = fopen('php://output', 'w');
 
@@ -624,8 +628,7 @@ class WPUBaseAdminDatas {
         $pagination = '';
 
         $is_admin_view = isset($args['is_admin_view']) && $args['is_admin_view'];
-        $export_url = 'index.php?wpubaseadmindatas_export=' . $this->tablename;
-        $export_url_base = $export_url;
+        $export_url_base = 'index.php?wpubaseadmindatas_export=' . $this->tablename;
 
         if (!is_array($args)) {
             $args = array();
@@ -684,27 +687,23 @@ class WPUBaseAdminDatas {
             $args['columns'] = $base_columns;
         }
 
+        $query_args = array();
+
         // Filter results
-        $where_glue = (isset($_GET['where_glue']) && in_array($_GET['where_glue'], array('AND', 'OR'))) ? $_GET['where_glue'] : 'AND';
         $where = array();
         $where_text = isset($_GET['where_text']) ? trim($_GET['where_text']) : '';
         if (!empty($where_text)) {
-            $where_glue = 'OR';
-            $export_url .= '&where_text=' . esc_html($_GET['where_text']);
-            foreach ($args['columns'] as $id => $name) {
-                if ($id != 'id' && $id != 'creation') {
-                    $where[] = "$id LIKE '%" . esc_sql($where_text) . "%'";
-                }
-            }
+            $query_args['where_text'] = $where_text;
         }
 
         // Filter
         $has_filter_key = false;
         if (isset($_GET['filter_key'], $_GET['filter_value'])) {
             $has_filter_key = true;
-            $export_url .= '&filter_key=' . esc_html($_GET['filter_key']) . '&filter_value=' . esc_html($_GET['filter_value']);
-            $where[] = esc_sql($_GET['filter_key']) . " = '" . esc_sql($_GET['filter_value']) . "'";
+            $query_args['filter_key'] = $_GET['filter_key'];
+            $query_args['filter_value'] = $_GET['filter_value'];
         }
+        $sql_where = $this->build_query($query_args);
 
         // Order results
         if (!isset($args['order'])) {
@@ -713,12 +712,6 @@ class WPUBaseAdminDatas {
 
         if (!isset($args['orderby'])) {
             $args['orderby'] = isset($_GET['orderby']) && array_key_exists($_GET['orderby'], $args['columns']) ? $_GET['orderby'] : 'id';
-        }
-
-        // Build filter query
-        $sql_where = '';
-        if (!empty($where)) {
-            $sql_where .= " WHERE " . implode(" " . $where_glue . " ", $where) . " ";
         }
 
         // Build order
@@ -763,7 +756,6 @@ class WPUBaseAdminDatas {
         );
         $url_items = $url_items_clear;
         $url_items['pagenum'] = '%#%';
-        $url_items['where_glue'] = $where_glue;
         $url_items['where_text'] = $where_text;
 
         /* Back query used in single page */
@@ -798,15 +790,16 @@ class WPUBaseAdminDatas {
         if ($has_filter_key) {
             $clear_form .= '<p class="admindatas-search-filter">';
             $clear_form .= sprintf(__('<strong>Filter :</strong> %s • <strong>Value :</strong> %s', $this->settings['plugin_id']), esc_html($_GET['filter_key']), esc_html($_GET['filter_value']));
-            $clear_form .= '<br /><small><a href="' . add_query_arg($url_items_clear, $this->pagename) . '">' . __('Reset') . '</a></small>';
+            $clear_form .= '<br /><small><a href="' . add_query_arg($url_items_clear, $this->pagename) . '">' . __('Reset', $this->settings['plugin_id']) . '</a></small>';
             $clear_form .= '</p>';
         }
 
         $search_form = '<form class="admindatas-search-form" action="' . $this->pagename . '" method="get"><p class="search-box">';
         $search_form .= '<input type="hidden" name="page" value="' . esc_attr($page_id) . '" />';
+        $search_form .= $this->build_hidden_inputs($query_args);
+        $search_form .= '<input type="search" name="where_text" value="' . stripslashes(esc_attr($where_text)) . '" />';
         $search_form .= '<input type="hidden" name="order" value="' . esc_attr($args['order']) . '" />';
         $search_form .= '<input type="hidden" name="orderby" value="' . esc_attr($args['orderby']) . '" />';
-        $search_form .= '<input type="search" name="where_text" value="' . esc_attr($where_text) . '" />';
         $search_form .= get_submit_button(__('Search', $this->settings['plugin_id']), '', 'submit', false);
         if ($where_text) {
             $search_form .= '<br /><small><a href="' . add_query_arg($url_items_clear, $this->pagename) . '">' . __('Clear', $this->settings['plugin_id']) . '</a></small>';
@@ -881,10 +874,9 @@ class WPUBaseAdminDatas {
         if ($has_id) {
             $content .= '<p class="admindatas-delete-button">';
             $content .= get_submit_button(__('Delete', $this->settings['plugin_id']), 'delete', 'delete_lines', false);
-            if ($has_filter_key) {
+            if (!empty($query_args)) {
                 $content .= ' ' . get_submit_button(__('Delete filtered lines', $this->settings['plugin_id']), 'delete_filter', 'delete_filter_lines', false);
-                $content .= '<input type="hidden" name="filter_key" value="' . esc_attr($_GET['filter_key']) . '" />';
-                $content .= '<input type="hidden" name="filter_value" value="' . esc_attr($_GET['filter_value']) . '" />';
+                $content .= $this->build_hidden_inputs($query_args);
             }
             $content .= '</p>';
         }
@@ -895,8 +887,8 @@ class WPUBaseAdminDatas {
 
         if ($args['has_export']) {
             $content .= '<a href="' . admin_url($export_url_base) . '">' . __('Export all', $this->settings['plugin_id']) . '</a>';
-            if ($where_text || $has_filter_key) {
-                $content .= ' <a href="' . admin_url($export_url) . '">' . __('Export filtered view', $this->settings['plugin_id']) . '</a>';
+            if (!empty($query_args)) {
+                $content .= ' <a href="' . $this->build_url(admin_url($export_url_base), $query_args) . '">' . __('Export filtered view', $this->settings['plugin_id']) . '</a>';
             }
         }
 
@@ -915,6 +907,71 @@ class WPUBaseAdminDatas {
 </style>
 HTML;
         return $content;
+    }
+
+    /* ----------------------------------------------------------
+      Query builder
+    ---------------------------------------------------------- */
+
+    function build_hidden_inputs($args) {
+        $inputs = '';
+        foreach ($args as $key => $value) {
+            if (!in_array($key, $this->authorized_query_args)) {
+                continue;
+            }
+            $inputs .= '<input type="hidden" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" />';
+        }
+        return $inputs;
+    }
+
+    function build_url($base_url, $args) {
+        foreach ($args as $key => $value) {
+            if (!in_array($key, $this->authorized_query_args)) {
+                continue;
+            }
+            $base_url = add_query_arg(array($key => $value), $base_url);
+        }
+        return $base_url;
+    }
+
+    function build_query($args) {
+        $query = '';
+        if (!is_array($args)) {
+            return $query;
+        }
+        $where = array();
+
+        if (isset($args['select'])) {
+            $fields = '*';
+            if (is_array($args['select'])) {
+                $fields = implode(',', $args['select']);
+            }
+
+            $query .= "SELECT " . $fields . " FROM " . $this->tablename;
+        }
+
+        /* Search */
+        if (isset($args['where_text']) && $args['where_text']) {
+            $where_text = trim($args['where_text']);
+            $where_or = array();
+            foreach ($this->settings['table_fields'] as $id => $field) {
+                if ($id != 'id' && $id != 'creation') {
+                    $where_or[] = "$id LIKE '%" . esc_sql($where_text) . "%'";
+                }
+            }
+            $where[] = "(" . implode(' OR ', $where_or) . ")";
+        }
+
+        /* Filter */
+        if (isset($args['filter_key'], $args['filter_value'])) {
+            $where[] = esc_sql($args['filter_key']) . " = '" . esc_sql($args['filter_value']) . "'";
+        }
+
+        if ($where) {
+            $query .= ' WHERE ' . implode(' AND ', $where);
+        }
+
+        return trim($query);
     }
 
     /* ----------------------------------------------------------
