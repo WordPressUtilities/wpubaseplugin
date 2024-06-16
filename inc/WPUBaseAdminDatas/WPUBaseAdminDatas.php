@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_0_0;
+namespace wpubaseadmindatas_4_1_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.0.0
+Version: 4.1.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -23,6 +23,9 @@ class WPUBaseAdminDatas {
     public $pagename;
     public $tablename;
     public $user_level = 'edit_posts';
+    private $slash_replacement = '#!#slash#!#';
+    private $labels_placeholder = '##_!_##labelsnumber##_!_##';
+
     public $field_types = array(
         'text',
         'url',
@@ -447,6 +450,8 @@ class WPUBaseAdminDatas {
     ---------------------------------------------------------- */
 
     public function export_array_to_csv($array, $name) {
+        _deprecated_function('export_array_to_csv', '4.1.0');
+
         if (isset($array[0])) {
             header('Content-Type: application/csv');
             header('Content-Disposition: attachment; filename=export-list-' . sanitize_title($name) . '-' . date_i18n('y-m-d') . '.csv');
@@ -756,7 +761,7 @@ class WPUBaseAdminDatas {
         );
         $url_items = $url_items_clear;
         $url_items['pagenum'] = '%#%';
-        $url_items['where_text'] = $where_text;
+        $url_items['where_text'] = str_replace('\/', $this->slash_replacement, $where_text); # Avoid an agressive WP escaping
 
         /* Back query used in single page */
         $url_items_edit = $url_items;
@@ -782,6 +787,7 @@ class WPUBaseAdminDatas {
         }
         $pagination .= '</div>';
         if ($page_links) {
+            $page_links = str_replace($this->slash_replacement, '\/', $page_links);
             $pagination .= '<div class="tablenav-pages alignright actions bulkactions">' . $page_links . '</div>';
         }
         $pagination .= '<br class="clear" /></div>';
@@ -834,8 +840,10 @@ class WPUBaseAdminDatas {
                 $labels .= '<th></th>';
             }
             $labels .= '</tr>';
-            $content .= '<thead>' . sprintf($labels, 1) . '</thead>';
-            $content .= '<tfoot>' . sprintf($labels, 2) . '</tfoot>';
+
+            $labels = str_replace('%s', $this->labels_placeholder, $labels);
+            $content .= '<thead>' . str_replace($this->labels_placeholder, 1, $labels) . '</thead>';
+            $content .= '<tfoot>' . str_replace($this->labels_placeholder, 2, $labels) . '</tfoot>';
         }
         $content .= '<tbody id="the-list">';
         foreach ($values as $id => $vals) {
