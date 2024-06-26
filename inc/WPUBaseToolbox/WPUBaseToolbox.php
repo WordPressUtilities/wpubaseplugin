@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_14_0;
+namespace wpubasetoolbox_0_14_1;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.14.0
+Version: 0.14.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.14.0';
+    private $plugin_version = '0.14.1';
     private $args = array();
     private $default_module_args = array(
         'need_form_js' => true
@@ -72,7 +72,9 @@ class WPUBaseToolbox {
         $button_submit = '<button class="' . esc_attr($args['button_classname']) . '" type="submit"><span>' . $args['button_label'] . '</span></button>';
 
         /* Start form */
-        $html .= '<form class="' . esc_attr($args['form_classname']) . ' wpubasetoolbox-form" id="' . esc_attr($form_id) . '" ' . ($args['wizard_mode'] ? ' data-wizard="1"' : '') . ' action="" method="post" ' . $extra_post_attributes . '>';
+        if ($args['form_element']) {
+            $html .= '<form class="' . esc_attr($args['form_classname']) . ' wpubasetoolbox-form" id="' . esc_attr($form_id) . '" ' . ($args['wizard_mode'] ? ' data-wizard="1"' : '') . ' action="" method="post" ' . $extra_post_attributes . '>';
+        }
         $html .= $args['html_before_content'];
 
         $html_fieldset = '';
@@ -149,9 +151,11 @@ class WPUBaseToolbox {
         $html .= '</div>';
 
         $html .= $args['html_after_content'];
-        /* End form */
-        $html .= '</form>';
 
+        /* End form */
+        if ($args['form_element']) {
+            $html .= '</form>';
+        }
         return $html;
     }
 
@@ -172,6 +176,7 @@ class WPUBaseToolbox {
             ),
             'form_attributes' => '',
             'form_classname' => 'cssc-form',
+            'form_element' => true,
             'field_group_classname' => 'twoboxes',
             'field_box_classname' => 'box',
             'submit_box_classname' => 'box--submit',
