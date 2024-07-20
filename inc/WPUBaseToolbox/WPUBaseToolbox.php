@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_14_1;
+namespace wpubasetoolbox_0_15_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.14.1
+Version: 0.15.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,10 +15,12 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.14.1';
+    private $plugin_version = '0.15.0';
     private $args = array();
+    private $missing_plugins = array();
     private $default_module_args = array(
-        'need_form_js' => true
+        'need_form_js' => true,
+        'plugin_name' => 'WPU Base Toolbox'
     );
 
     public function __construct($args = array()) {
@@ -164,7 +166,7 @@ class WPUBaseToolbox {
 
     public function get_clean_form_args($form_id, $fields = array(), $args = array()) {
         $default_args = array(
-            'button_label' => __('Submit'),
+            'button_label' => __('Submit', __NAMESPACE__),
             'button_classname' => 'cssc-button',
             'fieldsets' => array(
                 'default' => array(
@@ -190,8 +192,8 @@ class WPUBaseToolbox {
             'wizard_steps' => false,
             'wizard_prev_button_class' => 'btn--prev',
             'wizard_next_button_class' => 'btn--next',
-            'wizard_prev_button_label' => __('Previous'),
-            'wizard_next_button_label' => __('Next')
+            'wizard_prev_button_label' => __('Previous', __NAMESPACE__),
+            'wizard_next_button_label' => __('Next', __NAMESPACE__)
         );
         $args = array_merge($default_args, $args);
 
@@ -571,6 +573,52 @@ class WPUBaseToolbox {
             return inet_ntop(substr($ip, 0, strlen($ip) / 2) . str_repeat(chr(0), strlen($ip) / 2));
         }
         return '0.0.0.0';
+    }
+
+    /* ----------------------------------------------------------
+      Dependencies
+    ---------------------------------------------------------- */
+
+    function check_plugins_dependencies($plugins = array()) {
+        if (!is_array($plugins) || !is_admin()) {
+            return;
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+        foreach ($plugins as $plugin) {
+
+            // Check if plugin is active
+            $has_plugin = is_plugin_active($plugin['path']) || is_plugin_active_for_network($plugin['path']);
+
+            /* Get active must-use plugins list */
+            $mu_plugins_path = array(
+                WPMU_PLUGIN_DIR,
+                WPMU_PLUGIN_DIR . '/wpu'
+            );
+            foreach ($mu_plugins_path as $mu_plugins_dir) {
+                if (is_dir($mu_plugins_dir) && file_exists($mu_plugins_dir . '/' . $plugin['path'])) {
+                    $has_plugin = true;
+                    break;
+                }
+            }
+
+            if (!$has_plugin) {
+                $this->missing_plugins[] = $plugin;
+            }
+        }
+
+        if (!empty($this->missing_plugins)) {
+            add_action('admin_notices', array(&$this,
+                'set_error_missing_plugins'
+            ));
+        }
+    }
+
+    public function set_error_missing_plugins() {
+        foreach ($this->missing_plugins as $plugin) {
+            echo '<div class="error"><p>' . sprintf(__('The plugin <b>%s</b> depends on the <b>%s</b> plugin. Please install and activate it.', __NAMESPACE__), $this->args['plugin_name'], $plugin['name']) . '</p></div>';
+        }
     }
 
 }
