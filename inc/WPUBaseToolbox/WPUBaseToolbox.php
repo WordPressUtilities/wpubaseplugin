@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_15_0;
+namespace wpubasetoolbox_0_16_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.15.0
+Version: 0.16.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.15.0';
+    private $plugin_version = '0.16.0';
     private $args = array();
     private $missing_plugins = array();
     private $default_module_args = array(
@@ -501,8 +501,8 @@ class WPUBaseToolbox {
     /* Array to JSON
     -------------------------- */
 
-    public function export_array_to_json($data, $name) {
-        if (!isset($data[0])) {
+    public function export_array_to_json($array, $name) {
+        if (!isset($array[0])) {
             return;
         }
         /* Correct headers */
@@ -510,30 +510,31 @@ class WPUBaseToolbox {
         header('Content-Disposition: attachment; filename=' . $name . '.json');
         header('Pragma: no-cache');
 
-        echo json_encode($data);
+        echo json_encode($array);
+        die;
     }
 
     /* Array to CSV
     -------------------------- */
 
-    public function export_array_to_csv($data, $name) {
-        if (!isset($data[0])) {
+    public function export_array_to_csv($array, $name) {
+        if (!isset($array[0])) {
             return;
         }
 
-        $data = $this->export_array_clean_for_csv($data);
+        $array = $this->export_array_clean_for_csv($array);
 
         /* Correct headers */
         header('Content-Type: application/csv');
         header('Content-Disposition: attachment; filename=' . $name . '.csv');
         header('Pragma: no-cache');
 
-        $all_keys = array_keys($data[0]);
+        $all_keys = array_keys($array[0]);
 
         /* Build and send CSV */
         $output = fopen("php://output", 'w');
         fputcsv($output, $all_keys);
-        foreach ($data as $item) {
+        foreach ($array as $item) {
             fputcsv($output, $item);
         }
         fclose($output);
@@ -588,18 +589,26 @@ class WPUBaseToolbox {
 
         foreach ($plugins as $plugin) {
 
-            // Check if plugin is active
-            $has_plugin = is_plugin_active($plugin['path']) || is_plugin_active_for_network($plugin['path']);
+            $plugin['path'] = is_array($plugin['path']) ? $plugin['path'] : array($plugin['path']);
 
-            /* Get active must-use plugins list */
-            $mu_plugins_path = array(
-                WPMU_PLUGIN_DIR,
-                WPMU_PLUGIN_DIR . '/wpu'
-            );
-            foreach ($mu_plugins_path as $mu_plugins_dir) {
-                if (is_dir($mu_plugins_dir) && file_exists($mu_plugins_dir . '/' . $plugin['path'])) {
+            // Check if plugin is active
+            $has_plugin = false;
+
+            foreach ($plugin['path'] as $plugin_path) {
+                if (is_plugin_active($plugin_path) || is_plugin_active_for_network($plugin_path)) {
                     $has_plugin = true;
-                    break;
+                }
+
+                /* Get active must-use plugins list */
+                $mu_plugins_path = array(
+                    WPMU_PLUGIN_DIR,
+                    WPMU_PLUGIN_DIR . '/wpu'
+                );
+                foreach ($mu_plugins_path as $mu_plugins_dir) {
+                    if (is_dir($mu_plugins_dir) && file_exists($mu_plugins_dir . '/' . $plugin_path)) {
+                        $has_plugin = true;
+                        break;
+                    }
                 }
             }
 
@@ -616,9 +625,30 @@ class WPUBaseToolbox {
     }
 
     public function set_error_missing_plugins() {
-        foreach ($this->missing_plugins as $plugin) {
-            echo '<div class="error"><p>' . sprintf(__('The plugin <b>%s</b> depends on the <b>%s</b> plugin. Please install and activate it.', __NAMESPACE__), $this->args['plugin_name'], $plugin['name']) . '</p></div>';
+
+        if (!$this->missing_plugins) {
+            return;
         }
+
+        echo '<div class="error">';
+        if (count($this->missing_plugins) > 1) {
+            echo '<p>' . sprintf(__('The plugin <b>%s</b> depends on the following plugins. Please install and activate them:', __NAMESPACE__), $this->args['plugin_name']) . '</p><ul>';
+            foreach ($this->missing_plugins as $plugin) {
+                echo '<li>- ' . $this->get_missing_plugin_display_name($plugin) . '</li>';
+            }
+            echo '</ul>';
+        } else {
+            echo '<p>' . sprintf(__('The plugin <b>%s</b> depends on the <b>%s</b> plugin. Please install and activate it.', __NAMESPACE__), $this->args['plugin_name'], $this->get_missing_plugin_display_name($this->missing_plugins[0])) . '</p>';
+        }
+        echo '</div>';
+    }
+
+    function get_missing_plugin_display_name($plugin) {
+        $name = $plugin['name'];
+        if (isset($plugin['url'])) {
+            $name = '<a target="_blank" rel="noopener" href="' . $plugin['url'] . '">' . $name . '</a>';
+        }
+        return $name;
     }
 
 }
