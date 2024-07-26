@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_16_0;
+namespace wpubasetoolbox_0_16_1;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.16.0
+Version: 0.16.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.16.0';
+    private $plugin_version = '0.16.1';
     private $args = array();
     private $missing_plugins = array();
     private $default_module_args = array(
@@ -34,7 +34,7 @@ class WPUBaseToolbox {
         ));
     }
 
-    function form_scripts() {
+    public function form_scripts() {
         if ($this->args['need_form_js']) {
             wp_enqueue_script(__NAMESPACE__ . '-wpubasetoolbox-form-validation', plugins_url('assets/form-validation.js', __FILE__), array(), $this->plugin_version);
         }
@@ -363,7 +363,7 @@ class WPUBaseToolbox {
     /* Validate form
     -------------------------- */
 
-    function validate_form($source, $form_id, $fields = array(), $args = array()) {
+    public function validate_form($source, $form_id, $fields = array(), $args = array()) {
         if (!is_array($source) || empty($source) || empty($fields)) {
             return false;
         }
@@ -401,7 +401,7 @@ class WPUBaseToolbox {
       HTML Helpers
     ---------------------------------------------------------- */
 
-    function array_to_html_attributes($attributes = array()) {
+    public function array_to_html_attributes($attributes = array()) {
         if (!is_array($attributes)) {
             return '';
         }
@@ -414,7 +414,7 @@ class WPUBaseToolbox {
         return trim($html);
     }
 
-    function array_to_html_table($array, $args = array()) {
+    public function array_to_html_table($array, $args = array()) {
 
         /* Ensure array is ok */
         if (empty($array) || !is_array($array)) {
@@ -469,13 +469,36 @@ class WPUBaseToolbox {
     }
 
     /* ----------------------------------------------------------
+      Helpers
+    ---------------------------------------------------------- */
+
+    /**
+     * Insert a value or key/value pair after a specific key in an array.  If key doesn't exist, value is appended
+     * to the end of the array.
+     * Thanks to  https://gist.github.com/wpscholar/0deadce1bbfa4adb4e4c
+     *
+     * @param array $array
+     * @param string $key
+     * @param array $new
+     *
+     * @return array
+     */
+    public function array_insert_after($array, $key, $new) {
+        $keys = array_keys($array);
+        $index = array_search($key, $keys);
+        $pos = false === $index ? count($array) : $index + 1;
+
+        return array_merge(array_slice($array, 0, $pos), $new, array_slice($array, $pos));
+    }
+
+    /* ----------------------------------------------------------
       Export
     ---------------------------------------------------------- */
 
     /* Ensure all lines have the same keys
     -------------------------- */
 
-    function export_array_clean_for_csv($data) {
+    public function export_array_clean_for_csv($data) {
 
         /* Extract all available keys */
         $all_keys = array();
@@ -546,7 +569,7 @@ class WPUBaseToolbox {
     ---------------------------------------------------------- */
 
     /* Thanks to https://stackoverflow.com/a/13646735/975337 */
-    function get_user_ip($anonymized = true) {
+    public function get_user_ip($anonymized = true) {
         if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
             $_SERVER['REMOTE_ADDR'] = $_SERVER["HTTP_CF_CONNECTING_IP"];
             $_SERVER['HTTP_CLIENT_IP'] = $_SERVER["HTTP_CF_CONNECTING_IP"];
@@ -569,7 +592,7 @@ class WPUBaseToolbox {
     }
 
     /* Thanks to https://gist.github.com/svrnm/3a124d2af18a6726f66e */
-    function anonymize_ip($ip) {
+    public function anonymize_ip($ip) {
         if ($ip = @inet_pton($ip)) {
             return inet_ntop(substr($ip, 0, strlen($ip) / 2) . str_repeat(chr(0), strlen($ip) / 2));
         }
@@ -580,8 +603,8 @@ class WPUBaseToolbox {
       Dependencies
     ---------------------------------------------------------- */
 
-    function check_plugins_dependencies($plugins = array()) {
-        if (!is_array($plugins) || !is_admin()) {
+    public function check_plugins_dependencies($plugins = array()) {
+        if (!is_array($plugins) || !is_admin() || !current_user_can('activate_plugins')) {
             return;
         }
 
@@ -643,12 +666,11 @@ class WPUBaseToolbox {
         echo '</div>';
     }
 
-    function get_missing_plugin_display_name($plugin) {
+    public function get_missing_plugin_display_name($plugin) {
         $name = $plugin['name'];
         if (isset($plugin['url'])) {
             $name = '<a target="_blank" rel="noopener" href="' . $plugin['url'] . '">' . $name . '</a>';
         }
         return $name;
     }
-
 }
