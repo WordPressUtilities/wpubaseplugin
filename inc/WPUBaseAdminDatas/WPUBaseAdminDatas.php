@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_1_0;
+namespace wpubaseadmindatas_4_2_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.1.0
+Version: 4.2.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -450,7 +450,7 @@ class WPUBaseAdminDatas {
     ---------------------------------------------------------- */
 
     public function export_array_to_csv($array, $name) {
-        _deprecated_function('export_array_to_csv', '4.1.0');
+        _deprecated_function('export_array_to_csv', '4.2.0');
 
         if (isset($array[0])) {
             header('Content-Type: application/csv');
@@ -779,19 +779,21 @@ class WPUBaseAdminDatas {
 
         $start_element = max(0, ($args['pagenum'] - 1) * $args['perpage'] + 1);
         $end_element = min($args['pagenum'] * $args['perpage'], $args['max_elements']);
-        $pagination = '<div style="margin:1em 0" class="tablenav">';
-        $pagination .= '<div class="alignleft">';
-        $pagination .= sprintf(__('Items %s - %s', $this->settings['plugin_id']), $start_element, $end_element);
-        if ($total_nb) {
-            $pagination .= ' / ' . $total_nb;
-        }
-        $pagination .= '</div>';
-        if ($page_links) {
-            $page_links = str_replace($this->slash_replacement, '\/', $page_links);
-            $pagination .= '<div class="tablenav-pages alignright actions bulkactions">' . $page_links . '</div>';
-        }
-        $pagination .= '<br class="clear" /></div>';
+        if ($args['max_elements']) {
+            $pagination = '<div style="margin:1em 0" class="tablenav">';
+            $pagination .= '<div class="alignleft">';
+            $pagination .= sprintf(__('Items %s - %s', $this->settings['plugin_id']), $start_element, $end_element);
+            if ($total_nb) {
+                $pagination .= ' / ' . $total_nb;
+            }
+            $pagination .= '</div>';
 
+            if ($page_links) {
+                $page_links = str_replace($this->slash_replacement, '\/', $page_links);
+                $pagination .= '<div class="tablenav-pages alignright actions bulkactions">' . $page_links . '</div>';
+            }
+            $pagination .= '<br class="clear" /></div>';
+        }
         $clear_form = '';
         if ($has_filter_key) {
             $clear_form .= '<p class="admindatas-search-filter">';
@@ -893,7 +895,7 @@ class WPUBaseAdminDatas {
         $content .= $search_form;
         $content .= $pagination;
 
-        if ($args['has_export']) {
+        if ($args['has_export'] && $args['max_elements']) {
             $content .= '<a href="' . admin_url($export_url_base) . '">' . __('Export all', $this->settings['plugin_id']) . '</a>';
             if (!empty($query_args)) {
                 $content .= ' <a href="' . $this->build_url(admin_url($export_url_base), $query_args) . '">' . __('Export filtered view', $this->settings['plugin_id']) . '</a>';
