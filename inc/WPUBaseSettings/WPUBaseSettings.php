@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_21_0;
+namespace wpubasesettings_0_22_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.21.0
+Version: 0.22.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -486,6 +486,9 @@ EOT;
     public function admin_footer_medias() {
         echo <<<EOT
 <script>
+(function(){
+{$this->admin_footer_js_check_correct_page()}
+
 /* Delete image */
 jQuery('.wpubasesettings-mediabox .x').click(function(e) {
     var \$this = jQuery(this),
@@ -520,8 +523,14 @@ jQuery('.wpubasesettings-mediabox .button').click(function(e) {
 
     e.preventDefault();
 });
-
+}());
 </script>
+EOT;
+    }
+
+    public function admin_footer_js_check_correct_page() {
+        return <<<EOT
+if(!jQuery('[name="option_page"][value="{$this->settings_details['option_id']}"]').length){return;}
 EOT;
     }
 
@@ -532,6 +541,7 @@ EOT;
         echo <<<EOT
 <script>
 (function(){
+{$this->admin_footer_js_check_correct_page()}
 /* Check langs */
 var _langs = {$languages};
 if(!_langs){
@@ -583,6 +593,7 @@ EOT;
         echo <<<EOT
 <script>
 jQuery(document).ready(function() {
+    {$this->admin_footer_js_check_correct_page()}
     jQuery(".wpubasesettings-check-all").each(function() {
         var _btn = jQuery(this),
             _table = _btn.prev(".form-table"),
