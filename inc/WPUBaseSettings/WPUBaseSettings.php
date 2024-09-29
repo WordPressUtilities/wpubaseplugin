@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_22_0;
+namespace wpubasesettings_0_23_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.22.0
+Version: 0.23.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -198,17 +198,22 @@ class WPUBaseSettings {
             if (!current_user_can($section['user_cap'])) {
                 continue;
             }
+            if (!isset($section['before_section'])) {
+                $section['before_section'] = '';
+            }
             if (!isset($section['after_section'])) {
                 $section['after_section'] = '';
             }
             if (isset($section['wpubasesettings_checkall']) && $section['wpubasesettings_checkall']) {
                 $check_label = __('Check all', __NAMESPACE__);
-                $section['after_section'] .= '<button class="wpubasesettings-check-all" data-check-label="' . $check_label . '" data-uncheck-label="' . __('Uncheck all', __NAMESPACE__) . '">' . $check_label . '</button>';
+                $section['after_section'] .= '<button class="wpubasesettings-check-all" type="button" data-check-label="' . $check_label . '" data-uncheck-label="' . __('Uncheck all', __NAMESPACE__) . '">' . $check_label . '</button>';
                 if (!$has_check_all) {
                     $has_check_all = true;
                     add_action('admin_footer', array(&$this, 'admin_footer_checkall'));
                 }
             }
+            $section['before_section'] = '<div class="wpubasesettings-form-table-section">' . $section['before_section'];
+            $section['after_section'] =  $section['after_section'] . '</div>';
             add_settings_section(
                 $id,
                 $section['name'],
@@ -435,6 +440,7 @@ class WPUBaseSettings {
     /* Media */
     public function load_assets() {
         add_action('admin_footer', array(&$this, 'admin_footer'));
+        add_action('admin_head', array(&$this, 'admin_head'));
 
         if (!$this->has_media_setting) {
             return;
@@ -442,7 +448,6 @@ class WPUBaseSettings {
 
         add_action('admin_print_scripts', array(&$this, 'admin_scripts'));
         add_action('admin_print_styles', array(&$this, 'admin_styles'));
-        add_action('admin_head', array(&$this, 'admin_head'));
         add_action('admin_footer', array(&$this, 'admin_footer_medias'));
     }
 
@@ -478,6 +483,34 @@ class WPUBaseSettings {
     line-height: 1;
     color: #000;
     background-color: #fff;
+}
+
+.wpubasesettings-form-table-section h2 {
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+.wpubasesettings-form-table-section h2:after {
+    content: '▼';
+    display: inline-block;
+    padding-left: 0.3em;
+    text-align: center;
+    cursor: pointer;
+}
+
+.wpubasesettings-form-table-section:not(.is-open) h2:after {
+    content: '▶';
+}
+
+.wpubasesettings-form-table-section:not(.is-open) >*:not(h2) {
+    visibility: hidden;
+    z-index: 1;
+    position: absolute;
+    top: -99vh;
+    left: -99vw;
+    pointer-events: none;
 }
 </style>
 EOT;
@@ -554,6 +587,16 @@ if(!jQinput.length){
     return;
 }
 var jQform = jQinput.closest('form');
+
+/* Add toggles on titles */
+jQform.find('h2').each(function(i,el){
+    var jQel = jQuery(el),
+        jQWrap = jQel.closest('.wpubasesettings-form-table-section');
+    jQWrap.addClass('is-open');
+    jQel.on('click',function(){
+        jQWrap.toggleClass('is-open');
+    });
+});
 
 /* Add lang on TR */
 jQform.find('[data-wpulang]').each(function(i,el){

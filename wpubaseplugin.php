@@ -5,7 +5,7 @@ Plugin Name: WPU Base Plugin
 Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
 Update URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 3.6.0
+Version: 3.7.0
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpubaseplugin
@@ -20,7 +20,7 @@ defined('ABSPATH') || die;
 
 class WPUBasePlugin {
 
-    public $version = '3.6.0';
+    public $version = '3.7.0';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -36,7 +36,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseAdminPage'
         ),
         'settings' => array(
-            'namespace' => 'wpubasesettings_0_22_0',
+            'namespace' => 'wpubasesettings_0_23_0',
             'name' => 'WPUBaseSettings'
         ),
         'cron' => array(
@@ -199,12 +199,35 @@ class WPUBasePlugin {
             'sections' => array(
                 'settings' => array(
                     'name' => __('Base Settings', 'wpubaseplugin')
-                )
+                ),
+                'checkboxes' => array(
+                    'wpubasesettings_checkall' => true,
+                    'name' => __('Checkboxes', 'wpubaseplugin')
+                ),
             )
         );
         $settings = array(
             'test_field' => array(
                 'label' => __('Test field', 'wpubaseplugin'),
+                'section' => 'settings',
+                'lang' => 1
+            ),
+            'test_textarea' => array(
+                'label' => __('Test textarea', 'wpubaseplugin'),
+                'help' => 'Help text',
+                'type' => 'textarea'
+            ),
+            'checkbox_field' => array(
+                'label' => __('Checkbox field', 'wpubaseplugin'),
+                'label_check' => __('A longer label near the checkbox', 'wpubaseplugin'),
+                'section' => 'checkboxes',
+                'type' => 'checkbox',
+                'lang' => 1
+            ),
+            'checkbox_field2' => array(
+                'label' => __('Checkbox field', 'wpubaseplugin'),
+                'section' => 'checkboxes',
+                'type' => 'checkbox',
                 'lang' => 1
             )
         );
