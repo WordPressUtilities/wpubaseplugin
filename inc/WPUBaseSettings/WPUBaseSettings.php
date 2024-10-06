@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_23_0;
+namespace wpubasesettings_0_24_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.23.0
+Version: 0.24.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -393,13 +393,18 @@ class WPUBaseSettings {
             break;
         case 'post':
         case 'page':
-            $code_dropdown = wp_dropdown_pages(array(
+            $page_dropdown_args = array(
                 'echo' => false,
                 'name' => $name_val,
                 'id' => $args['id'],
                 'selected' => $value,
                 'post_type' => isset($args['post_type']) ? $args['post_type'] : $args['type']
-            ));
+            );
+
+            if (isset($args['lang_id']) && $args['lang_id'] && function_exists('pll_get_post')) {
+                $page_dropdown_args['lang'] = $args['lang_id'];
+            }
+            $code_dropdown = wp_dropdown_pages($page_dropdown_args);
             echo str_replace('<select ', '<select ' . $attr, $code_dropdown);
             break;
         case 'select':
