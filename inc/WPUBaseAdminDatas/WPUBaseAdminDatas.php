@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_3_0;
+namespace wpubaseadmindatas_4_4_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.3.0
+Version: 4.4.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -175,8 +175,14 @@ class WPUBaseAdminDatas {
         $sql_query .= " (\n" . implode(",\n", $fields_query) . "\n)";
         $sql_query .= " DEFAULT CHARSET=utf8;";
 
+        $table_fields = array();
+        foreach ($table_fields as $id => $field) {
+            $field['public_name'] = '';
+            $table_fields[$id] = $field;
+        }
+
         // If query has changed since last time
-        $sql_md5 = md5(serialize($this->settings['table_fields']));
+        $sql_md5 = md5(serialize($table_fields));
         $sql_option_value = get_option($this->sql_option_name);
         if ($sql_md5 != $sql_option_value) {
             // Update or create table
@@ -185,7 +191,7 @@ class WPUBaseAdminDatas {
             // Create table
             maybe_create_table($this->tablename, $sql_query);
 
-            foreach ($this->settings['table_fields'] as $column_name => $col) {
+            foreach ($table_fields as $column_name => $col) {
                 switch ($col['type']) {
                 case 'varchar':
                     $col_sql = 'varchar(100) DEFAULT NULL';
@@ -456,7 +462,7 @@ class WPUBaseAdminDatas {
     ---------------------------------------------------------- */
 
     public function export_array_to_csv($array, $name) {
-        _deprecated_function('export_array_to_csv', '4.3.0');
+        _deprecated_function('export_array_to_csv', '4.4.0');
 
         if (isset($array[0])) {
             header('Content-Type: application/csv');
@@ -490,7 +496,7 @@ class WPUBaseAdminDatas {
         $this->export_datas();
     }
 
-    /* Thanks to https://stackoverflow.com/a/554.3.04 */
+    /* Thanks to https://stackoverflow.com/a/554.4.04 */
     public function export_datas() {
         global $wpdb;
 
