@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_4_0;
+namespace wpubaseadmindatas_4_5_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.4.0
+Version: 4.5.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -176,7 +176,7 @@ class WPUBaseAdminDatas {
         $sql_query .= " DEFAULT CHARSET=utf8;";
 
         $table_fields = array();
-        foreach ($table_fields as $id => $field) {
+        foreach ($this->settings['table_fields'] as $id => $field) {
             $field['public_name'] = '';
             $table_fields[$id] = $field;
         }
@@ -462,7 +462,7 @@ class WPUBaseAdminDatas {
     ---------------------------------------------------------- */
 
     public function export_array_to_csv($array, $name) {
-        _deprecated_function('export_array_to_csv', '4.4.0');
+        _deprecated_function('export_array_to_csv', '4.5.0');
 
         if (isset($array[0])) {
             header('Content-Type: application/csv');
@@ -496,7 +496,7 @@ class WPUBaseAdminDatas {
         $this->export_datas();
     }
 
-    /* Thanks to https://stackoverflow.com/a/554.4.04 */
+    /* Thanks to https://stackoverflow.com/a/55482704 */
     public function export_datas() {
         global $wpdb;
 
