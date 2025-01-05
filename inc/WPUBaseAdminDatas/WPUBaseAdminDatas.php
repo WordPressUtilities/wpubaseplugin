@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_5_0;
+namespace wpubaseadmindatas_4_6_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.5.0
+Version: 4.6.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -120,6 +120,10 @@ class WPUBaseAdminDatas {
             $settings['user_level'] = $this->user_level;
         }
 
+        if (!isset($settings['id_type'])) {
+            $settings['id_type'] = 'mediumint unsigned';
+        }
+
         if (!isset($settings['handle_database'])) {
             $settings['handle_database'] = true;
         }
@@ -164,7 +168,7 @@ class WPUBaseAdminDatas {
 
         // Assemble fields
         $fields_query = array(
-            'id mediumint(8) unsigned NOT NULL auto_increment',
+            'id ' . $this->settings['id_type'] . ' NOT NULL auto_increment',
             'creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP',
             'PRIMARY KEY (id)'
         );
@@ -182,7 +186,7 @@ class WPUBaseAdminDatas {
         }
 
         // If query has changed since last time
-        $sql_md5 = md5(serialize($table_fields));
+        $sql_md5 = md5($sql_query . 'erazaa' . serialize($table_fields));
         $sql_option_value = get_option($this->sql_option_name);
         if ($sql_md5 != $sql_option_value) {
             // Update or create table
@@ -190,6 +194,14 @@ class WPUBaseAdminDatas {
 
             // Create table
             maybe_create_table($this->tablename, $sql_query);
+
+            $columns = $wpdb->get_results("DESC " . $this->tablename);
+            foreach ($columns as $column) {
+                if ($column->Field != 'id' && $column->Type == $this->settings['id_type']) {
+                    continue;
+                }
+                $wpdb->query("ALTER TABLE " . $this->tablename . " MODIFY COLUMN id " . $this->settings['id_type'] . " NOT NULL AUTO_INCREMENT");
+            }
 
             foreach ($table_fields as $column_name => $col) {
                 switch ($col['type']) {
@@ -462,7 +474,7 @@ class WPUBaseAdminDatas {
     ---------------------------------------------------------- */
 
     public function export_array_to_csv($array, $name) {
-        _deprecated_function('export_array_to_csv', '4.5.0');
+        _deprecated_function('export_array_to_csv', '4.6.0');
 
         if (isset($array[0])) {
             header('Content-Type: application/csv');
