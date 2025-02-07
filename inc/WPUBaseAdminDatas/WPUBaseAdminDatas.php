@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_6_0;
+namespace wpubaseadmindatas_4_7_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.6.0
+Version: 4.7.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -474,7 +474,7 @@ class WPUBaseAdminDatas {
     ---------------------------------------------------------- */
 
     public function export_array_to_csv($array, $name) {
-        _deprecated_function('export_array_to_csv', '4.6.0');
+        _deprecated_function('export_array_to_csv', '4.7.0');
 
         if (isset($array[0])) {
             header('Content-Type: application/csv');
@@ -1007,6 +1007,30 @@ HTML;
         }
 
         return trim($query);
+    }
+
+    function create_or_edit($datas, $args = array()) {
+        if (!is_array($args)) {
+            $args = array();
+        }
+        $args = array_merge(array(
+            'uniqid' => false,
+            'uniqid_field' => 'id',
+            'value_type' => '%s',
+            'extra_datas_updated' => array(),
+            'extra_datas_created' => array()
+        ), $args);
+
+        $line = $this->get_line_by($args['uniqid_field'], $args['uniqid'], $args['value_type']);
+
+        $line_id = ($line && is_array($line) && isset($line['id'])) ? $line['id'] : false;
+        if ($line_id) {
+            $datas = array_merge($datas, $args['extra_datas_updated']);
+            $this->edit_line($line_id, $datas);
+        } else {
+            $datas = array_merge($datas, $args['extra_datas_created']);
+            $this->create_line($datas);
+        }
     }
 
     /* ----------------------------------------------------------
