@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_16_2;
+namespace wpubasefields_0_17_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.16.2
+Version: 0.17.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -34,6 +34,8 @@ class WPUBaseFields {
         'file',
         'text',
         'email',
+        'date',
+        'datetime',
         'number',
         'url'
     );
@@ -302,8 +304,14 @@ class WPUBaseFields {
             case 'color':
             case 'number':
             case 'email':
+            case 'date':
+            case 'datetime':
             case 'url':
-                $field_html .= '<input ' . $id_name . ' type="' . esc_attr($field['type']) . '" value="' . esc_attr($displayed_value) . '" />';
+                $field_type = $field['type'];
+                if ($field['type'] == 'datetime') {
+                    $field_type = 'datetime-local';
+                }
+                $field_html .= '<input ' . $id_name . ' type="' . esc_attr($field_type) . '" value="' . esc_attr($displayed_value) . '" />';
             }
 
             $field_html .= '<input class="wpubasefield-input-control" type="hidden" name="' . $field_name . '__control"  value="1" />';
@@ -417,6 +425,16 @@ class WPUBaseFields {
             break;
         case 'email':
             if (filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
+                return false;
+            }
+            break;
+        case 'date':
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                return false;
+            }
+            break;
+        case 'datetime':
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $value)) {
                 return false;
             }
             break;
