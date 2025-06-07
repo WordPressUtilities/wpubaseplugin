@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_17_0;
+namespace wpubasefields_0_18_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.17.0
+Version: 0.18.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -126,6 +126,9 @@ class WPUBaseFields {
             if (!isset($field['required'])) {
                 $field['required'] = false;
             }
+            if (!isset($field['readonly'])) {
+                $field['readonly'] = false;
+            }
             if (!isset($field['help'])) {
                 $field['help'] = false;
             }
@@ -192,6 +195,9 @@ class WPUBaseFields {
             $id_name = ' name="' . $field_name . '" id="' . $field_name . '" ';
             if ($field['required']) {
                 $id_name .= ' required';
+            }
+            if ($field['readonly']) {
+                $id_name .= ' readonly';
             }
             if ($field['placeholder'] && $field['type'] != 'select') {
                 $id_name .= ' placeholder="' . esc_attr($field['placeholder']) . '"';
@@ -388,6 +394,10 @@ class WPUBaseFields {
 
                 /* No control value : field will not be touched */
                 if (!isset($_POST['wpubasefields_' . $field_id . '__control'])) {
+                    continue;
+                }
+
+                if ($field['readonly']) {
                     continue;
                 }
 
