@@ -25,8 +25,11 @@ document.addEventListener("DOMContentLoaded", function() {
                     if (!$input.checked) {
                         _visible = false;
                     }
-                }
-                else {
+                } else if (_data[_key] == 'notchecked') {
+                    if ($input.checked) {
+                        _visible = false;
+                    }
+                } else {
                     if (_data[_key] != $input.value) {
                         _visible = false;
                     }
@@ -71,8 +74,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     locked = true;
                     wp.data.dispatch('core/editor').lockPostSaving('wpubasefields');
                 }
-            }
-            else if (locked) {
+            } else if (locked) {
                 locked = false;
                 wp.data.dispatch('core/editor').unlockPostSaving('wpubasefields');
             }
