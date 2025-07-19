@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_7_0;
+namespace wpubaseadmindatas_4_8_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.7.0
+Version: 4.8.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -100,7 +100,11 @@ class WPUBaseAdminDatas {
         // Build query
         foreach ($settings['table_fields'] as $id => $field) {
             if (!isset($field['public_name'])) {
-                $settings['table_fields'][$id]['public_name'] = $id;
+                $_name = $id;
+                if (isset($field['label'])) {
+                    $_name = $field['label'];
+                }
+                $settings['table_fields'][$id]['public_name'] = $_name;
             }
             if (!isset($field['type'])) {
                 $settings['table_fields'][$id]['type'] = isset($field['type']) ? $field['type'] : 'varchar';
@@ -210,6 +214,9 @@ class WPUBaseAdminDatas {
                     break;
                 case 'number':
                     $col_sql = 'MEDIUMINT UNSIGNED';
+                    break;
+                case 'date':
+                    $col_sql = 'DATE';
                     break;
                 case 'timestamp':
                     $col_sql = 'TIMESTAMP';
@@ -397,6 +404,10 @@ class WPUBaseAdminDatas {
         switch ($field['field_type']) {
         case 'email':
             return !!filter_var($value, FILTER_VALIDATE_EMAIL);
+            break;
+
+        case 'date':
+            return !!\DateTime::createFromFormat('Y-m-d', $value);
             break;
 
         case 'url':
@@ -879,7 +890,8 @@ class WPUBaseAdminDatas {
                 $content .= '<th scope="row" class="check-column" class="column-cb check-column"><input type="checkbox" name="select_line[' . $vals->id . ']" value="' . $vals->id . '" /></th>';
             }
             foreach ($vals as $cell_id => $val) {
-                $val = (empty($val) ? '&nbsp;' : $val);
+                $val = (empty($val) ? "\xC2\xA0" : $val);
+                $val = htmlspecialchars($val, ENT_QUOTES, "UTF-8");
                 $content .= '<td data-colname="' . esc_attr($args['columns'][$cell_id]['label']) . '" class="' . ($cell_id == $args['primary_column'] ? 'column-primary' : '') . '">';
                 $cell_content = apply_filters('wpubaseadmindatas_cellcontent', $val, $cell_id, $this->settings);
 
