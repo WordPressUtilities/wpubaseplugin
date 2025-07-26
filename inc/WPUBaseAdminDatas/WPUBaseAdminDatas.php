@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_8_0;
+namespace wpubaseadmindatas_4_9_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.8.0
+Version: 4.9.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -200,6 +200,9 @@ class WPUBaseAdminDatas {
             maybe_create_table($this->tablename, $sql_query);
 
             $columns = $wpdb->get_results("DESC " . $this->tablename);
+            $columns_keys = array_map(function ($col) {
+                return $col->Field;
+            }, $columns);
             foreach ($columns as $column) {
                 if ($column->Field != 'id' && $column->Type == $this->settings['id_type']) {
                     continue;
@@ -225,7 +228,12 @@ class WPUBaseAdminDatas {
                     $col_sql = $col['sql'];
                 }
 
-                maybe_add_column($this->tablename, $column_name, 'ALTER TABLE ' . $this->tablename . ' ADD ' . $column_name . ' ' . $col_sql);
+                if (in_array($column_name, $columns_keys)) {
+                    $wpdb->query("ALTER TABLE " . $this->tablename . " MODIFY COLUMN " . $column_name . " " . $col_sql);
+                } else {
+                    maybe_add_column($this->tablename, $column_name, 'ALTER TABLE ' . $this->tablename . ' ADD ' . $column_name . ' ' . $col_sql);
+                }
+
             }
 
             // Update option hash
