@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_10_0;
+namespace wpubaseadmindatas_4_11_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.10.0
+Version: 4.11.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -655,7 +655,7 @@ class WPUBaseAdminDatas {
                     $_posts = get_posts(array(
                         'post_type' => isset($field['post_type']) ? $field['post_type'] : 'post',
                         'numberposts' => -1,
-                        'post_status' => isset($field['post_status']) ? $field['post_status'] : 'any',
+                        'post_status' => 'any',
                         'orderby' => 'title',
                         'order' => 'ASC'
                     ));
@@ -1082,6 +1082,9 @@ HTML;
         $page_id = '';
         if (property_exists($screen, 'parent_base')) {
             $page_id = $screen->parent_base;
+        }
+        if (isset($_GET['page']) && !empty($_GET['page'])) {
+            $page_id = sanitize_text_field($_GET['page']);
         }
         return $page_id;
     }
