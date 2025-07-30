@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_9_0;
+namespace wpubaseadmindatas_4_10_0;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.9.0
+Version: 4.10.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -32,6 +32,7 @@ class WPUBaseAdminDatas {
         'textarea',
         'date',
         'number',
+        'post',
         'true_false',
         'email'
     );
@@ -422,6 +423,9 @@ class WPUBaseAdminDatas {
             return !!filter_var($value, FILTER_VALIDATE_URL);
             break;
 
+        case 'post':
+            return !!get_post($value);
+
         case 'number':
             return is_numeric($value);
             break;
@@ -646,6 +650,22 @@ class WPUBaseAdminDatas {
                 switch ($field['field_type']) {
                 case 'textarea':
                     $_html .= '<textarea ' . $field['field_attributes'] . ' rows="5" cols="30" id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']">' . $value . '</textarea>';
+                    break;
+                case 'post':
+                    $_posts = get_posts(array(
+                        'post_type' => isset($field['post_type']) ? $field['post_type'] : 'post',
+                        'numberposts' => -1,
+                        'post_status' => isset($field['post_status']) ? $field['post_status'] : 'any',
+                        'orderby' => 'title',
+                        'order' => 'ASC'
+                    ));
+                    $_html .= '<select ' . $field['field_attributes'] . ' id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']">';
+                    $_html .= '<option value="">' . __('Select a post', $this->settings['plugin_id']) . '</option>';
+
+                    foreach ($_posts as $_post) {
+                        $_html .= '<option value="' . esc_attr($_post->ID) . '"' . selected($value, $_post->ID, false) . '>' . esc_html($_post->post_title) . '</option>';
+                    }
+                    $_html .= '</select>';
                     break;
                 case 'true_false':
                     $_html .= '<label><input ' . $field['field_attributes'] . ' type="radio" id="' . $_fieldId . '" name="admindatas_fields[' . $id . ']" ' . ($value != '1' ? 'checked' : '') . ' value="0" />' . __('No') . '</label>';
