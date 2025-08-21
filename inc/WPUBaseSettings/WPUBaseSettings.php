@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_24_1;
+namespace wpubasesettings_0_24_2;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.24.1
+Version: 0.24.2
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -57,7 +57,7 @@ class WPUBaseSettings {
             add_action('admin_menu', array(&$this,
                 'admin_menu'
             ));
-            $this->admin_url = admin_url($this->settings_details['parent_page_url'] . '?page=' . $this->settings_details['plugin_id']);
+            $this->admin_url = add_query_arg('page', $this->settings_details['plugin_id'], admin_url($this->settings_details['parent_page_url']));
             if (isset($settings_details['plugin_basename'])) {
                 add_filter("plugin_action_links_" . $settings_details['plugin_basename'], array(&$this, 'plugin_add_settings_link'));
             }
@@ -122,6 +122,9 @@ class WPUBaseSettings {
         }
         if (!isset($settings_details['plugin_name'])) {
             $settings_details['plugin_name'] = $settings_details['plugin_id'];
+        }
+        if (!isset($settings_details['menu_name'])) {
+            $settings_details['menu_name'] = $settings_details['plugin_name'];
         }
         if (!isset($settings_details['show_in_rest'])) {
             $settings_details['show_in_rest'] = false;
@@ -213,7 +216,7 @@ class WPUBaseSettings {
                 }
             }
             $section['before_section'] = '<div class="wpubasesettings-form-table-section">' . $section['before_section'];
-            $section['after_section'] =  $section['after_section'] . '</div>';
+            $section['after_section'] = $section['after_section'] . '</div>';
             add_settings_section(
                 $id,
                 $section['name'],
@@ -672,7 +675,7 @@ EOT;
     /* Base settings */
 
     public function admin_menu() {
-        $this->hook_page = add_submenu_page($this->settings_details['parent_page'], $this->settings_details['plugin_name'] . ' - ' . __('Settings'), $this->settings_details['plugin_name'], $this->settings_details['user_cap'], $this->settings_details['plugin_id'], array(&$this,
+        $this->hook_page = add_submenu_page($this->settings_details['parent_page'], $this->settings_details['plugin_name'] . ' - ' . __('Settings'), $this->settings_details['menu_name'], $this->settings_details['user_cap'], $this->settings_details['plugin_id'], array(&$this,
             'admin_settings'
         ), 110);
         add_action('load-' . $this->hook_page, array(&$this, 'load_assets'));
