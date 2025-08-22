@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_24_2;
+namespace wpubasesettings_0_24_3;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.24.2
+Version: 0.24.3
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -746,14 +746,14 @@ EOT;
         }
 
         // Obtaining from Polylang
-        global $polylang;
-        if (function_exists('pll_the_languages') && is_object($polylang)) {
-            $poly_langs = $polylang->model->get_languages_list();
-            $languages = array();
-            foreach ($poly_langs as $lang) {
-                $languages[$lang->slug] = $lang->slug;
-            }
-            return $languages;
+        if (function_exists('pll_languages_list')) {
+            $keys = pll_languages_list(array(
+                'fields' => 'slug'
+            ));
+            $names = pll_languages_list(array(
+                'fields' => 'name'
+            ));
+            return array_combine($keys, $names);
         }
 
         // Obtaining from WPML
