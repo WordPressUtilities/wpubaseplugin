@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_24_3;
+namespace wpubasesettings_0_24_4;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.24.3
+Version: 0.24.4
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -579,6 +579,7 @@ EOT;
     public function admin_footer() {
         $option_id = $this->settings_details['option_id'];
         $languages = json_encode($this->get_languages());
+        $current_language = $this->get_current_language();
         $label_txt = __('Language');
         echo <<<EOT
 <script>
@@ -613,7 +614,10 @@ jQform.find('[data-wpulang]').each(function(i,el){
     jQel.closest('tr').attr('data-wpulangtr', jQel.attr('data-wpulang'));
 });
 var jQTr = jQform.find('[data-wpulangtr]'),
-    _firstLang = Object.keys(_langs)[0];
+    _current_lang = '{$current_language}';
+if(!_current_lang) {
+    _current_lang = Object.keys(_langs)[0];
+}
 if(!jQTr.length){
     return;
 }
@@ -621,7 +625,7 @@ if(!jQTr.length){
 /* Build switch */
 var select_html='';
 for(var _l in _langs){
-    select_html+='<option value="'+_l+'">'+_langs[_l]+'</option>';
+    select_html+='<option '+(_l == _current_lang ? 'selected="selected"' : '')+' value="'+_l+'">'+_langs[_l]+'</option>';
 }
 var jQSelect = jQuery('<label><strong>{$label_txt}</strong> : <select>'+select_html+'</select></label>');
 jQSelect.prependTo(jQform);
@@ -631,7 +635,7 @@ function show_lang(_lang_id){
     jQTr.hide();
     jQTr.filter('[data-wpulangtr="'+_lang_id+'"]').show();
 }
-show_lang(_firstLang);
+show_lang(_current_lang);
 jQSelect.on('change', 'select',function(){
     show_lang(jQuery(this).val());
 });
