@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_11_0;
+namespace wpubaseadmindatas_4_11_1;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.11.0
+Version: 4.11.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -884,7 +884,7 @@ class WPUBaseAdminDatas {
         $content .= '<input type="hidden" name="action" value="admindatas_' . $this->settings['plugin_id'] . '">';
         $content .= '<input type="hidden" name="page" value="' . esc_attr($page_id) . '" />';
         $content .= wp_nonce_field('action-main-form-' . $page_id, 'action-main-form-admin-datas-' . $page_id, true, false);
-        if ($has_id && $is_admin_view && $this->settings['can_create']) {
+        if ($is_admin_view && $this->settings['can_create']) {
             $new_url = add_query_arg(array('backquery' => $_back_query), $this->pagename . '&create=1');
             $content .= '<p><a class="page-title-action" href="' . $new_url . '">' . __('New Post', $this->settings['plugin_id']) . '</a></p>';
         }
