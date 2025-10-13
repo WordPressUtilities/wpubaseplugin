@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_11_1;
+namespace wpubaseadmindatas_4_11_2;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.11.1
+Version: 4.11.2
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -170,6 +170,9 @@ class WPUBaseAdminDatas {
             return;
         }
         global $wpdb;
+        if (!$wpdb || !$wpdb->ready) {
+            return;
+        }
 
         // Assemble fields
         $fields_query = array(
