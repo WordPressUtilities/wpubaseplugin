@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_24_5;
+namespace wpubasesettings_0_24_6;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.24.5
+Version: 0.24.6
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -204,6 +204,9 @@ class WPUBaseSettings {
             if (!isset($section['before_section'])) {
                 $section['before_section'] = '';
             }
+            if (!isset($section['is_open'])) {
+                $section['is_open'] = true;
+            }
             if (!isset($section['after_section'])) {
                 $section['after_section'] = '';
             }
@@ -215,7 +218,7 @@ class WPUBaseSettings {
                     add_action('admin_footer', array(&$this, 'admin_footer_checkall'));
                 }
             }
-            $section['before_section'] = '<div class="wpubasesettings-form-table-section">' . $section['before_section'];
+            $section['before_section'] = '<div class="wpubasesettings-form-table-section ' . ($section['is_open'] ? '' : 'is-closed') . '">' . $section['before_section'];
             $section['after_section'] = $section['after_section'] . '</div>';
             add_settings_section(
                 $id,
@@ -606,7 +609,12 @@ var jQform = jQinput.closest('form');
 jQform.find('h2').each(function(i,el){
     var jQel = jQuery(el),
         jQWrap = jQel.closest('.wpubasesettings-form-table-section');
-    jQWrap.addClass('is-open');
+    if(jQWrap.hasClass('is-closed')){
+        jQWrap.removeClass('is-closed');
+    }
+    else {
+        jQWrap.addClass('is-open');
+    }
     jQel.on('click',function(){
         jQWrap.toggleClass('is-open');
     });
