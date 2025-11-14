@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_19_0;
+namespace wpubasefields_0_20_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.19.0
+Version: 0.20.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -16,7 +16,7 @@ defined('ABSPATH') || die;
 
 class WPUBaseFields {
     private $script_id;
-    private $version = '0.16.1';
+    private $version = '0.20.0';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -69,7 +69,8 @@ class WPUBaseFields {
 
         $default_field_group = array(
             'label' => 'Default',
-            'post_type' => 'post'
+            'post_type' => 'post',
+            'capability' => 'edit_posts'
         );
 
         /* Groups */
@@ -77,19 +78,43 @@ class WPUBaseFields {
             $field_groups = array();
         }
         foreach ($field_groups as $group_id => $group) {
-            if (!isset($group['post_type'])) {
-                $group['post_type'] = 'post';
+            if (!is_array($group)) {
+                $group = array();
             }
             if (!isset($group['label'])) {
                 $group['label'] = $group_id;
             }
-            if (!isset($group['capability'])) {
-                $group['capability'] = 'edit_posts';
-            }
+            $group = array_merge($default_field_group, $group);
+
             $this->field_groups[$group_id] = $group;
         }
 
         $need_default_group = false;
+
+        /* Extract fields with subfields */
+        foreach ($fields as $field_id => $field) {
+            if (!is_array($field) || !isset($field['sub_fields']) || !is_array($field['sub_fields'])) {
+                continue;
+            }
+            $first_subfield_key = array_key_first($field['sub_fields']);
+            $last_subfield_key = array_key_last($field['sub_fields']);
+            foreach ($field['sub_fields'] as $subfield_id => $subfield) {
+                if (!is_array($subfield)) {
+                    $subfield = array();
+                }
+                if (!isset($subfield['group']) && isset($field['group'])) {
+                    $subfield['group'] = $field['group'];
+                }
+                if ($subfield_id == $first_subfield_key) {
+                    $subfield['_html_before'] = '<li data-group="' . esc_attr($field_id) . '" class="wpubasefield-input wpubasefield-input--group"><ul>';
+                }
+                if ($subfield_id == $last_subfield_key) {
+                    $subfield['_html_after'] = '</ul></li>';
+                }
+                $fields[$field_id . '__' . $subfield_id] = $subfield;
+            }
+            unset($fields[$field_id]);
+        }
 
         /* Fields */
         foreach ($fields as $field_id => $field) {
@@ -104,36 +129,25 @@ class WPUBaseFields {
                 $need_default_group = true;
                 $field['group'] = 'default';
             }
-            /* Check label */
-            if (!isset($field['label'])) {
-                $field['label'] = $field_id;
-            }
+
+            $field = array_merge(array(
+                'label' => $field_id,
+                'column_start' => false,
+                'column_end' => false,
+                'required' => false,
+                'readonly' => false,
+                'help' => false,
+                'preview_format' => 'thumbnail'
+            ), $field);
+
             if (!isset($field['type']) || !in_array($field['type'], $this->supported_types)) {
                 $field['type'] = 'text';
-            }
-            if (!isset($field['column_start'])) {
-                $field['column_start'] = false;
             }
             if (!isset($field['post_type'])) {
                 $field['post_type'] = $field['type'] == 'page' ? array('page') : array('post');
             }
             if (!is_array($field['post_type'])) {
                 $field['post_type'] = array($field['post_type']);
-            }
-            if (!isset($field['column_end'])) {
-                $field['column_end'] = false;
-            }
-            if (!isset($field['required'])) {
-                $field['required'] = false;
-            }
-            if (!isset($field['readonly'])) {
-                $field['readonly'] = false;
-            }
-            if (!isset($field['help'])) {
-                $field['help'] = false;
-            }
-            if (!isset($field['preview_format'])) {
-                $field['preview_format'] = 'thumbnail';
             }
             if (!isset($field['placeholder'])) {
                 $field['placeholder'] = $field['type'] == 'select' ? __('Select a value', 'wpubasefields') : '';
@@ -327,6 +341,9 @@ class WPUBaseFields {
             $field_html .= '<small class="wpubasefield-msg-invalid">' . __('This field is invalid', 'wpubasefields') . '</small>';
 
             if ($field_html) {
+                if (isset($field['_html_before'])) {
+                    $html_content .= $field['_html_before'];
+                }
                 if ($field['column_start']) {
                     $html_content .= '<li class="wpubasefield-input wpubasefield-input--columns"><ul>';
                 }
@@ -350,6 +367,9 @@ class WPUBaseFields {
                 $html_content .= '>' . $field_html . '</li>';
                 if ($field['column_end']) {
                     $html_content .= '</ul></li>';
+                }
+                if (isset($field['_html_after'])) {
+                    $html_content .= $field['_html_after'];
                 }
             }
         }

@@ -6,7 +6,6 @@ Add Custom fields to your plugin.
 ## Insert in the plugins_loaded hook
 
 ```php
-include 'inc/WPUBaseFields.php';
 $fields = array(
     'demo' => array(
         'group' => 'group_1',
@@ -37,5 +36,6 @@ $field_groups = array(
         'label' => 'Group 2'
     )
 );
+require_once __DIR__ . '/inc/WPUBaseFields/WPUBaseFields.php';
 $this->basefields = new \wpubaseplugin\WPUBaseFields($fields, $field_groups);
 ```
