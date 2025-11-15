@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_20_0;
+namespace wpubasefields_0_21_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.20.0
+Version: 0.21.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -16,7 +16,7 @@ defined('ABSPATH') || die;
 
 class WPUBaseFields {
     private $script_id;
-    private $version = '0.20.0';
+    private $version = '0.21.0';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -206,15 +206,27 @@ class WPUBaseFields {
 
             $displayed_value = is_array($value) ? serialize($value) : $value;
             $field_name = 'wpubasefields_' . $field_id;
-            $id_name = ' name="' . $field_name . '" id="' . $field_name . '" ';
+
+            $item_attributes = array(
+                'name' => $field_name,
+                'id' => $field_name
+            );
             if ($field['required']) {
-                $id_name .= ' required';
+                $item_attributes['required'] = 'required';
             }
             if ($field['readonly']) {
-                $id_name .= ' readonly';
+                $item_attributes['readonly'] = 'readonly';
             }
             if ($field['placeholder'] && $field['type'] != 'select') {
-                $id_name .= ' placeholder="' . esc_attr($field['placeholder']) . '"';
+                $item_attributes['placeholder'] = $field['placeholder'];
+            }
+            if (isset($field['extra_attributes']) && is_array($field['extra_attributes'])) {
+                $item_attributes = array_merge($item_attributes, $field['extra_attributes']);
+            }
+
+            $id_name = '';
+            foreach ($item_attributes as $key => $var) {
+                $id_name .= ' ' . $key . '="' . esc_attr($var) . '"';
             }
 
             /* Build field HTML */
@@ -400,18 +412,16 @@ class WPUBaseFields {
         foreach ($this->field_groups as $group_id => $group) {
             $nnce = 'wpubasefields_group_' . $group_id;
             if (!isset($_POST[$nnce . '_meta_box_nonce']) || !wp_verify_nonce($_POST[$nnce . '_meta_box_nonce'], $nnce . '_nonce')) {
-                return;
+                continue;
             }
 
             if (!current_user_can($group['capability'])) {
                 continue;
             }
-
             foreach ($this->fields as $field_id => $field) {
                 if ($field['group'] != $group_id) {
                     continue;
                 }
-
                 /* No control value : field will not be touched */
                 if (!isset($_POST['wpubasefields_' . $field_id . '__control'])) {
                     continue;
@@ -427,7 +437,6 @@ class WPUBaseFields {
                 }
 
                 $posted_value = $this->check_field_value($value, $field);
-
                 if ($posted_value !== false) {
                     update_post_meta($post_id, $field_id, $posted_value);
                 }
