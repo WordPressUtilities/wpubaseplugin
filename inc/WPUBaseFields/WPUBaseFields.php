@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_21_0;
+namespace wpubasefields_0_21_1;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.21.0
+Version: 0.21.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -16,7 +16,7 @@ defined('ABSPATH') || die;
 
 class WPUBaseFields {
     private $script_id;
-    private $version = '0.21.0';
+    private $version = '0.21.1';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -106,7 +106,21 @@ class WPUBaseFields {
                     $subfield['group'] = $field['group'];
                 }
                 if ($subfield_id == $first_subfield_key) {
-                    $subfield['_html_before'] = '<li data-group="' . esc_attr($field_id) . '" class="wpubasefield-input wpubasefield-input--group"><ul>';
+
+                    $parent_attributes = array(
+                        'id' => 'wpubasefields_' . $field_id,
+                        'data-group' => $field_id,
+                        'class' => 'wpubasefield-input wpubasefield-input--group'
+                    );
+                    if (isset($field['toggle-display'])) {
+                        $parent_attributes['data-toggle-display'] = json_encode($field['toggle-display']);
+                    }
+                    $html_attrs = '';
+                    foreach ($parent_attributes as $key => $var) {
+                        $html_attrs .= ' ' . $key . '="' . esc_attr($var) . '"';
+                    }
+
+                    $subfield['_html_before'] = '<li' . $html_attrs . '><ul>';
                 }
                 if ($subfield_id == $last_subfield_key) {
                     $subfield['_html_after'] = '</ul></li>';
