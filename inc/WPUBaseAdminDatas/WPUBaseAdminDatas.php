@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_11_2;
+namespace wpubaseadmindatas_4_11_3;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.11.2
+Version: 4.11.3
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -406,6 +406,7 @@ class WPUBaseAdminDatas {
                 array('ID' => $item_id)
             );
         }
+        return $item_id;
     }
 
     /* ----------------------------------------------------------
@@ -1069,10 +1070,10 @@ HTML;
         $line_id = ($line && is_array($line) && isset($line['id'])) ? $line['id'] : false;
         if ($line_id) {
             $datas = array_merge($datas, $args['extra_datas_updated']);
-            $this->edit_line($line_id, $datas);
+            return $this->edit_line($line_id, $datas);
         } else {
             $datas = array_merge($datas, $args['extra_datas_created']);
-            $this->create_line($datas);
+            return $this->create_line($datas);
         }
     }
 
