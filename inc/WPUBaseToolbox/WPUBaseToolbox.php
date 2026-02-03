@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_20_0;
+namespace wpubasetoolbox_0_21_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.20.0
+Version: 0.21.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.20.0';
+    private $plugin_version = '0.21.0';
     private $args = array();
     private $missing_plugins = array();
     private $default_module_args = array(
@@ -583,6 +583,7 @@ class WPUBaseToolbox {
             $args = array();
         }
         $args = array_merge(array(
+            'add_keys' => true,
             'separator' => ',',
             'enclosure' => '"'
         ), $args);
@@ -594,7 +595,9 @@ class WPUBaseToolbox {
         /* Build and send CSV */
         ob_start();
         $output = fopen("php://output", 'w');
-        fputcsv($output, $all_keys, $args['separator'], $args['enclosure']);
+        if ($args['add_keys']) {
+            fputcsv($output, $all_keys, $args['separator'], $args['enclosure']);
+        }
         foreach ($array as $item) {
             fputcsv($output, $item, $args['separator'], $args['enclosure']);
         }
@@ -730,6 +733,69 @@ class WPUBaseToolbox {
         header('Content-Type: text/html; charset=' . get_bloginfo('charset'));
         get_template_part('404');
         die;
+    }
+
+    /* ----------------------------------------------------------
+      Widgets
+    ---------------------------------------------------------- */
+
+    public function admin_widget_build_table($lines, $args = array()) {
+
+        if (!is_array($args)) {
+            $args = array();
+        }
+
+        $args = array_merge(array(
+            'columns' => array(),
+            'esc_html_columns' => true,
+            'esc_html_line_values' => true,
+            'empty_message' => __('No data available.', __NAMESPACE__)
+        ), $args);
+
+        if (!is_array($lines) || empty($lines)) {
+            return '<p>' . $args['empty_message'] . '</p>';
+        }
+
+        $html = '';
+        $html .= '<div style="max-height:400px;overflow:auto"><table class="widefat striped">';
+        if (isset($args['columns']) && is_array($args['columns'])) {
+            $html .= '<thead><tr>';
+            foreach ($args['columns'] as $col_name) {
+                $col_name_display = $args['esc_html_columns'] ? esc_html($col_name) : $col_name;
+                $html .= '<th>' . $col_name_display . '</th>';
+            }
+            $html .= '</tr></thead>';
+        }
+        $html .= '<tbody>';
+        foreach ($lines as $line) {
+            $html .= '<tr>';
+            foreach ($line as $line_value) {
+                $line_value_display = $args['esc_html_line_values'] ? esc_html($line_value) : $line_value;
+                $html .= '<td>' . $line_value_display . '</td>';
+            }
+            $html .= '</tr>';
+        }
+        $html .= '</tbody>';
+        $html .= '</table></div>';
+
+        return $html;
+    }
+
+    /* ----------------------------------------------------------
+      URLs
+    ---------------------------------------------------------- */
+
+    public function unparse_url($parsed_url) {
+        $scheme = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
+        $host = isset($parsed_url['host']) ? $parsed_url['host'] : '';
+        $port = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
+        $user = isset($parsed_url['user']) ? $parsed_url['user'] : '';
+        $pass = isset($parsed_url['pass']) ? ':' . $parsed_url['pass'] : '';
+        $pass = ($user || $pass) ? "$pass@" : '';
+        $path = isset($parsed_url['path']) ? $parsed_url['path'] : '';
+        $query = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
+        $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : '';
+        return "$scheme$user$pass$host$port$path$query$fragment";
     }
 
 }
