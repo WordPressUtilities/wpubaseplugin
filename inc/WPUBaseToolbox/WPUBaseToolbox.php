@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_21_0;
+namespace wpubasetoolbox_0_22_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.21.0
+Version: 0.22.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.21.0';
+    private $plugin_version = '0.22.0';
     private $args = array();
     private $missing_plugins = array();
     private $default_module_args = array(
@@ -796,6 +796,52 @@ class WPUBaseToolbox {
         $query = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
         $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : '';
         return "$scheme$user$pass$host$port$path$query$fragment";
+    }
+
+    /* ----------------------------------------------------------
+      User roles
+    ---------------------------------------------------------- */
+
+    function create_custom_user_role($capacities = array(), $args = array()) {
+        if (!get_site_url()) {
+            return;
+        }
+
+        if (!is_array($args) || !is_array($capacities)) {
+            error_log('WPUBaseToolbox::create_custom_user_role: $capacities and $args should be arrays');
+            return;
+        }
+
+        if (!isset($args['role_opt'], $args['role_id'], $args['role_name'])) {
+            error_log('WPUBaseToolbox::create_custom_user_role: Missing required arguments (role_opt, role_id, role_name)');
+            return;
+        }
+
+        $args = array_merge(array(
+            'base_role' => 'editor'
+        ), $args);
+
+        /* Start on a role */
+        $base_role = get_role($args['base_role']);
+        $role_details = $base_role->capabilities;
+
+        /* Add new capacities */
+        foreach ($capacities as $cap => $granted) {
+            $role_details[$cap] = $granted;
+        }
+
+        $role_details = apply_filters($args['role_opt'] . '__roles', $role_details);
+        $role_version = md5($args['role_id'] . $args['role_name'] . json_encode($role_details));
+
+        /* Update role only if it doesn’t exist */
+        if (get_option($args['role_opt']) != $role_version) {
+            if (get_role($args['role_id'])) {
+                remove_role($args['role_id']);
+            }
+            add_role($args['role_id'], $args['role_name'], $role_details);
+            update_option($args['role_opt'], $role_version);
+        }
+
     }
 
 }
