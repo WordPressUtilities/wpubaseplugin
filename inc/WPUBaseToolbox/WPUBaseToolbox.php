@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_22_0;
+namespace wpubasetoolbox_0_22_1;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.22.0
+Version: 0.22.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.22.0';
+    private $plugin_version = '0.22.1';
     private $args = array();
     private $missing_plugins = array();
     private $default_module_args = array(
@@ -831,7 +831,7 @@ class WPUBaseToolbox {
         }
 
         $role_details = apply_filters($args['role_opt'] . '__roles', $role_details);
-        $role_version = md5($args['role_id'] . $args['role_name'] . json_encode($role_details));
+        $role_version = md5($args['role_id'] . json_encode($role_details));
 
         /* Update role only if it doesn’t exist */
         if (get_option($args['role_opt']) != $role_version) {
