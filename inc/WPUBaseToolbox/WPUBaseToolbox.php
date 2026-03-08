@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_22_1;
+namespace wpubasetoolbox_0_22_2;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.22.1
+Version: 0.22.2
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.22.1';
+    private $plugin_version = '0.22.2';
     private $args = array();
     private $missing_plugins = array();
     private $default_module_args = array(
@@ -438,14 +438,20 @@ class WPUBaseToolbox {
         /* HEAD */
         $html .= '<thead><tr>';
         foreach ($array[0] as $key => $value) {
+            $attributes = array();
             $label = $key;
             if (isset($args['colnames'][$key])) {
-                $label = $args['colnames'][$key];
+                if (!is_array($args['colnames'][$key])) {
+                    $label = $args['colnames'][$key];
+                } else {
+                    $label = isset($args['colnames'][$key]['label']) ? $args['colnames'][$key]['label'] : $key;
+                    $attributes = isset($args['colnames'][$key]['attributes']) ? $args['colnames'][$key]['attributes'] : array();
+                }
             }
             if ($args['htmlspecialchars_th']) {
                 $label = htmlspecialchars($label);
             }
-            $html .= '<th>' . $label . '</th>';
+            $html .= '<th ' . $this->array_to_html_attributes($attributes) . '>' . $label . '</th>';
         }
         $html .= '</tr></thead>';
 
