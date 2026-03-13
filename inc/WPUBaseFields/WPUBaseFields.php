@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_21_1;
+namespace wpubasefields_0_22_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.21.1
+Version: 0.22.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -16,7 +16,7 @@ defined('ABSPATH') || die;
 
 class WPUBaseFields {
     private $script_id;
-    private $version = '0.21.1';
+    private $version = '0.22.0';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -44,7 +44,7 @@ class WPUBaseFields {
         $this->init($fields, $field_groups);
     }
 
-    function init($fields = array(), $field_groups = array()) {
+    private function init($fields = array(), $field_groups = array()) {
         if (empty($fields)) {
             return;
         }
@@ -60,12 +60,26 @@ class WPUBaseFields {
         /* Display box */
         add_action('save_post', array(&$this, 'save_post'));
 
+        /* Term meta */
+        foreach ($this->field_groups as $group) {
+            if (empty($group['taxonomy'])) {
+                continue;
+            }
+            $taxonomies = is_array($group['taxonomy']) ? $group['taxonomy'] : array($group['taxonomy']);
+            foreach ($taxonomies as $taxonomy) {
+                add_action($taxonomy . '_add_form_fields', array(&$this, 'display_term_add_fields'));
+                add_action($taxonomy . '_edit_form_fields', array(&$this, 'display_term_edit_fields'));
+                add_action('created_' . $taxonomy, array(&$this, 'save_term'));
+                add_action('edited_' . $taxonomy, array(&$this, 'save_term'));
+            }
+        }
+
         /* Basic CSS */
         add_action('admin_enqueue_scripts', array(&$this, 'admin_enqueue_scripts'));
 
     }
 
-    function build_fields($fields = array(), $field_groups = array()) {
+    private function build_fields($fields = array(), $field_groups = array()) {
 
         $default_field_group = array(
             'label' => 'Default',
@@ -179,8 +193,11 @@ class WPUBaseFields {
 
     }
 
-    function display_boxes() {
+    public function display_boxes() {
         foreach ($this->field_groups as $group_id => $group) {
+            if (empty($group['post_type'])) {
+                continue;
+            }
             if (!current_user_can($group['capability'])) {
                 continue;
             }
@@ -188,10 +205,19 @@ class WPUBaseFields {
         }
     }
 
-    function display_box_content($post, $args) {
+    public function display_box_content($post, $args) {
+        $html_content = $this->get_fields_html($post->ID, $args['args']['group_id'], 'post');
+        if (empty($html_content)) {
+            return;
+        }
+        wp_nonce_field($args['id'] . '_nonce', $args['id'] . '_meta_box_nonce');
+        echo '<ul class="wpubasefield-list">' . $html_content . '</ul>';
+    }
+
+    private function get_fields_html($object_id, $group_id, $meta_type = 'post') {
         $html_content = '';
         foreach ($this->fields as $field_id => $field) {
-            if ($field['group'] != $args['args']['group_id']) {
+            if ($field['group'] != $group_id) {
                 continue;
             }
 
@@ -207,10 +233,17 @@ class WPUBaseFields {
                 asort($field['data']);
             }
 
-            /* Shared settings */
-            $value = get_post_meta($post->ID, $field_id, 1);
+            /* Get value based on meta type */
+            if ($meta_type === 'term' && $object_id) {
+                $value = get_term_meta($object_id, $field_id, true);
+            } elseif ($meta_type === 'term') {
+                $value = '';
+            } else {
+                $value = get_post_meta($object_id, $field_id, 1);
+            }
+
             if (isset($field['default_value'])) {
-                if (is_null($value)) {
+                if (is_null($value) || $value === '') {
                     $value = $field['default_value'];
                 }
                 if (isset($field['data']) && in_array($field['type'], array('radio', 'select', 'checkboxes')) && !isset($field['data'][$value])) {
@@ -399,18 +432,10 @@ class WPUBaseFields {
                 }
             }
         }
-
-        if (empty($html_content)) {
-            return;
-        }
-
-        /* Display box content */
-        wp_nonce_field($args['id'] . '_nonce', $args['id'] . '_meta_box_nonce');
-        echo '<ul class="wpubasefield-list">' . $html_content . '</ul>';
-
+        return $html_content;
     }
 
-    function save_post($post_id) {
+    public function save_post($post_id) {
         if (!$post_id) {
             return;
         }
@@ -424,6 +449,9 @@ class WPUBaseFields {
         }
 
         foreach ($this->field_groups as $group_id => $group) {
+            if (!empty($group['taxonomy'])) {
+                continue;
+            }
             $nnce = 'wpubasefields_group_' . $group_id;
             if (!isset($_POST[$nnce . '_meta_box_nonce']) || !wp_verify_nonce($_POST[$nnce . '_meta_box_nonce'], $nnce . '_nonce')) {
                 continue;
@@ -453,6 +481,103 @@ class WPUBaseFields {
                 $posted_value = $this->check_field_value($value, $field);
                 if ($posted_value !== false) {
                     update_post_meta($post_id, $field_id, $posted_value);
+                }
+            }
+        }
+    }
+
+    /* ----------------------------------------------------------
+      Term meta
+    ---------------------------------------------------------- */
+
+    public function display_term_add_fields($taxonomy) {
+        foreach ($this->field_groups as $group_id => $group) {
+            if (empty($group['taxonomy'])) {
+                continue;
+            }
+            $taxonomies = is_array($group['taxonomy']) ? $group['taxonomy'] : array($group['taxonomy']);
+            if (!in_array($taxonomy, $taxonomies)) {
+                continue;
+            }
+            if (!current_user_can($group['capability'])) {
+                continue;
+            }
+            $html = $this->get_fields_html(0, $group_id, 'term');
+            if (!$html) {
+                continue;
+            }
+            $nonce_id = 'wpubasefields_group_' . $group_id;
+            echo '<div class="form-field wpubasefields-term-group">';
+            wp_nonce_field($nonce_id . '_nonce', $nonce_id . '_meta_box_nonce');
+            echo '<ul class="wpubasefield-list">' . $html . '</ul>';
+            echo '</div>';
+        }
+    }
+
+    public function display_term_edit_fields($term) {
+        foreach ($this->field_groups as $group_id => $group) {
+            if (empty($group['taxonomy'])) {
+                continue;
+            }
+            $taxonomies = is_array($group['taxonomy']) ? $group['taxonomy'] : array($group['taxonomy']);
+            if (!in_array($term->taxonomy, $taxonomies)) {
+                continue;
+            }
+            if (!current_user_can($group['capability'])) {
+                continue;
+            }
+            $html = $this->get_fields_html($term->term_id, $group_id, 'term');
+            if (!$html) {
+                continue;
+            }
+            $nonce_id = 'wpubasefields_group_' . $group_id;
+            echo '<tr class="form-field wpubasefields-term-group"><td colspan="2">';
+            wp_nonce_field($nonce_id . '_nonce', $nonce_id . '_meta_box_nonce');
+            echo '<ul class="wpubasefield-list">' . $html . '</ul>';
+            echo '</td></tr>';
+        }
+    }
+
+    public function save_term($term_id) {
+        if (!$term_id) {
+            return;
+        }
+        $term = get_term($term_id);
+        if (!$term || is_wp_error($term)) {
+            return;
+        }
+        foreach ($this->field_groups as $group_id => $group) {
+            if (empty($group['taxonomy'])) {
+                continue;
+            }
+            $taxonomies = is_array($group['taxonomy']) ? $group['taxonomy'] : array($group['taxonomy']);
+            if (!in_array($term->taxonomy, $taxonomies)) {
+                continue;
+            }
+            $nnce = 'wpubasefields_group_' . $group_id;
+            if (!isset($_POST[$nnce . '_meta_box_nonce']) || !wp_verify_nonce($_POST[$nnce . '_meta_box_nonce'], $nnce . '_nonce')) {
+                continue;
+            }
+            if (!current_user_can($group['capability'])) {
+                continue;
+            }
+            foreach ($this->fields as $field_id => $field) {
+                if ($field['group'] != $group_id) {
+                    continue;
+                }
+                if (!isset($_POST['wpubasefields_' . $field_id . '__control'])) {
+                    continue;
+                }
+                if ($field['readonly']) {
+                    continue;
+                }
+                $value = ($field['type'] == 'checkbox') ? '0' : '';
+                if (isset($_POST['wpubasefields_' . $field_id])) {
+                    $value = ($field['type'] == 'checkbox') ? '1' : $_POST['wpubasefields_' . $field_id];
+                }
+                $posted_value = $this->check_field_value($value, $field);
+                if ($posted_value !== false) {
+                    update_term_meta($term_id, $field_id, $posted_value);
                 }
             }
         }
@@ -525,21 +650,41 @@ class WPUBaseFields {
       Admin
     ---------------------------------------------------------- */
 
-    function admin_enqueue_scripts() {
+    public function admin_enqueue_scripts() {
         $screen = get_current_screen();
         if (!$screen) {
             return;
         }
-        if ($screen->base != 'post') {
-            return;
-        }
         $need_display_assets = false;
-        foreach ($this->field_groups as $group) {
-            if (!current_user_can($group['capability'])) {
-                continue;
+
+        /* Post screens */
+        if ($screen->base == 'post') {
+            foreach ($this->field_groups as $group) {
+                if (!empty($group['taxonomy'])) {
+                    continue;
+                }
+                if (!current_user_can($group['capability'])) {
+                    continue;
+                }
+                if ($group['post_type'] == $screen->post_type || is_array($group['post_type']) && in_array($screen->post_type, $group['post_type'])) {
+                    $need_display_assets = true;
+                }
             }
-            if ($group['post_type'] == $screen->post_type || is_array($group['post_type']) && in_array($screen->post_type, $group['post_type'])) {
-                $need_display_assets = true;
+        }
+
+        /* Term screens (add & edit) */
+        if (in_array($screen->base, array('edit-tags', 'term'))) {
+            foreach ($this->field_groups as $group) {
+                if (empty($group['taxonomy'])) {
+                    continue;
+                }
+                if (!current_user_can($group['capability'])) {
+                    continue;
+                }
+                $taxonomies = is_array($group['taxonomy']) ? $group['taxonomy'] : array($group['taxonomy']);
+                if (in_array($screen->taxonomy, $taxonomies)) {
+                    $need_display_assets = true;
+                }
             }
         }
 
