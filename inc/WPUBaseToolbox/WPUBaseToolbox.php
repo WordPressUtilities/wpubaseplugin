@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_22_2;
+namespace wpubasetoolbox_0_23_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.22.2
+Version: 0.23.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,11 +15,12 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.22.2';
+    private $plugin_version = '0.23.0';
     private $args = array();
     private $missing_plugins = array();
     private $default_module_args = array(
         'need_form_js' => true,
+        'need_table_js' => false,
         'plugin_name' => 'WPU Base Toolbox'
     );
 
@@ -28,10 +29,18 @@ class WPUBaseToolbox {
             $args = array();
         }
         $this->args = array_merge($this->default_module_args, $args);
-
+        add_action('admin_enqueue_scripts', array(&$this,
+            'table_scripts'
+        ));
         add_action('wp_enqueue_scripts', array(&$this,
             'form_scripts'
         ));
+    }
+
+    public function table_scripts(){
+        if ($this->args['need_table_js']) {
+            wp_enqueue_script(__NAMESPACE__ . '-wpubasetoolbox-table-sort', plugins_url('assets/table-sort.js', __FILE__), array(), $this->plugin_version);
+        }
     }
 
     public function form_scripts() {
