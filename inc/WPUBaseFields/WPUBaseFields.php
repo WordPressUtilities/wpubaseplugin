@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_22_0;
+namespace wpubasefields_0_23_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.22.0
+Version: 0.23.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -16,7 +16,7 @@ defined('ABSPATH') || die;
 
 class WPUBaseFields {
     private $script_id;
-    private $version = '0.22.0';
+    private $version = '0.23.0';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -37,7 +37,8 @@ class WPUBaseFields {
         'date',
         'datetime',
         'number',
-        'url'
+        'url',
+        'wp_link'
     );
 
     function __construct($fields = array(), $field_groups = array()) {
@@ -379,6 +380,32 @@ class WPUBaseFields {
                 $field_html .= '<small><a class="wpubasefields-file-wrap__remove" href="#" role="button">' . esc_html($label_remove) . '</a></small>';
                 $field_html .= '</div>';
                 break;
+            case 'wp_link':
+                $label_link = __('Select a link', 'wpubasefields');
+                $label_remove = __('Remove link', 'wpubasefields');
+                $link_data = array('url' => '', 'title' => '', 'target' => '');
+                if ($value) {
+                    $decoded = is_array($value) ? $value : json_decode($value, true);
+                    if (is_array($decoded)) {
+                        $link_data = array_merge($link_data, $decoded);
+                    }
+                }
+                $has_preview = !empty($link_data['url']) ? '1' : '0';
+                $field_html .= '<div class="wpubasefields-link-wrap__main" data-haspreview="' . $has_preview . '">';
+                $field_html .= '<span class="wpubasefields-link-wrap__preview">';
+                $field_html .= '<span class="dashicons dashicons-admin-links"></span>';
+                $field_html .= '<span class="wpubasefields-link-wrap__details">';
+                $field_html .= '<span class="wpubasefields-link-wrap__title">' . esc_html($link_data['title']) . '</span>';
+                $field_html .= '<span class="wpubasefields-link-wrap__url">' . esc_html($link_data['url']) . '</span>';
+                $field_html .= '</span>';
+                $field_html .= '</span>';
+                $field_html .= '<input ' . $id_name . ' type="hidden" value="' . esc_attr(json_encode($link_data)) . '" />';
+                $field_html .= '<span class="wpubasefields-link-wrap__buttons">';
+                $field_html .= '<button type="button" class="wpubasefields_select_link button" title="' . esc_attr($label_link) . '">' . esc_html($label_link) . '</button>';
+                $field_html .= '<small><a class="wpubasefields-link-wrap__remove" href="#" role="button">' . esc_html($label_remove) . '</a></small>';
+                $field_html .= '</span>';
+                $field_html .= '</div>';
+                break;
             case 'text':
             case 'color':
             case 'number':
@@ -633,6 +660,17 @@ class WPUBaseFields {
                 return false;
             }
             break;
+        case 'wp_link':
+            $decoded = json_decode(wp_unslash($value), true);
+            if (!is_array($decoded)) {
+                return json_encode(array('url' => '', 'title' => '', 'target' => ''));
+            }
+            $value = json_encode(array(
+                'url' => isset($decoded['url']) ? esc_url_raw($decoded['url']) : '',
+                'title' => isset($decoded['title']) ? sanitize_text_field($decoded['title']) : '',
+                'target' => isset($decoded['target']) && $decoded['target'] === '_blank' ? '_blank' : ''
+            ));
+            break;
         case 'checkbox':
             if ($value != '0' && $value != '1') {
                 return false;
@@ -694,7 +732,9 @@ class WPUBaseFields {
 
         /* JS */
         wp_enqueue_media();
-        wp_enqueue_script($this->script_id, plugins_url('assets/admin.js', __FILE__), array('jquery'), $this->version);
+        wp_enqueue_editor();
+        wp_enqueue_script('wplink');
+        wp_enqueue_script($this->script_id, plugins_url('assets/admin.js', __FILE__), array('jquery', 'wplink'), $this->version);
 
         /* CSS */
         wp_enqueue_style($this->script_id, plugins_url('assets/admin.css', __FILE__), array(), $this->version, false);

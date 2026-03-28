@@ -104,6 +104,90 @@ document.addEventListener("DOMContentLoaded", function() {
     /* Select
     -------------------------- */
 
+    /* ----------------------------------------------------------
+      WP Link modal
+    ---------------------------------------------------------- */
+
+    var _wpubasefields_active_link_wrapper = false;
+
+    /* Remove
+    -------------------------- */
+
+    jQuery('.wpubasefields-link-wrap__remove').on('click', function(e) {
+        e.preventDefault();
+        var $link = jQuery(this),
+            $wrapper = $link.closest('.wpubasefield-input'),
+            $main = $wrapper.find('.wpubasefields-link-wrap__main'),
+            $input = $wrapper.find('input[type="hidden"]');
+        $main.find('.wpubasefields-link-wrap__title').text('');
+        $main.find('.wpubasefields-link-wrap__url').text('');
+        $main.attr('data-haspreview', '0');
+        $input.val(JSON.stringify({url: '', title: '', target: ''}));
+    });
+
+    /* Select
+    -------------------------- */
+
+    jQuery('.wpubasefields_select_link').on('click', function(e) {
+        e.preventDefault();
+        var $button = jQuery(this),
+            $wrapper = $button.closest('.wpubasefield-input'),
+            $input = $wrapper.find('input[type="hidden"]'),
+            _current = {};
+
+        try {
+            _current = JSON.parse($input.val());
+        } catch (e) {
+            _current = {};
+        }
+
+        _wpubasefields_active_link_wrapper = $wrapper;
+
+        /* Pre-fill the wpLink dialog */
+        if (!document.getElementById('wpubasefields-link-textarea')) {
+            jQuery('body').append('<textarea id="wpubasefields-link-textarea" style="display:none;"></textarea>');
+        }
+
+        wpLink.open('wpubasefields-link-textarea');
+
+        /* Fill dialog with current values */
+        jQuery('#wp-link-url').val(_current.url || '');
+        jQuery('#wp-link-text').val(_current.title || '');
+        jQuery('#wp-link-target').prop('checked', _current.target === '_blank');
+    });
+
+    /* Capture values on submit click (before wpLink.close resets them) */
+    jQuery(document).on('click', '#wp-link-submit', function(e) {
+        if (!_wpubasefields_active_link_wrapper) {
+            return;
+        }
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        var $wrapper = _wpubasefields_active_link_wrapper,
+            $main = $wrapper.find('.wpubasefields-link-wrap__main'),
+            $input = $wrapper.find('input[type="hidden"]'),
+            _url = jQuery('#wp-link-url').val(),
+            _title = jQuery('#wp-link-text').val(),
+            _target = jQuery('#wp-link-target').prop('checked') ? '_blank' : '';
+
+        if (_url) {
+            var _data = {url: _url, title: _title, target: _target};
+            $input.val(JSON.stringify(_data));
+            $main.find('.wpubasefields-link-wrap__title').text(_title || _url);
+            $main.find('.wpubasefields-link-wrap__url').text(_url);
+            $main.attr('data-haspreview', '1');
+        }
+
+        _wpubasefields_active_link_wrapper = false;
+        wpLink.close();
+    });
+
+    /* Handle cancel / close */
+    jQuery(document).on('click', '#wp-link-close, #wp-link-cancel', function() {
+        _wpubasefields_active_link_wrapper = false;
+    });
+
     jQuery('.wpubasefields_select_file').on('click', function(e) {
         e.preventDefault();
 
