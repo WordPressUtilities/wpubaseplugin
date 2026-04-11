@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_23_0;
+namespace wpubasetoolbox_0_24_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.23.0
+Version: 0.24.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,9 +15,10 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.23.0';
+    private $plugin_version = '0.24.0';
     private $args = array();
     private $missing_plugins = array();
+    private $invalid_plugins_versions = array();
     private $default_module_args = array(
         'need_form_js' => true,
         'need_table_js' => false,
@@ -37,7 +38,7 @@ class WPUBaseToolbox {
         ));
     }
 
-    public function table_scripts(){
+    public function table_scripts() {
         if ($this->args['need_table_js']) {
             wp_enqueue_script(__NAMESPACE__ . '-wpubasetoolbox-table-sort', plugins_url('assets/table-sort.js', __FILE__), array(), $this->plugin_version);
         }
@@ -676,7 +677,9 @@ class WPUBaseToolbox {
 
             foreach ($plugin['path'] as $plugin_path) {
                 if (is_plugin_active($plugin_path) || is_plugin_active_for_network($plugin_path)) {
+                    $this->check_plugin_version($plugin, WP_PLUGIN_DIR . '/' . $plugin_path);
                     $has_plugin = true;
+                    break;
                 }
 
                 /* Get active must-use plugins list */
@@ -686,6 +689,7 @@ class WPUBaseToolbox {
                 );
                 foreach ($mu_plugins_path as $mu_plugins_dir) {
                     if (is_dir($mu_plugins_dir) && file_exists($mu_plugins_dir . '/' . $plugin_path)) {
+                        $this->check_plugin_version($plugin, $mu_plugins_dir . '/' . $plugin_path);
                         $has_plugin = true;
                         break;
                     }
@@ -701,6 +705,26 @@ class WPUBaseToolbox {
             add_action('admin_notices', array(&$this,
                 'set_error_missing_plugins'
             ));
+        }
+        if (!empty($this->invalid_plugins_versions)) {
+            add_action('admin_notices', array(&$this,
+                'set_error_invalid_plugins_versions'
+            ));
+        }
+    }
+
+    public function check_plugin_version($plugin, $plugin_path) {
+        if (!isset($plugin['min_version'])) {
+            return;
+        }
+
+        $plugin_data = get_plugin_data($plugin_path);
+        if (version_compare($plugin_data['Version'], $plugin['min_version'], '<')) {
+            $this->invalid_plugins_versions[] = array(
+                'name' => $plugin_data['Name'],
+                'current_version' => $plugin_data['Version'],
+                'required_version' => $plugin['min_version']
+            );
         }
     }
 
@@ -719,6 +743,26 @@ class WPUBaseToolbox {
             echo '</ul>';
         } else {
             echo '<p>' . sprintf(__('The plugin <b>%s</b> depends on the <b>%s</b> plugin. Please install and activate it.', __NAMESPACE__), $this->args['plugin_name'], $this->get_missing_plugin_display_name($this->missing_plugins[0])) . '</p>';
+        }
+        echo '</div>';
+    }
+
+    public function set_error_invalid_plugins_versions() {
+
+        if (!$this->invalid_plugins_versions) {
+            return;
+        }
+
+        echo '<div class="error">';
+        if (count($this->invalid_plugins_versions) > 1) {
+            echo '<p>' . sprintf(__('The plugin <b>%s</b> needs specific plugins versions. Please update them:', __NAMESPACE__), $this->args['plugin_name']) . '</p><ul>';
+            foreach ($this->invalid_plugins_versions as $plugin) {
+                echo '<li>- ' . esc_html($plugin['name']) . ' (current version: ' . esc_html($plugin['current_version']) . ', required version: ' . esc_html($plugin['required_version']) . ')</li>';
+            }
+            echo '</ul>';
+        } else {
+            $plugin = $this->invalid_plugins_versions[0];
+            echo '<p>' . sprintf(__('The plugin <b>%s</b> needs a specific <b>%s</b> plugin version. Please update it to at least version %s (current version: %s).', __NAMESPACE__), $this->args['plugin_name'], esc_html($plugin['name']), esc_html($plugin['required_version']), esc_html($plugin['current_version'])) . '</p>';
         }
         echo '</div>';
     }
