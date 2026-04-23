@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_24_0;
+namespace wpubasetoolbox_0_24_1;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.24.0
+Version: 0.24.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.24.0';
+    private $plugin_version = '0.24.1';
     private $args = array();
     private $missing_plugins = array();
     private $invalid_plugins_versions = array();
@@ -903,4 +903,36 @@ class WPUBaseToolbox {
 
     }
 
+    /* ----------------------------------------------------------
+      Markdown to HTML
+    ---------------------------------------------------------- */
+
+    function markdown_to_html($text) {
+        $text = trim(wp_strip_all_tags($text));
+
+        /* Bold */
+        $text = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $text);
+
+        /* Italic */
+        $text = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $text);
+
+        /* Links */
+        $text = preg_replace('/\[(.+?)\]\((.+?)\)/', '<a href="$2" rel="noopener noreferrer" target="_blank">$1</a>', $text);
+
+        /* Convert dashes to ul/li */
+        $lines = explode("\n", $text);
+        foreach ($lines as $line) {
+            if (preg_match('/^\s*-\s+(.+)/', $line, $matches)) {
+                $new_line = '<ul><li>' . trim($matches[1]) . '</li></ul>';
+                $text = str_replace($line, $new_line, $text);
+            }
+        }
+        $text = preg_replace('/<\/ul>\s*<ul>/', '', $text);
+
+        /* Line breaks */
+        $text = preg_replace('/\n/', '<br />', $text);
+        $text = force_balance_tags($text);
+
+        return $text;
+    }
 }
