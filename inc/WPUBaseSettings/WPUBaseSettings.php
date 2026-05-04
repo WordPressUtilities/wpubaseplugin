@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_24_7;
+namespace wpubasesettings_0_25_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.24.7
+Version: 0.25.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -212,7 +212,7 @@ class WPUBaseSettings {
             }
             if (isset($section['wpubasesettings_checkall']) && $section['wpubasesettings_checkall']) {
                 $check_label = __('Check all', __NAMESPACE__);
-                $section['after_section'] .= '<button class="wpubasesettings-check-all" type="button" data-check-label="' . $check_label . '" data-uncheck-label="' . __('Uncheck all', __NAMESPACE__) . '">' . $check_label . '</button>';
+                $section['after_section'] .= '<button class="wpubasesettings-check-all" type="button" data-check-label="' . esc_attr($check_label) . '" data-uncheck-label="' . esc_attr(__('Uncheck all', __NAMESPACE__)) . '">' . esc_html($check_label) . '</button>';
                 if (!$has_check_all) {
                     $has_check_all = true;
                     add_action('admin_footer', array(&$this, 'admin_footer_checkall'));
@@ -326,7 +326,7 @@ class WPUBaseSettings {
         add_settings_error(
             $this->settings_details['option_id'],
             $this->settings_details['option_id'] . esc_attr('settings_updated'),
-            __('Settings saved.'),
+            __('Settings saved.', __NAMESPACE__),
             'updated'
         );
 
@@ -386,14 +386,14 @@ class WPUBaseSettings {
             echo '<a href="#" class="x">&times;</a>';
             echo '<img ' . $img_src . ' alt="" />';
             echo '</div>';
-            echo '<button type="button" class="button">' . __('Upload New Media') . '</button>';
+            echo '<button type="button" class="button">' . __('Upload New Media', __NAMESPACE__) . '</button>';
             echo '</div>';
             break;
         case 'radio':
             foreach ($args['datas'] as $_id => $_data) {
                 echo '<p>';
-                echo '<input id="' . $args['id'] . $_id . '" type="radio" ' . $name . ' value="' . esc_attr($_id) . '" ' . ($value == $_id ? 'checked="checked"' : '') . ' />';
-                echo '<label class="wpubasesettings-radio-label" for="' . $args['id'] . $_id . '">' . $_data . '</label>';
+                echo '<input id="' . esc_attr($args['id'] . $_id) . '" type="radio" ' . $name . ' value="' . esc_attr($_id) . '" ' . ($value == $_id ? 'checked="checked"' : '') . ' />';
+                echo '<label class="wpubasesettings-radio-label" for="' . esc_attr($args['id'] . $_id) . '">' . esc_html($_data) . '</label>';
                 echo '</p>';
             }
             break;
@@ -440,7 +440,7 @@ class WPUBaseSettings {
         case 'password':
         case 'email':
         case 'text':
-            echo '<input ' . $name . ' ' . $id . ' type="' . $args['type'] . '" value="' . esc_attr($value) . '" />';
+            echo '<input ' . $name . ' ' . $id . ' type="' . esc_attr($args['type']) . '" value="' . esc_attr($value) . '" />';
         }
         if (!empty($args['help'])) {
             echo '<div><small>' . $args['help'] . '</small></div>';
@@ -587,7 +587,7 @@ EOT;
         $option_id = $this->settings_details['option_id'];
         $languages = json_encode($this->get_languages());
         $current_language = $this->get_current_language();
-        $label_txt = __('Language');
+        $label_txt = __('Language', __NAMESPACE__);
         echo <<<EOT
 <script>
 (function(){
@@ -700,14 +700,14 @@ EOT;
     /* Base settings */
 
     public function admin_menu() {
-        $this->hook_page = add_submenu_page($this->settings_details['parent_page'], $this->settings_details['plugin_name'] . ' - ' . __('Settings'), $this->settings_details['menu_name'], $this->settings_details['user_cap'], $this->settings_details['plugin_id'], array(&$this,
+        $this->hook_page = add_submenu_page($this->settings_details['parent_page'], $this->settings_details['plugin_name'] . ' - ' . __('Settings', __NAMESPACE__), $this->settings_details['menu_name'], $this->settings_details['user_cap'], $this->settings_details['plugin_id'], array(&$this,
             'admin_settings'
         ), 110);
         add_action('load-' . $this->hook_page, array(&$this, 'load_assets'));
     }
 
     public function plugin_add_settings_link($links) {
-        $settings_link = '<a href="' . $this->admin_url . '">' . __('Settings') . '</a>';
+        $settings_link = '<a href="' . $this->admin_url . '">' . __('Settings', __NAMESPACE__) . '</a>';
         array_push($links, $settings_link);
         return $links;
     }
@@ -722,7 +722,7 @@ EOT;
             echo '<form action="' . admin_url('options.php') . '" method="post">';
             settings_fields($this->settings_details['option_id']);
             do_settings_sections($this->settings_details['plugin_id']);
-            echo submit_button(__('Save'));
+            echo submit_button(__('Save', __NAMESPACE__));
             echo '</form>';
         }
         do_action('wpubasesettings_after_content_' . $this->hook_page);
@@ -833,14 +833,14 @@ EOT;
         'option_id' => 'wpuimporttwitter_options',
         'sections' => array(
             'import' => array(
-                'name' => __('Import Settings', 'wpuimporttwitter')
+                'name' => __('Import Settings', __NAMESPACE__)
             )
         )
     );
     $this->settings = array(
         'sources' => array(
-            'label' => __('Sources', 'wpuimporttwitter'),
-            'help' => __('One #hashtag or one @user per line.', 'wpuimporttwitter'),
+            'label' => __('Sources', __NAMESPACE__),
+            'help' => __('One #hashtag or one @user per line.', __NAMESPACE__),
             'type' => 'textarea'
         )
     );
@@ -858,6 +858,6 @@ EOT;
     echo '<form action="' . admin_url('options.php') . '" method="post">';
     settings_fields($this->settings_details['option_id']);
     do_settings_sections($this->options['plugin_id']);
-    echo submit_button(__('Save Changes', 'wpuimporttwitter'));
+    echo submit_button(__('Save Changes', __NAMESPACE__));
     echo '</form>';
 */
