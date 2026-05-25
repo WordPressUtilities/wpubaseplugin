@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadmindatas_4_11_3;
+namespace wpubaseadmindatas_4_11_4;
 
 /*
 Class Name: WPU Base Admin Datas
 Description: A class to handle datas in WordPress admin
-Version: 4.11.3
+Version: 4.11.4
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -22,6 +22,7 @@ class WPUBaseAdminDatas {
     public $settings;
     public $pagename;
     public $tablename;
+    public $date_columns = array();
     public $user_level = 'edit_posts';
     private $slash_replacement = '#!#slash#!#';
     private $labels_placeholder = '##_!_##labelsnumber##_!_##';
@@ -139,6 +140,14 @@ class WPUBaseAdminDatas {
 
         if (!isset($settings['can_edit']) || !current_user_can($settings['user_level'])) {
             $settings['can_edit'] = $settings['can_create'];
+        }
+
+        // Collect date-typed columns for fuzzy date search (creation is always present)
+        $this->date_columns = array('creation');
+        foreach ($settings['table_fields'] as $id => $field) {
+            if (isset($field['type']) && in_array($field['type'], array('date', 'timestamp'))) {
+                $this->date_columns[] = $id;
+            }
         }
 
         $this->settings = $settings;
@@ -1034,8 +1043,16 @@ HTML;
             $where_text = trim($args['where_text']);
             $where_or = array();
             foreach ($this->settings['table_fields'] as $id => $field) {
-                if ($id != 'id' && $id != 'creation') {
+                if ($id != 'id') {
                     $where_or[] = "$id LIKE '%" . esc_sql($where_text) . "%'";
+                }
+            }
+            /* Fuzzy date search: only when input looks like a date fragment
+               (contains a dash, or is purely numeric with at least 4 digits) */
+            $looks_like_date = (strpos($where_text, '-') !== false) || (ctype_digit($where_text) && strlen($where_text) >= 4);
+            if ($looks_like_date && !empty($this->date_columns)) {
+                foreach ($this->date_columns as $date_col) {
+                    $where_or[] = "$date_col LIKE '%" . esc_sql($where_text) . "%'";
                 }
             }
             $where[] = "(" . implode(' OR ', $where_or) . ")";
