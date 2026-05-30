@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_23_0;
+namespace wpubasefields_0_24_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.23.0
+Version: 0.24.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -16,7 +16,7 @@ defined('ABSPATH') || die;
 
 class WPUBaseFields {
     private $script_id;
-    private $version = '0.23.0';
+    private $version = '0.24.0';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -74,6 +74,9 @@ class WPUBaseFields {
                 add_action('edited_' . $taxonomy, array(&$this, 'save_term'));
             }
         }
+
+        /* Admin list columns */
+        $this->register_admin_columns();
 
         /* Basic CSS */
         add_action('admin_enqueue_scripts', array(&$this, 'admin_enqueue_scripts'));
@@ -166,8 +169,16 @@ class WPUBaseFields {
                 'required' => false,
                 'readonly' => false,
                 'help' => false,
-                'preview_format' => 'thumbnail'
+                'preview_format' => 'thumbnail',
+                'admin_column' => false
             ), $field);
+
+            /* Normalize admin column opt-in : false (off) or array (on, with options) */
+            if ($field['admin_column'] === true) {
+                $field['admin_column'] = array();
+            } elseif (!is_array($field['admin_column'])) {
+                $field['admin_column'] = false;
+            }
 
             if (!isset($field['type']) || !in_array($field['type'], $this->supported_types)) {
                 $field['type'] = 'text';
@@ -682,6 +693,266 @@ class WPUBaseFields {
 
         return $value;
 
+    }
+
+    /* ----------------------------------------------------------
+      Admin list columns
+    ---------------------------------------------------------- */
+
+    private function register_admin_columns() {
+        $post_types = array();
+        $taxonomies = array();
+        foreach ($this->fields as $field_id => $field) {
+            if (!is_array($field['admin_column'])) {
+                continue;
+            }
+            $group = $this->field_groups[$field['group']];
+            if (!empty($group['taxonomy'])) {
+                $taxes = is_array($group['taxonomy']) ? $group['taxonomy'] : array($group['taxonomy']);
+                foreach ($taxes as $tax) {
+                    $taxonomies[$tax] = 1;
+                }
+                continue;
+            }
+            $pts = is_array($group['post_type']) ? $group['post_type'] : array($group['post_type']);
+            foreach ($pts as $pt) {
+                $post_types[$pt] = 1;
+            }
+        }
+
+        foreach (array_keys($post_types) as $pt) {
+            add_filter('manage_' . $pt . '_posts_columns', function ($columns) use ($pt) {
+                return $this->add_post_columns($columns, $pt);
+            });
+            add_action('manage_' . $pt . '_posts_custom_column', array(&$this, 'render_post_column'), 10, 2);
+            add_filter('manage_edit-' . $pt . '_sortable_columns', function ($columns) use ($pt) {
+                return $this->add_sortable_columns($columns, $pt);
+            });
+        }
+
+        foreach (array_keys($taxonomies) as $tax) {
+            add_filter('manage_edit-' . $tax . '_columns', function ($columns) use ($tax) {
+                return $this->add_term_columns($columns, $tax);
+            });
+            add_filter('manage_' . $tax . '_custom_column', array(&$this, 'render_term_column'), 10, 3);
+        }
+
+        if (!empty($post_types)) {
+            add_action('pre_get_posts', array(&$this, 'sortable_orderby'));
+        }
+    }
+
+    /* Columns registration */
+
+    public function add_post_columns($columns, $post_type) {
+        $new_cols = array();
+        foreach ($this->fields as $field_id => $field) {
+            if (!is_array($field['admin_column'])) {
+                continue;
+            }
+            $group = $this->field_groups[$field['group']];
+            if (!empty($group['taxonomy'])) {
+                continue;
+            }
+            $pts = is_array($group['post_type']) ? $group['post_type'] : array($group['post_type']);
+            if (!in_array($post_type, $pts)) {
+                continue;
+            }
+            if (!current_user_can($group['capability'])) {
+                continue;
+            }
+            $new_cols['wpubasefields_' . $field_id] = $this->get_column_label($field);
+        }
+        return $this->insert_columns_before($columns, $new_cols, 'date');
+    }
+
+    public function add_term_columns($columns, $taxonomy) {
+        $new_cols = array();
+        foreach ($this->fields as $field_id => $field) {
+            if (!is_array($field['admin_column'])) {
+                continue;
+            }
+            $group = $this->field_groups[$field['group']];
+            if (empty($group['taxonomy'])) {
+                continue;
+            }
+            $taxes = is_array($group['taxonomy']) ? $group['taxonomy'] : array($group['taxonomy']);
+            if (!in_array($taxonomy, $taxes)) {
+                continue;
+            }
+            if (!current_user_can($group['capability'])) {
+                continue;
+            }
+            $new_cols['wpubasefields_' . $field_id] = $this->get_column_label($field);
+        }
+        return $this->insert_columns_before($columns, $new_cols, 'posts');
+    }
+
+    public function add_sortable_columns($columns, $post_type) {
+        foreach ($this->fields as $field_id => $field) {
+            if (!is_array($field['admin_column']) || empty($field['admin_column']['sortable'])) {
+                continue;
+            }
+            $group = $this->field_groups[$field['group']];
+            if (!empty($group['taxonomy'])) {
+                continue;
+            }
+            $pts = is_array($group['post_type']) ? $group['post_type'] : array($group['post_type']);
+            if (!in_array($post_type, $pts)) {
+                continue;
+            }
+            $columns['wpubasefields_' . $field_id] = 'wpubasefields_' . $field_id;
+        }
+        return $columns;
+    }
+
+    /* Columns rendering */
+
+    public function render_post_column($column, $post_id) {
+        $field_id = $this->column_field_id($column);
+        if (!$field_id) {
+            return;
+        }
+        echo $this->render_column_value($field_id, get_post_meta($post_id, $field_id, true), $post_id);
+    }
+
+    public function render_term_column($content, $column, $term_id) {
+        $field_id = $this->column_field_id($column);
+        if (!$field_id) {
+            return $content;
+        }
+        return $this->render_column_value($field_id, get_term_meta($term_id, $field_id, true), $term_id);
+    }
+
+    /* Sortable query */
+
+    public function sortable_orderby($query) {
+        if (!is_admin() || !$query->is_main_query()) {
+            return;
+        }
+        $orderby = $query->get('orderby');
+        if (!is_string($orderby)) {
+            return;
+        }
+        $field_id = $this->column_field_id($orderby);
+        if (!$field_id) {
+            return;
+        }
+        $field = $this->fields[$field_id];
+        if (empty($field['admin_column']['sortable'])) {
+            return;
+        }
+        $numeric = in_array($field['type'], array('number', 'date', 'datetime'));
+        $query->set('meta_key', $field_id);
+        $query->set('orderby', $numeric ? 'meta_value_num' : 'meta_value');
+    }
+
+    /* Helpers */
+
+    private function column_field_id($column) {
+        if (!is_string($column) || strpos($column, 'wpubasefields_') !== 0) {
+            return false;
+        }
+        $field_id = substr($column, strlen('wpubasefields_'));
+        if (!isset($this->fields[$field_id]) || !is_array($this->fields[$field_id]['admin_column'])) {
+            return false;
+        }
+        return $field_id;
+    }
+
+    private function get_column_label($field) {
+        if (is_array($field['admin_column']) && !empty($field['admin_column']['label'])) {
+            return $field['admin_column']['label'];
+        }
+        return $field['label'];
+    }
+
+    private function insert_columns_before($columns, $new_cols, $before_key) {
+        if (empty($new_cols)) {
+            return $columns;
+        }
+        if (!isset($columns[$before_key])) {
+            return array_merge($columns, $new_cols);
+        }
+        $result = array();
+        foreach ($columns as $key => $label) {
+            if ($key === $before_key) {
+                $result = array_merge($result, $new_cols);
+            }
+            $result[$key] = $label;
+        }
+        return $result;
+    }
+
+    private function render_column_value($field_id, $value, $object_id) {
+        $field = $this->fields[$field_id];
+        $opts = is_array($field['admin_column']) ? $field['admin_column'] : array();
+        $empty = '<span aria-hidden="true">&mdash;</span>';
+
+        /* Custom rendering override */
+        if (isset($opts['callback']) && is_callable($opts['callback'])) {
+            return call_user_func($opts['callback'], $value, $object_id, $field_id);
+        }
+
+        /* Checkbox : 0 is a meaningful value */
+        if ($field['type'] == 'checkbox') {
+            return ($value === '1' || $value === 1) ? '<span class="dashicons dashicons-yes"></span>' : $empty;
+        }
+
+        /* Empty value */
+        if ($value === '' || $value === null || (is_array($value) && empty($value))) {
+            return $empty;
+        }
+
+        switch ($field['type']) {
+        case 'select':
+        case 'radio':
+            return isset($field['data'][$value]) ? esc_html($field['data'][$value]) : esc_html($value);
+        case 'post':
+        case 'page':
+            $title = get_the_title($value);
+            return $title ? esc_html($title) : $empty;
+        case 'checkboxes':
+            $value = maybe_unserialize($value);
+            if (!is_array($value) || empty($value)) {
+                return $empty;
+            }
+            $labels = array();
+            foreach ($value as $key) {
+                $labels[] = isset($field['data'][$key]) ? $field['data'][$key] : $key;
+            }
+            return esc_html(implode(', ', $labels));
+        case 'image':
+            if (is_numeric($value)) {
+                $img = wp_get_attachment_image($value, array(40, 40));
+                return $img ? $img : $empty;
+            }
+            return $empty;
+        case 'file':
+            if (is_numeric($value)) {
+                $file = get_attached_file($value);
+                return $file ? esc_html(basename($file)) : $empty;
+            }
+            return $empty;
+        case 'wp_link':
+            $decoded = is_array($value) ? $value : json_decode($value, true);
+            if (!is_array($decoded) || empty($decoded['url'])) {
+                return $empty;
+            }
+            $title = !empty($decoded['title']) ? $decoded['title'] : $decoded['url'];
+            return '<a href="' . esc_url($decoded['url']) . '">' . esc_html($title) . '</a>';
+        case 'color':
+            return '<span style="display:inline-block;width:18px;height:18px;border:1px solid #ccc;border-radius:2px;vertical-align:middle;background:' . esc_attr($value) . '"></span> ' . esc_html($value);
+        case 'editor':
+        case 'textarea':
+            return esc_html(wp_trim_words(wp_strip_all_tags($value), 12));
+        case 'url':
+            return '<a href="' . esc_url($value) . '">' . esc_html($value) . '</a>';
+        case 'email':
+            return '<a href="mailto:' . esc_attr($value) . '">' . esc_html($value) . '</a>';
+        default:
+            return esc_html($value);
+        }
     }
 
     /* ----------------------------------------------------------
