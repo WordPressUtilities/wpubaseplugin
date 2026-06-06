@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_25_0;
+namespace wpubasesettings_0_26_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.25.0
+Version: 0.26.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -95,6 +95,35 @@ class WPUBaseSettings {
         $opt = $this->get_settings();
         $opt[$id] = $value;
         update_option($this->settings_details['option_id'], $opt);
+    }
+
+    /* Override : returns the constant name bound to a setting, or false */
+    public function get_setting_constant_name($id) {
+        if (!isset($this->settings[$id])) {
+            return false;
+        }
+        /* Multilingual not supported */
+        if (isset($this->settings[$id]['translated_from']) || isset($this->settings[$id]['lang_id'])) {
+            return false;
+        }
+        if (isset($this->settings[$id]['constant']) && $this->settings[$id]['constant']) {
+            return $this->settings[$id]['constant'];
+        }
+        return strtoupper($this->settings_details['option_id'] . '_' . $id);
+    }
+
+    /* Override : forced value if the constant is defined */
+    public function get_setting_constant_value($id) {
+        $constant_name = $this->get_setting_constant_name($id);
+        if ($constant_name && defined($constant_name)) {
+            return constant($constant_name);
+        }
+        return false;
+    }
+
+    public function is_setting_overridden($id) {
+        $constant_name = $this->get_setting_constant_name($id);
+        return $constant_name && defined($constant_name);
     }
 
     public function set_min_capability() {
@@ -265,6 +294,11 @@ class WPUBaseSettings {
         $options = get_option($this->settings_details['option_id']);
         foreach ($this->settings as $id => $setting) {
 
+            // Override : never write to DB if a constant forces the value
+            if ($this->is_setting_overridden($id)) {
+                continue;
+            }
+
             // If regex : use it to validate the field
             if (isset($setting['regex'])) {
                 if (isset($input[$id]) && preg_match($setting['regex'], $input[$id])) {
@@ -357,15 +391,24 @@ class WPUBaseSettings {
         if (isset($args['attributes_html']) && $args['attributes_html']) {
             $attr .= ' ' . $args['attributes_html'];
         }
+        /* Override : non-editable field if a constant is defined */
+        $is_overridden = $this->is_setting_overridden($args['id']);
+        if ($is_overridden) {
+            $readonly_types = array('text', 'textarea', 'url', 'email', 'number', 'password');
+            $attr .= in_array($args['type'], $readonly_types) ? ' readonly ' : ' disabled="disabled" ';
+        }
         $id .= $attr;
         $value = isset($options[$args['id']]) ? $options[$args['id']] : $args['default_value'];
         if (!isset($options[$args['id']]) && isset($args['translated_from']) && $args['translated_from'] && isset($options[$args['translated_from']]) && $options[$args['translated_from']]) {
             $value = $options[$args['translated_from']];
         }
+        if ($is_overridden) {
+            $value = $this->get_setting_constant_value($args['id']);
+        }
 
         switch ($args['type']) {
         case 'checkbox':
-            $checked_val = isset($options[$args['id']]) ? $options[$args['id']] : '0';
+            $checked_val = $is_overridden ? $value : (isset($options[$args['id']]) ? $options[$args['id']] : '0');
             echo '<label><input type="checkbox" ' . $name . ' ' . $id . ' ' . checked($checked_val, '1', 0) . ' value="1" /> ' . $args['label_check'] . '</label>';
             break;
         case 'textarea':
@@ -441,6 +484,12 @@ class WPUBaseSettings {
         case 'email':
         case 'text':
             echo '<input ' . $name . ' ' . $id . ' type="' . esc_attr($args['type']) . '" value="' . esc_attr($value) . '" />';
+        }
+        if ($is_overridden) {
+            echo '<div class="wpubasesettings-overridden-notice"><small>' . sprintf(
+                __('This value is set by the constant %s and cannot be edited here.', __NAMESPACE__),
+                '<code>' . esc_html($this->get_setting_constant_name($args['id'])) . '</code>'
+            ) . '</small></div>';
         }
         if (!empty($args['help'])) {
             echo '<div><small>' . $args['help'] . '</small></div>';
@@ -754,6 +803,10 @@ EOT;
             }
             if (isset($setting['translated_from'], $setting['lang_id'], $settings[$key]) && $lang == $setting['lang_id'] && $settings[$key] !== false) {
                 $settings[$setting['translated_from']] = $settings[$key];
+            }
+            /* Override : a defined constant always wins over the stored value */
+            if ($this->is_setting_overridden($key)) {
+                $settings[$key] = $this->get_setting_constant_value($key);
             }
         }
         return $settings;
