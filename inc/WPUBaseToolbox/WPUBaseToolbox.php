@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_25_1;
+namespace wpubasetoolbox_0_26_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.25.1
+Version: 0.26.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.25.1';
+    private $plugin_version = '0.26.0';
     private $args = array();
     private $missing_plugins = array();
     private $invalid_plugins_versions = array();
@@ -612,10 +612,10 @@ class WPUBaseToolbox {
         ob_start();
         $output = fopen("php://output", 'w');
         if ($args['add_keys']) {
-            fputcsv($output, $all_keys, $args['separator'], $args['enclosure']);
+            fputcsv($output, $all_keys, $args['separator'], $args['enclosure'], '');
         }
         foreach ($array as $item) {
-            fputcsv($output, $item, $args['separator'], $args['enclosure']);
+            fputcsv($output, $item, $args['separator'], $args['enclosure'], '');
         }
         fclose($output);
         return ob_get_clean();
@@ -626,6 +626,16 @@ class WPUBaseToolbox {
     -------------------------- */
 
     public function csv_to_array($file_content) {
+
+        /* Strip UTF-8 BOM if present */
+        if (substr($file_content, 0, 3) === "\xEF\xBB\xBF") {
+            $file_content = substr($file_content, 3);
+        }
+
+        /* Convert from Windows-1252 when content is not valid UTF-8 */
+        if (!mb_check_encoding($file_content, 'UTF-8')) {
+            $file_content = mb_convert_encoding($file_content, 'UTF-8', 'Windows-1252');
+        }
 
         /* Normalize line endings */
         $file_content = str_replace(array("\r\n", "\r"), "\n", $file_content);
@@ -644,7 +654,7 @@ class WPUBaseToolbox {
         rewind($handle);
 
         /* Extract column names */
-        $column_names = fgetcsv($handle, 0, $separator);
+        $column_names = fgetcsv($handle, 0, $separator, '"', '');
         if (!is_array($column_names) || !isset($column_names[0])) {
             fclose($handle);
             return false;
@@ -655,7 +665,7 @@ class WPUBaseToolbox {
 
         /* Build array */
         $array = array();
-        while (($row = fgetcsv($handle, 0, $separator)) !== false) {
+        while (($row = fgetcsv($handle, 0, $separator, '"', '')) !== false) {
             if ($row === array(null) || $row === array('')) {
                 continue;
             }
