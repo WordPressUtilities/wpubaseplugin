@@ -1,10 +1,10 @@
 <?php
-namespace wpubasemodal_0_1_0;
+namespace wpubasemodal_0_1_3;
 
 /*
 Class Name: WPU Base Modal
 Description: A class to display a modal in WordPress
-Version: 0.1.2
+Version: 0.1.3
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/

@@ -5,7 +5,7 @@ Plugin Name: WPU Base Plugin
 Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
 Update URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 3.43.1
+Version: 3.43.2
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpubaseplugin
@@ -20,7 +20,7 @@ defined('ABSPATH') || die;
 
 class WPUBasePlugin {
 
-    public $version = '3.43.1';
+    public $version = '3.43.2';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -64,7 +64,7 @@ class WPUBasePlugin {
             'name' => 'WPUBaseFileCache'
         ),
         'modal' => array(
-            'namespace' => 'wpubasemodal_0_1_0',
+            'namespace' => 'wpubasemodal_0_1_3',
             'name' => 'WPUBaseModal'
         )
     );
