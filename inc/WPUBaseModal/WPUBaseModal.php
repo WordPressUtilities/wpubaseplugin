@@ -4,7 +4,7 @@ namespace wpubasemodal_0_1_0;
 /*
 Class Name: WPU Base Modal
 Description: A class to display a modal in WordPress
-Version: 0.1.0
+Version: 0.1.2
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -51,7 +51,7 @@ class WPUBaseModal {
         $p = $this->prefix;
 
         $css = '<style>
-            .' . $p . '-modal { display: flex; align-items: center; justify-content: center; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0.1.0,0.4); }
+            .' . $p . '-modal { display: flex; align-items: center; justify-content: center; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
             .' . $p . '-modal-content { background-color: #fefefe; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; }
             .' . $p . '-modal-close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
             .' . $p . '-modal-close:hover, .' . $p . '-modal-close:focus { color: black; text-decoration: none; }
