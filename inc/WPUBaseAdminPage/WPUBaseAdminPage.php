@@ -1,10 +1,10 @@
 <?php
-namespace wpubaseadminpage_1_8_0;
+namespace wpubaseadminpage_1_8_1;
 
 /*
 Class Name: WPU Base Admin page
 Description: A class to handle pages in WordPress
-Version: 1.8.0
+Version: 1.8.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -82,12 +82,14 @@ class WPUBaseAdminPage {
     public function set_pages($pages) {
         foreach ($pages as $id => $page) {
             $page['id'] = $this->prefix . $id;
-            $page['url'] = admin_url('admin.php?page=' . $page['id']);
+            $page_url = 'admin.php?page=' . $page['id'];
+            $page['url'] = $this->options['network_page'] ? network_admin_url($page_url) : admin_url($page_url);
             if (!isset($page['section'])) {
                 $page['section'] = '';
             } else {
                 $path = (strpos($page['section'], '?') !== false ? '&' : '?') . 'page=' . $page['id'];
-                $page['url'] = admin_url($page['section'] . $path);
+                $page_url = $page['section'] . $path;
+                $page['url'] = $this->options['network_page'] ? network_admin_url($page_url) : admin_url($page_url);
             }
             if (!isset($page['name'])) {
                 $page['name'] = $id;
