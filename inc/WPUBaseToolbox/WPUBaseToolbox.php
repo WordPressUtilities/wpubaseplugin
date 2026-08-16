@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_27_0;
+namespace wpubasetoolbox_0_28_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.27.0
+Version: 0.28.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.27.0';
+    private $plugin_version = '0.28.0';
     private $args = array();
     private $missing_plugins = array();
     private $invalid_plugins_versions = array();
@@ -625,7 +625,15 @@ class WPUBaseToolbox {
     /* CSV string to array
     -------------------------- */
 
-    public function csv_to_array($file_content) {
+    public function csv_to_array($file_content, $args = array()) {
+
+        if (!is_array($args)) {
+            $args = array();
+        }
+
+        $args = array_merge(array(
+            'sanitize_column_names' => true
+        ), $args);
 
         /* Strip UTF-8 BOM if present */
         if (substr($file_content, 0, 3) === "\xEF\xBB\xBF") {
@@ -659,9 +667,16 @@ class WPUBaseToolbox {
             fclose($handle);
             return false;
         }
-        $raw_line = array_fill_keys($column_names, '');
         $column_names = array_map('trim', $column_names);
         $column_names = array_map('strtolower', $column_names);
+        if ($args['sanitize_column_names']) {
+            $new_column_names = array();
+            foreach ($column_names as $column_name) {
+                $new_column_names[] = sanitize_title($column_name);
+            }
+            $column_names = $new_column_names;
+        }
+        $raw_line = array_fill_keys($column_names, '');
 
         /* Build array */
         $array = array();
