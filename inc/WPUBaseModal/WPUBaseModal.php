@@ -1,10 +1,10 @@
 <?php
-namespace wpubasemodal_0_1_3;
+namespace wpubasemodal_0_2_0;
 
 /*
 Class Name: WPU Base Modal
 Description: A class to display a modal in WordPress
-Version: 0.1.3
+Version: 0.2.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -25,14 +25,22 @@ class WPUBaseModal {
     }
 
     /* Return the HTML for a modal. Assets are printed only on the first call. */
-    public function get_modal_html($message = '') {
+    public function get_modal_html($message = '', $args = array()) {
+        $args = wp_parse_args($args, array(
+            'close_label' => __('Close', __NAMESPACE__),
+            'title' => ''
+        ));
+
         $this->count++;
         $p = $this->prefix;
         $id = $p . '-modal-' . $this->count;
 
         $html = '<div id="' . esc_attr($id) . '" class="' . esc_attr($p) . '-modal" role="dialog" aria-modal="true">';
         $html .= '<div class="' . esc_attr($p) . '-modal-content">';
-        $html .= '<span class="' . esc_attr($p) . '-modal-close" role="button" tabindex="0" aria-label="' . esc_attr__('Close', __NAMESPACE__) . '">&times;</span>';
+        $html .= '<span class="' . esc_attr($p) . '-modal-close" role="button" tabindex="0" aria-label="' . esc_attr($args['close_label']) . '">&times;</span>';
+        if ($args['title']) {
+            $html .= '<h2 class="' . esc_attr($p) . '-modal-title">' . esc_html($args['title']) . '</h2>';
+        }
         $html .= '<p>' . wp_kses_post($message) . '</p>';
         $html .= '</div>';
         $html .= '</div>';
@@ -50,33 +58,18 @@ class WPUBaseModal {
         $this->assets_printed = true;
         $p = $this->prefix;
 
-        $css = '<style>
-            .' . $p . '-modal { display: flex; align-items: center; justify-content: center; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-            .' . $p . '-modal-content { background-color: #fefefe; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; }
-            .' . $p . '-modal-close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-            .' . $p . '-modal-close:hover, .' . $p . '-modal-close:focus { color: black; text-decoration: none; }
-        </style>';
+        $css_content = file_get_contents(__DIR__ . '/assets/modal.css');
+        $css_content = str_replace('wpubasemodalplaceholder', $p, $css_content);
 
-        $js = '<script>
-            (function() {
-                var modalClass = "' . $p . '-modal";
-                var closeClass = "' . $p . '-modal-close";
-                function close(modal) { if (modal) { modal.style.display = "none"; } }
-                document.addEventListener("click", function(e) {
-                    if (e.target.classList.contains(closeClass)) { close(e.target.closest("." + modalClass)); }
-                    else if (e.target.classList.contains(modalClass)) { close(e.target); }
-                });
-                document.addEventListener("keydown", function(e) {
-                    if (e.key === "Escape") {
-                        document.querySelectorAll("." + modalClass).forEach(close);
-                    } else if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains(closeClass)) {
-                        e.preventDefault();
-                        close(e.target.closest("." + modalClass));
-                    }
-                });
-            })();
-        </script>';
+        $js_content = file_get_contents(__DIR__ . '/assets/modal.js');
+        $js_content = str_replace('wpubasemodalplaceholder', $p, $js_content);
 
-        return $css . $js;
+        return '<style>' . $this->compress_code($css_content) . '</style>' . '<script>' . $this->compress_code($js_content) . '</script>';
+    }
+
+    private function compress_code($code) {
+        $code = preg_replace('/\s+/', ' ', $code);
+        $code = str_replace('; ', ';', $code);
+        return $code;
     }
 }

@@ -1,0 +1,39 @@
+.wpubasemodalplaceholder-modal {
+    display: flex;
+    z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.wpubasemodalplaceholder-modal-content {
+    width: 80%;
+    padding: 20px;
+    max-width: 500px;
+    border: 1px solid #888;
+    background-color: #fefefe;
+}
+
+.wpubasemodalplaceholder-modal-title {
+    margin-top: 0;
+}
+
+.wpubasemodalplaceholder-modal-close {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+}
+
+.wpubasemodalplaceholder-modal-close:hover,
+.wpubasemodalplaceholder-modal-close:focus {
+    text-decoration: none;
+    color: black;
+}
