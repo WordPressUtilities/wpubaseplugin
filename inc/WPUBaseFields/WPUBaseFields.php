@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefields_0_24_0;
+namespace wpubasefields_0_25_0;
 
 /*
 Class Name: WPU Base Fields
 Description: A class to handle fields in WordPress
-Version: 0.24.0
+Version: 0.25.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -16,7 +16,7 @@ defined('ABSPATH') || die;
 
 class WPUBaseFields {
     private $script_id;
-    private $version = '0.24.0';
+    private $version = '0.25.0';
     private $fields = array();
     private $field_groups = array();
     private $supported_types = array(
@@ -674,13 +674,15 @@ class WPUBaseFields {
         case 'wp_link':
             $decoded = json_decode(wp_unslash($value), true);
             if (!is_array($decoded)) {
-                return json_encode(array('url' => '', 'title' => '', 'target' => ''));
+                return wp_slash(json_encode(array('url' => '', 'title' => '', 'target' => ''), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
             }
             $value = json_encode(array(
                 'url' => isset($decoded['url']) ? esc_url_raw($decoded['url']) : '',
                 'title' => isset($decoded['title']) ? sanitize_text_field($decoded['title']) : '',
                 'target' => isset($decoded['target']) && $decoded['target'] === '_blank' ? '_blank' : ''
-            ));
+            ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            /* Slashes are stripped by update_*_meta: pre-slash so escaped quotes survive */
+            $value = wp_slash($value);
             break;
         case 'checkbox':
             if ($value != '0' && $value != '1') {
