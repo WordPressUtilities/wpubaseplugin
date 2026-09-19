@@ -5,7 +5,7 @@ Plugin Name: WPU Base Plugin
 Plugin URI: https://github.com/WordPressUtilities/wpubaseplugin
 Update URI: https://github.com/WordPressUtilities/wpubaseplugin
 Description: A framework for a WordPress plugin
-Version: 3.47.0
+Version: 3.48.0
 Author: Darklg
 Author URI: https://darklg.me/
 Text Domain: wpubaseplugin
@@ -20,7 +20,7 @@ defined('ABSPATH') || die;
 
 class WPUBasePlugin {
 
-    public $version = '3.47.0';
+    public $version = '3.48.0';
 
     private $utilities_classes = array(
         'messages' => array(
@@ -66,6 +66,10 @@ class WPUBasePlugin {
         'modal' => array(
             'namespace' => 'wpubasemodal_0_2_0',
             'name' => 'WPUBaseModal'
+        ),
+        'notify' => array(
+            'namespace' => 'wpubasenotify_0_1_0',
+            'name' => 'WPUBaseNotify'
         )
     );
 
@@ -210,6 +214,19 @@ class WPUBasePlugin {
                 ),
             )
         );
+
+        // Init notifications
+        $this->tools['notify']->init(array(
+            'option_id' => 'wpubaseplugin_options',
+            'plugin_name' => $this->options['name'],
+            'notifications' => array(
+                'test_alert' => array(
+                    'label' => __('Test alert', 'wpubaseplugin'),
+                    'help' => __('A demo notification.', 'wpubaseplugin')
+                )
+            )
+        ));
+        $settings_details['sections'] += $this->tools['notify']->get_settings_section();
         $settings = array(
             'test_field' => array(
                 'label' => __('Test field', 'wpubaseplugin'),
@@ -237,6 +254,7 @@ class WPUBasePlugin {
         );
 
         // Init settings
+        $settings = array_merge($settings, $this->tools['notify']->get_settings_fields());
         $this->tools['settings']->init($settings_details, $settings);
 
         // Init admin page
