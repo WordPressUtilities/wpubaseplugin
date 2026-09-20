@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_27_0;
+namespace wpubasesettings_0_28_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.27.0
+Version: 0.28.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -665,14 +665,22 @@ jQuery('.wpubasesettings-mediabox .button').click(function(e) {
 EOT;
     }
 
+    /* Selector matching the settings form: the options.php hidden field when the page is
+       auto-created, or any settings field when they are inserted in a custom admin page. */
+    public function admin_footer_js_form_selector() {
+        $option_id = $this->settings_details['option_id'];
+        return '[name="option_page"][value="' . $option_id . '"],[name^="' . $option_id . '["]';
+    }
+
     public function admin_footer_js_check_correct_page() {
+        $selector = $this->admin_footer_js_form_selector();
         return <<<EOT
-if(!jQuery('[name="option_page"][value="{$this->settings_details['option_id']}"]').length){return;}
+if(!jQuery('{$selector}').length){return;}
 EOT;
     }
 
     public function admin_footer() {
-        $option_id = $this->settings_details['option_id'];
+        $form_selector = $this->admin_footer_js_form_selector();
         $languages = json_encode($this->get_languages());
         $current_language = $this->get_current_language();
         $label_txt = __('Language', __NAMESPACE__);
@@ -687,11 +695,10 @@ if(!_langs){
 }
 
 /* Get items */
-var jQinput = jQuery('input[type="hidden"][name="option_page"][value="{$option_id}"]');
-if(!jQinput.length){
+var jQform = jQuery('{$form_selector}').first().closest('form');
+if(!jQform.length){
     return;
 }
-var jQform = jQinput.closest('form');
 
 /* Add toggles on titles */
 jQform.find('h2').each(function(i,el){
