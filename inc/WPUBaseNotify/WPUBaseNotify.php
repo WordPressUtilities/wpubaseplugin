@@ -1,10 +1,10 @@
 <?php
-namespace wpubasenotify_0_1_0;
+namespace wpubasenotify_0_2_0;
 
 /*
 Class Name: WPU Base Notify
 Description: A class to send plain text alerts by email or webhook
-Version: 0.1.0
+Version: 0.2.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -133,19 +133,17 @@ class WPUBaseNotify {
         );
 
         foreach ($this->notifications as $id => $notification) {
-            $base_details = array(
-                'type' => 'checkbox',
+            $fields[$this->get_notification_field_id($id)] = array(
+                'type' => 'checkboxlist',
                 'section' => $section,
-                'help' => $notification['help']
+                'help' => $notification['help'],
+                'label' => $notification['label'],
+                'datas' => array(
+                    'email' => __('E-mail', __NAMESPACE__),
+                    'slack' => __('Webhook', __NAMESPACE__)
+                ),
+                'default' => array()
             );
-            $fields[$this->get_channel_field_id($id, 'email')] = array_merge($base_details, array(
-                'label' => sprintf(__('%s : notify by email', __NAMESPACE__), $notification['label']),
-                'default' => 1
-            ));
-            $fields[$this->get_channel_field_id($id, 'slack')] = array_merge($base_details, array(
-                'label' => sprintf(__('%s : notify by webhook', __NAMESPACE__), $notification['label']),
-                'default' => 0
-            ));
         }
 
         return $fields;
@@ -232,17 +230,17 @@ class WPUBaseNotify {
         return $webhook;
     }
 
-    private function get_channel_field_id($id, $channel) {
-        return $this->prefix . 'notif_' . $id . '_' . $channel;
+    private function get_notification_field_id($id) {
+        return $this->prefix . 'notif_' . $id;
     }
 
     private function is_channel_enabled($id, $channel) {
-        $value = $this->get_option_value($this->get_channel_field_id($id, $channel));
+        $value = $this->get_option_value($this->get_notification_field_id($id));
         /* Never saved : fall back on the same default as the settings field */
         if ($value === null) {
             return $channel == 'email';
         }
-        return $value == '1';
+        return is_array($value) && in_array($channel, $value);
     }
 
     private function get_value($key) {

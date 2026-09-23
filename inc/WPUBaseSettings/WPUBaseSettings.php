@@ -1,10 +1,10 @@
 <?php
-namespace wpubasesettings_0_28_0;
+namespace wpubasesettings_0_29_0;
 
 /*
 Class Name: WPU Base Settings
 Description: A class to handle native settings in WordPress admin
-Version: 0.28.0
+Version: 0.29.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -323,6 +323,7 @@ class WPUBaseSettings {
                 'type' => $this->settings[$id]['type'],
                 'help' => $this->settings[$id]['help'],
                 'default_value' => $this->settings[$id]['default_value'],
+                'default' => isset($this->settings[$id]['default']) ? $this->settings[$id]['default'] : false,
                 'editor_args' => $this->settings[$id]['editor_args'],
                 'label_check' => $this->settings[$id]['label_check']
             ));
@@ -351,7 +352,7 @@ class WPUBaseSettings {
             }
 
             // Set a default value
-            if ($setting['type'] != 'checkbox') {
+            if (!in_array($setting['type'], array('checkbox', 'checkboxlist'))) {
                 // - if not sent or if user is not allowed
                 if (!isset($input[$id]) || !current_user_can($setting['user_cap'])) {
                     $input[$id] = isset($options[$id]) ? $options[$id] : '0';
@@ -361,6 +362,13 @@ class WPUBaseSettings {
             switch ($setting['type']) {
             case 'checkbox':
                 $option_id = isset($input[$id]) && !in_array($input[$id], array('0', '')) ? '1' : '0';
+                break;
+            case 'checkboxlist':
+                /* Absent from POST means every box is unchecked */
+                $option_id = array();
+                if (isset($input[$id]) && is_array($input[$id])) {
+                    $option_id = array_values(array_intersect($input[$id], array_keys($setting['datas'])));
+                }
                 break;
             case 'radio':
             case 'select':
@@ -470,6 +478,24 @@ class WPUBaseSettings {
             echo '</div>';
             echo '<button type="button" class="button">' . __('Upload New Media', __NAMESPACE__) . '</button>';
             echo '</div>';
+            break;
+        case 'checkboxlist':
+            $values = isset($options[$args['id']]) ? $options[$args['id']] : $args['default'];
+            if ($is_overridden) {
+                $values = $value;
+            }
+            if (!is_array($values)) {
+                /* A constant override or a legacy value can be a comma separated string */
+                $values = array_filter(array_map('trim', explode(',', (string) $values)));
+            }
+            $cb_name = (isset($args['readonly']) && $args['readonly']) ? '' : ' name="' . esc_attr($name_val) . '[]" ';
+            foreach ($args['datas'] as $_id => $_data) {
+                $cb_id = esc_attr($args['id'] . '_' . $_id);
+                echo '<p>';
+                echo '<input id="' . $cb_id . '" type="checkbox" ' . $cb_name . $attr . ' value="' . esc_attr($_id) . '" ' . checked(in_array($_id, $values), true, 0) . ' />';
+                echo '<label class="wpubasesettings-checkbox-label" for="' . $cb_id . '">' . esc_html($_data) . '</label>';
+                echo '</p>';
+            }
             break;
         case 'radio':
             foreach ($args['datas'] as $_id => $_data) {
