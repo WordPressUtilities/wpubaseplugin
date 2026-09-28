@@ -1,10 +1,10 @@
 <?php
-namespace wpubasetoolbox_0_28_0;
+namespace wpubasetoolbox_0_29_0;
 
 /*
 Class Name: WPU Base Toolbox
 Description: Cool helpers for WordPress Plugins
-Version: 0.28.0
+Version: 0.29.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -15,7 +15,7 @@ License URI: https://opensource.org/licenses/MIT
 defined('ABSPATH') || die;
 
 class WPUBaseToolbox {
-    private $plugin_version = '0.28.0';
+    private $plugin_version = '0.29.0';
     private $args = array();
     private $missing_plugins = array();
     private $invalid_plugins_versions = array();
