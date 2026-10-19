@@ -1,10 +1,10 @@
 <?php
-namespace wpubasefilecache_0_4_0;
+namespace wpubasefilecache_0_4_1;
 
 /*
 Class Name: WPU Base File Cache
 Description: A class to handle basic file cache
-Version: 0.4.0
+Version: 0.4.1
 Author: Darklg
 Author URI: https://darklg.me/
 License: MIT License
@@ -31,6 +31,10 @@ class WPUBaseFileCache {
     }
 
     public function maybe_autopurge() {
+        /* No delay : autopurge disabled */
+        if (!$this->settings['autopurge_delay']) {
+            return;
+        }
         $transient_key = 'wpu_filecache_purge_' . sanitize_key($this->cache_dir);
         if (get_transient($transient_key)) {
             return;
@@ -105,6 +109,13 @@ class WPUBaseFileCache {
         $this->file_put_contents($cached_file, serialize($content));
 
         return true;
+    }
+
+    public function delete_cache($cache_id) {
+        $cached_file = $this->get_cache_dir() . $cache_id;
+        if (file_exists($cached_file)) {
+            unlink($cached_file);
+        }
     }
 
     /**
