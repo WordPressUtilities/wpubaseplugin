@@ -1,10 +1,10 @@
 <?php
-namespace wpubasenotify_0_2_1;
+namespace wpubasenotify_0_3_0;
 
 /*
 Class Name: WPU Base Notify
 Description: A class to send plain text alerts by email or webhook
-Version: 0.2.1
+Version: 0.3.0
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -245,6 +245,16 @@ class WPUBaseNotify {
     }
 
     private function get_option_value($key) {
+        /* Same constant override as WPUBaseSettings */
+        $constant_name = strtoupper($this->option_id . '_' . $key);
+        if (defined($constant_name)) {
+            $value = constant($constant_name);
+            /* A checkbox list can be forced as a comma separated string */
+            if (strpos($key, $this->prefix . 'notif_') === 0 && !is_array($value)) {
+                $value = array_filter(array_map('trim', explode(',', (string) $value)));
+            }
+            return $value;
+        }
         $options = get_option($this->option_id);
         if (!is_array($options) || !isset($options[$key])) {
             return null;
