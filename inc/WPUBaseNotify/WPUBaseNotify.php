@@ -1,10 +1,10 @@
 <?php
-namespace wpubasenotify_0_2_0;
+namespace wpubasenotify_0_2_1;
 
 /*
 Class Name: WPU Base Notify
 Description: A class to send plain text alerts by email or webhook
-Version: 0.2.0
+Version: 0.2.1
 Class URI: https://github.com/WordPressUtilities/wpubaseplugin
 Author: Darklg
 Author URI: https://darklg.me/
@@ -236,10 +236,6 @@ class WPUBaseNotify {
 
     private function is_channel_enabled($id, $channel) {
         $value = $this->get_option_value($this->get_notification_field_id($id));
-        /* Never saved : fall back on the same default as the settings field */
-        if ($value === null) {
-            return $channel == 'email';
-        }
         return is_array($value) && in_array($channel, $value);
     }
 

@@ -49,7 +49,7 @@ $this->basenotify->notify('404_spike', 'Spike of 404 errors', 'Yesterday : 250 e
 * Messages are plain text on both channels. The subject is sent bold on the webhook, as the subject by email.
 * An empty email field falls back on the website administration email.
 * Webhook URLs must use HTTPS.
-* Email notifications are enabled by default, webhook ones are not.
+* Every channel is disabled until its checkbox is checked and saved.
 * Delivery failures raise a persistent admin notice, which disappears as soon as the faulty setting is edited.
 
 ## Uninstall hook
